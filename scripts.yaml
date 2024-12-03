@@ -6,3 +6,5 @@ build_runner:
   watch:
     (aliases): w
     (command): dart run build_runner watch --delete-conflicting-outputs
+
+barrel: barreler build
