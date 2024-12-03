@@ -17,3 +17,4 @@ export 'models/resolver.dart';
 export 'models/shell_script.dart';
 export 'services/git_service.dart';
 export 'utils/all_files.dart';
+export 'utils/re_register_hooks.dart';
