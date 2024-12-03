@@ -7,5 +7,8 @@ part of 'resolver.dart';
 // **************************************************************************
 
 extension _$ResolverAutoequal on Resolver {
-  List<Object?> get _$props => [hooks];
+  List<Object?> get _$props => [
+        hook,
+        fs,
+      ];
 }

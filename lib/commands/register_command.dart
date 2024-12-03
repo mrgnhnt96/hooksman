@@ -7,7 +7,6 @@ import 'package:file/file.dart';
 import 'package:git_hooks/mixins/paths_mixin.dart';
 import 'package:git_hooks/services/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
-import 'package:path/path.dart' as p;
 
 class RegisterCommand extends Command<int> with PathsMixin {
   RegisterCommand({
@@ -56,24 +55,25 @@ class RegisterCommand extends Command<int> with PathsMixin {
 
     final hooksDartToolDir =
         fs.directory(fs.path.join(root, '.dart_tool', 'git_hooks'));
-    final executables = fs
+    final executablesDir = fs
         .directory(fs.path.join(hooksDartToolDir.path, 'executables'))
       ..createSync(recursive: true);
 
-    final hooks = <String>[];
-    final toCompile = <Future<void>>[];
+    final executables = <String>[];
+    final toCompile = <Future<ProcessResult>>[];
 
     for (final hook in definedHooks) {
       final relativePath =
           fs.path.relative(hook.path, from: hooksDartToolDir.path);
-
       final content = '''
 import 'package:git_hooks/git_hooks.dart';
+import 'dart:io';
 
 import '$relativePath' as hook;
 
-Future<int> main() async {
-  return await executeHook(hook.main());
+void main() async {
+  final code = await executeHook(hook.main());
+  exitCode = code;
 }''';
 
       final file = fs.file(fs.path.join(hooksDartToolDir.path, hook.basename))
@@ -82,9 +82,9 @@ Future<int> main() async {
       logger.detail('Registered hook: ${hook.basename}');
 
       final outFile =
-          executables.childFile(p.basenameWithoutExtension(file.path));
+          executablesDir.childFile(fs.path.basenameWithoutExtension(file.path));
 
-      hooks.add(outFile.path);
+      executables.add(outFile.path);
 
       final process = Process.run('dart', [
         'compile',
@@ -99,7 +99,14 @@ Future<int> main() async {
 
     final progress = logger.progress('Compiling executables');
 
-    await Future.wait(toCompile);
+    final results = await Future.wait(toCompile);
+
+    for (final result in results) {
+      if (result.exitCode != 0) {
+        progress.fail('Failed to compile ${result.stderr}');
+        return 1;
+      }
+    }
 
     progress.complete();
 
@@ -120,9 +127,9 @@ Future<int> main() async {
     final execsDir = fs.directory(fs.path.join(hooksPath, 'execs'))
       ..createSync(recursive: true);
 
-    for (final hook in hooks) {
-      final name = p.basename(hook).toParamCase();
-      fs.file(hook).copySync(fs.path.join(execsDir.path, name));
+    for (final exe in executables) {
+      final name = fs.path.basename(exe).toParamCase();
+      fs.file(exe).copySync(fs.path.join(execsDir.path, name));
 
       final content = '''
 #!/bin/sh
@@ -131,12 +138,16 @@ Future<int> main() async {
 
 set -e
 
-\$(dirname \$0)/execs/$name
+"\$(dirname "\$0")"/execs/$name
+
+echo "Last exit code: \$?"
 ''';
 
-      fs.file(fs.path.join(hooksPath, name)).writeAsStringSync(content);
+      final hook = fs.file(fs.path.join(hooksPath, name))
+        ..createSync(recursive: true)
+        ..writeAsStringSync(content);
 
-      final executableResult = await Process.run('chmod', ['u+x', hook]);
+      final executableResult = await Process.run('chmod', ['u+x', hook.path]);
 
       if (executableResult.exitCode != 0) {
         logger
