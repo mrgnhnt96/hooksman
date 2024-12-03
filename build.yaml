@@ -1,0 +1,10 @@
+targets:
+  $default:
+    builders:
+      autoequal_gen:
+        enabled: true
+        generate_for:
+          exclude:
+            - "**/test/**"
+        options:
+          auto_include: true
