@@ -53,8 +53,10 @@ class RegisterCommand extends Command<int> with PathsMixin {
 
     logger.detail('Registering hooks (${definedHooks.length})');
 
-    final hooksDartToolDir =
-        fs.directory(fs.path.join(root, '.dart_tool', 'git_hooks'));
+    final hooksDartToolDir = fs
+        .directory(fs.path.join(root, '.dart_tool', 'git_hooks'))
+      ..deleteSync(recursive: true);
+
     final executablesDir = fs
         .directory(fs.path.join(hooksDartToolDir.path, 'executables'))
       ..createSync(recursive: true);
@@ -121,6 +123,8 @@ void main() {
     if (hooksDir.existsSync()) {
       hooksDir.deleteSync(recursive: true);
     }
+
+    hooksDir.createSync(recursive: true);
 
     for (final exe in executables) {
       final name = fs.path.basename(exe).toParamCase();

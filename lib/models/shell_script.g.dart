@@ -1,11 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'hook_command.dart';
+part of 'shell_script.dart';
 
 // **************************************************************************
 // AutoequalGenerator
 // **************************************************************************
 
-extension _$HookCommandAutoequal on HookCommand {
-  List<Object?> get _$props => [pathPatterns];
+extension _$ShellScriptAutoequal on ShellScript {
+  List<Object?> get _$props => [
+        commands,
+        pathPatterns,
+      ];
 }

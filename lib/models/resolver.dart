@@ -15,32 +15,30 @@ class Resolver extends Equatable {
   final Hook hook;
   final FileSystem fs;
 
-  Iterable<ResolvedHook> resolve(Iterable<String> files) sync* {
-    final resolvedHooks = <HookCommand>[];
-    final commandsToResolve = [...hook.commands];
+  ResolvedHook resolve(Iterable<String> files) {
+    Iterable<HookCommand> commands() sync* {
+      final commandsToResolve = [...hook.commands];
 
-    for (final file in files) {
-      if (commandsToResolve.isEmpty) {
-        break;
-      }
-
-      for (final command in hook.commands) {
-        if (command.pathPatterns.any((e) => e.matches(file))) {
-          resolvedHooks.add(command);
-          commandsToResolve.remove(command);
+      for (final file in files) {
+        if (commandsToResolve.isEmpty) {
           break;
+        }
+
+        for (final command in hook.commands) {
+          if (command.pathPatterns.any((e) => e.matches(file))) {
+            commandsToResolve.remove(command);
+
+            yield command;
+            break;
+          }
         }
       }
     }
 
-    for (final hook in commandsToResolve) {
-      final resolvedHook = ResolvedHook(
-        commands: hook.commands(files),
-        workingDirectory: hook.workingDirectory ?? fs.currentDirectory.path,
-      );
-
-      yield resolvedHook;
-    }
+    return ResolvedHook(
+      files: files.toList(),
+      commands: commands().toList(),
+    );
   }
 
   @override
