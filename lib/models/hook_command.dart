@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:glob/glob.dart';
 
 part 'hook_command.g.dart';
 
@@ -8,7 +7,7 @@ class HookCommand extends Equatable {
     required this.pathPatterns,
   });
 
-  final List<Glob> pathPatterns;
+  final List<Pattern> pathPatterns;
 
   @override
   List<Object?> get props => _$props;

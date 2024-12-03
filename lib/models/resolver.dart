@@ -25,7 +25,7 @@ class Resolver extends Equatable {
         }
 
         for (final command in hook.commands) {
-          if (command.pathPatterns.any((e) => e.matches(file))) {
+          if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
             commandsToResolve.remove(command);
 
             yield command;

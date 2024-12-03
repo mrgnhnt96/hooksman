@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:git_hooks/models/hook_command.dart';
-import 'package:glob/glob.dart';
+import 'package:git_hooks/utils/all_files.dart';
 
 part 'dart_script.g.dart';
 
@@ -12,9 +12,13 @@ class DartScript extends Equatable implements HookCommand {
     required this.script,
   });
 
+  DartScript.always({
+    required this.script,
+  }) : pathPatterns = [AllFiles()];
+
   final FutureOr<int> Function(Iterable<String> files) script;
   @override
-  final List<Glob> pathPatterns;
+  final List<Pattern> pathPatterns;
 
   @override
   List<Object?> get props => _$props;
