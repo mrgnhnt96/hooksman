@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file/local.dart';
-import 'package:git_hooks/git_hooks.dart';
 import 'package:git_hooks/models/dart_script.dart';
+import 'package:git_hooks/models/hook.dart';
+import 'package:git_hooks/models/resolver.dart';
 import 'package:git_hooks/models/shell_script.dart';
+import 'package:git_hooks/services/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 Future<void> executeHook(Hook hook) async {
@@ -77,7 +80,16 @@ Future<int> _runDartScript(
   Logger logger,
 ) async {
   try {
-    return await script.script(files);
+    return await runZoned(
+      () async {
+        return await script.script(files);
+      },
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, line) {
+          // don't print anything
+        },
+      ),
+    );
   } catch (e) {
     logger.err(e.toString());
     return 1;
