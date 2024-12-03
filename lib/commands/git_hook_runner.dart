@@ -2,7 +2,7 @@ import 'package:args/command_runner.dart';
 // ignore: implementation_imports
 import 'package:args/src/arg_results.dart';
 import 'package:file/file.dart';
-import 'package:git_hooks/commands/resolve_command.dart';
+import 'package:git_hooks/commands/register_command.dart';
 import 'package:git_hooks/services/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
@@ -13,7 +13,7 @@ class GitHookRunner extends CommandRunner<int> {
     required GitService git,
   }) : super('git_hooks', 'Run git hooks') {
     addCommand(
-      ResolveCommand(
+      RegisterCommand(
         fs: fs,
         logger: logger,
         git: git,

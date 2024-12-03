@@ -23,6 +23,7 @@ Future<int> main(List<String> providedArgs) async {
     logger: logger,
     git: GitService(
       logger: logger,
+      fs: fs,
     ),
   );
 
