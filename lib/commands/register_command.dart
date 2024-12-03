@@ -67,13 +67,11 @@ class RegisterCommand extends Command<int> with PathsMixin {
           fs.path.relative(hook.path, from: hooksDartToolDir.path);
       final content = '''
 import 'package:git_hooks/git_hooks.dart';
-import 'dart:io';
 
 import '$relativePath' as hook;
 
-void main() async {
-  final code = await executeHook(hook.main());
-  exitCode = code;
+void main() {
+  executeHook(hook.main());
 }''';
 
       final file = fs.file(fs.path.join(hooksDartToolDir.path, hook.basename))
@@ -124,37 +122,9 @@ void main() async {
       hooksDir.deleteSync(recursive: true);
     }
 
-    final execsDir = fs.directory(fs.path.join(hooksPath, 'execs'))
-      ..createSync(recursive: true);
-
     for (final exe in executables) {
       final name = fs.path.basename(exe).toParamCase();
-      fs.file(exe).copySync(fs.path.join(execsDir.path, name));
-
-      final content = '''
-#!/bin/sh
-
-# GENERATED CODE - DO NOT MODIFY BY HAND
-
-set -e
-
-"\$(dirname "\$0")"/execs/$name
-
-echo "Last exit code: \$?"
-''';
-
-      final hook = fs.file(fs.path.join(hooksPath, name))
-        ..createSync(recursive: true)
-        ..writeAsStringSync(content);
-
-      final executableResult = await Process.run('chmod', ['u+x', hook.path]);
-
-      if (executableResult.exitCode != 0) {
-        logger
-          ..err('Failed to register hook')
-          ..detail('Error: ${executableResult.stderr}');
-        return 1;
-      }
+      fs.file(exe).copySync(fs.path.join(hooksDir.path, name));
     }
 
     return 0;

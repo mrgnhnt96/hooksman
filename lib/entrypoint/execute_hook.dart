@@ -4,7 +4,11 @@ import 'package:file/local.dart';
 import 'package:git_hooks/git_hooks.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-Future<int> executeHook(Hook hook) async {
+Future<void> executeHook(Hook hook) async {
+  exitCode = await _run(hook);
+}
+
+Future<int> _run(Hook hook) async {
   const fs = LocalFileSystem();
 
   final logger = Logger()..level = Level.verbose;
@@ -57,5 +61,5 @@ Future<int> executeHook(Hook hook) async {
   }
 
   logger.write('\n');
-  return 1;
+  return 0;
 }
