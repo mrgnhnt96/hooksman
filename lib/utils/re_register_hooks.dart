@@ -9,8 +9,15 @@ class ReRegisterHooks extends ShellScript {
             else
               Glob('hooks/*.dart'),
           ],
-          commands: (_) => [
-            'dart run git_hooks register',
-          ],
+          commands: (_) {
+            final changeDir = switch (pathToHooksDir) {
+              String() => 'cd $pathToHooksDir &&',
+              _ => '',
+            };
+
+            return [
+              '$changeDir dart run git_hooks register',
+            ];
+          },
         );
 }
