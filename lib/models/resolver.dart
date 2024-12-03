@@ -24,14 +24,20 @@ class Resolver extends Equatable {
           break;
         }
 
-        for (final command in hook.commands) {
-          if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
-            commandsToResolve.remove(command);
+        void Function()? remove;
 
+        for (final command in commandsToResolve) {
+          if (!commandsToResolve.contains(command)) break;
+
+          if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
+            remove = () => commandsToResolve.remove(command);
             yield command;
+
             break;
           }
         }
+
+        remove?.call();
       }
     }
 
