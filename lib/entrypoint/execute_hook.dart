@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:file/local.dart';
 import 'package:git_hooks/models/dart_script.dart';
 import 'package:git_hooks/models/hook.dart';
-import 'package:git_hooks/models/hook_command.dart';
 import 'package:git_hooks/models/resolver.dart';
 import 'package:git_hooks/models/resolving_tasks.dart';
 import 'package:git_hooks/models/shell_script.dart';
@@ -49,12 +48,12 @@ String label(
 }) {
   // get width of terminal
   final maxWidth = stdout.terminalColumns;
-  final down = yellow.wrap('↓');
-  final right = yellow.wrap('→');
-  final dot = yellow.wrap('•');
+  const down = '↓';
+  const right = '→';
+  const dot = '•';
   final loading = yellow.wrap(frame);
-  final checkMark = green.wrap('✔️');
-  final x = red.wrap('❌');
+  const checkMark = '✔️';
+  const x = '❌';
 
   String? fileCount(int count) {
     final string = switch (count) {
@@ -67,7 +66,7 @@ String label(
   }
 
   String? icon(
-    HookCommand command,
+    dynamic command, // HookCommand | String
     int fileCount, {
     required bool isComplete,
     required bool isError,
@@ -78,7 +77,7 @@ String label(
     }
 
     if (isHalted) {
-      return yellow.wrap(dot);
+      return blue.wrap(dot);
     }
 
     if (isError) {
@@ -92,6 +91,7 @@ String label(
     final icon = switch (command) {
       ShellScript() => right,
       DartScript() => loading,
+      String() => loading,
       _ => '',
     };
 
@@ -108,6 +108,8 @@ String label(
         :isError,
         :isHalted,
         :files,
+        :hasCompletedSubTasks,
+        :completedSubTaskIndex,
       ) = task;
 
       final count = fileCount(files.length);
@@ -129,12 +131,29 @@ String label(
         continue;
       }
 
-      if (hasCompleted) {
+      if (hasCompleted && hasCompletedSubTasks) {
         continue;
       }
 
-      for (final script in command.commands(files)) {
-        yield '    $loading $script';
+      for (final (index, script) in command.commands(files).indexed) {
+        final hasCompleted =
+            completedSubTaskIndex != null && index < completedSubTaskIndex;
+
+        final iconString = icon(
+          script,
+          files.length,
+          isComplete: hasCompleted,
+          isError: switch (hasCompleted) {
+            false => isError,
+            _ => false,
+          },
+          isHalted: switch (hasCompleted) {
+            false => isHalted,
+            _ => false,
+          },
+        );
+
+        yield '    $iconString $script';
       }
     }
 
@@ -180,8 +199,20 @@ Future<int> run(
   final tasks = <(ResolvingTask, Future<int>)>[];
 
   for (final (files, command) in resolvedHook.commands) {
+    final subTaskController = switch (command) {
+      ShellScript() => StreamController<int>(),
+      _ => null,
+    };
+
     final future = switch (command) {
-      ShellScript() => _runShellScript(command, files, logger),
+      ShellScript() => _runShellScript(
+          command,
+          files,
+          logger,
+          onCompleted: (index) {
+            subTaskController?.add(index);
+          },
+        ),
       DartScript() => _runDartScript(command, files, logger),
       _ => throw ArgumentError(
           'Unsupported command type',
@@ -192,6 +223,7 @@ Future<int> run(
     final task = ResolvingTask(
       files: files,
       command: command,
+      subTaskController: subTaskController,
       completer: switch (files.length) {
         0 => null,
         _ => Completer<int>(),
@@ -288,8 +320,10 @@ Future<int> _runDartScript(
 Future<int> _runShellScript(
   ShellScript script,
   Iterable<String> files,
-  Logger logger,
-) async {
+  Logger logger, {
+  required void Function(int) onCompleted,
+}) async {
+  var index = 0;
   for (final command in script.commands(files)) {
     final result = await Process.run(
       'bash',
@@ -305,6 +339,9 @@ Future<int> _runShellScript(
         ..delayed(result.stderr as String);
       return 1;
     }
+
+    onCompleted(index);
+    index++;
   }
 
   return 0;
