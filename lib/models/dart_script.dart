@@ -10,15 +10,19 @@ class DartScript extends Equatable implements HookCommand {
   const DartScript({
     required this.pathPatterns,
     required this.script,
+    this.name,
   });
 
   DartScript.always({
     required this.script,
+    this.name,
   }) : pathPatterns = [AllFiles()];
 
   final FutureOr<int> Function(Iterable<String> files) script;
   @override
   final List<Pattern> pathPatterns;
+  @override
+  final String? name;
 
   @override
   List<Object?> get props => _$props;

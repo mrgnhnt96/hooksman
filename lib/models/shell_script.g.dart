@@ -10,5 +10,6 @@ extension _$ShellScriptAutoequal on ShellScript {
   List<Object?> get _$props => [
         commands,
         pathPatterns,
+        name,
       ];
 }

@@ -7,5 +7,8 @@ part of 'hook_command.dart';
 // **************************************************************************
 
 extension _$HookCommandAutoequal on HookCommand {
-  List<Object?> get _$props => [pathPatterns];
+  List<Object?> get _$props => [
+        name,
+        pathPatterns,
+      ];
 }
