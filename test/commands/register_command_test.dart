@@ -138,7 +138,7 @@ void main() {
             "import '../../hooks/pre_commit.dart' as hook;",
             '',
             'void main() {',
-            '  executeHook(hook.main());',
+            "  executeHook('pre-commit', hook.main());",
             '}',
           ]);
         });
@@ -236,16 +236,16 @@ void main() {
     });
 
     group('#copyExecutables', () {
-      test('should return 1 when hooks directory does not exist', () async {
+      test('should create the hooks directory when it does not exist',
+          () async {
         final command = cmd();
         final code = command.copyExecutables(
-          ['hook1', 'hook2'],
-          gitHooksDir: '',
+          [],
+          gitHooksDir: p.join('.git', 'hooks'),
         );
 
-        expect(code, 1);
-
-        verify(() => logger.err(any())).called(1);
+        expect(code, 0);
+        expect(fs.directory(p.join('.git', 'hooks')).existsSync(), isTrue);
       });
 
       test('should copy executables from dart tool to git hooks', () async {

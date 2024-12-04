@@ -68,13 +68,17 @@ class RegisterCommand extends Command<int> with PathsMixin {
     for (final hook in definedHooks) {
       final relativePath =
           fs.path.relative(hook.path, from: hooksDartToolDir.path);
+
+      final hookName =
+          fs.path.basenameWithoutExtension(hook.path).toParamCase();
+
       final content = '''
 import 'package:git_hooks/git_hooks.dart';
 
 import '$relativePath' as hook;
 
 void main() {
-  executeHook(hook.main());
+  executeHook('$hookName', hook.main());
 }''';
 
       final file = fs.file(fs.path.join(hooksDartToolDir.path, hook.basename))

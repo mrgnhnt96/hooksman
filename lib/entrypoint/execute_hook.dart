@@ -9,7 +9,7 @@ import 'package:git_hooks/models/shell_script.dart';
 import 'package:git_hooks/services/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-Future<void> executeHook(Hook hook) async {
+Future<void> executeHook(String name, Hook hook) async {
   const fs = LocalFileSystem();
 
   final logger = Logger()..level = Level.verbose;
@@ -24,7 +24,7 @@ Future<void> executeHook(Hook hook) async {
   );
 
   try {
-    exitCode = await _run(
+    exitCode = await run(
       hook,
       logger: logger,
       gitService: gitService,
@@ -35,27 +35,27 @@ Future<void> executeHook(Hook hook) async {
   }
 }
 
-Future<int> _run(
+Future<int> run(
   Hook hook, {
   required Logger logger,
   required GitService gitService,
   required Resolver resolver,
 }) async {
-  final files = await gitService.getChangedFiles();
+  final allFiles = await gitService.getChangedFiles(hook.diff);
 
-  if (files == null) {
+  if (allFiles == null) {
     logger.err('Could not get changed files');
     return 1;
   }
 
-  if (files.isEmpty) {
+  if (allFiles.isEmpty) {
     logger.info('No files to process');
     return 0;
   }
 
-  final resolvedHook = resolver.resolve(files);
+  final resolvedHook = resolver.resolve(allFiles);
 
-  for (final command in resolvedHook.commands) {
+  for (final (files, command) in resolvedHook.commands) {
     final result = await switch (command) {
       ShellScript() => _runShellScript(command, files, logger),
       DartScript() => _runDartScript(command, files, logger),
