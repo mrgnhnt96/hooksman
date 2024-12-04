@@ -5,9 +5,15 @@ Hook main() {
     commands: [
       ReRegisterHooks(),
       ShellScript(
-        pathPatterns: [Glob('*.dart')],
+        pathPatterns: [Glob('**.dart')],
         commands: (files) => [
           'dart analyze --fatal-infos ${files.join(' ')}',
+        ],
+      ),
+      ShellScript(
+        pathPatterns: [Glob('**.dart')],
+        commands: (files) => [
+          'sip run build_runner build',
         ],
       ),
     ],
