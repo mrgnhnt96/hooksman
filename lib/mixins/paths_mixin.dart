@@ -46,7 +46,7 @@ mixin PathsMixin {
     return gitDir.childDirectory('.git').path;
   }
 
-  String? get hooksDir {
+  String? get gitHooksDir {
     final gitDir = this.gitDir;
 
     if (gitDir == null) {
@@ -55,5 +55,13 @@ mixin PathsMixin {
     }
 
     return fs.directory(p.join(gitDir, 'hooks')).path;
+  }
+
+  Directory dartToolGitHooksDir(String root) {
+    return fs.directory(p.join(root, '.dart_tool', 'git_hooks'));
+  }
+
+  Directory executablesDir(String root) {
+    return fs.directory(p.join(dartToolGitHooksDir(root).path, 'executables'));
   }
 }
