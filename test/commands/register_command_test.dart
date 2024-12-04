@@ -164,11 +164,11 @@ void main() {
           final [first, second] = executables;
           expect(
             first.executablePath,
-            p.join('executables', 'dart_file1'),
+            p.join('executables', 'dart-file1'),
           );
           expect(
             second.executablePath,
-            p.join('executables', 'dart_file2'),
+            p.join('executables', 'dart-file2'),
           );
         });
 

@@ -87,8 +87,8 @@ void main() {
 
       logger.detail('Registered hook: ${hook.basename}');
 
-      final outFile =
-          executablesDir.childFile(fs.path.basenameWithoutExtension(file.path));
+      final outFile = executablesDir
+          .childFile(fs.path.basenameWithoutExtension(file.path).toParamCase());
 
       final process = compiler.compile(
         file: file.path,
