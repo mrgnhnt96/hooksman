@@ -29,7 +29,8 @@ class ResolvingTask {
   bool get isHalted => code == -99;
   bool get hasCompletedSubTasks {
     final task = command;
-    if (task is! ShellScript) return false;
+    if (task is! ShellScript) return true;
+    if (isError && !isHalted) return false;
 
     final subTasks = task.commands(files);
 

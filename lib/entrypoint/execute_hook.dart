@@ -53,7 +53,7 @@ String label(
   const dot = '•';
   final loading = yellow.wrap(frame);
   const checkMark = '✔️';
-  const x = '❌';
+  const x = 'ⅹ';
 
   String? fileCount(int count) {
     final string = switch (count) {
@@ -98,6 +98,16 @@ String label(
     return yellow.wrap(icon);
   }
 
+  String trim(String string) {
+    final trimmed = string.split('').take(maxWidth - 1).toList();
+
+    if (trimmed.length < string.length) {
+      trimmed.add('…');
+    }
+
+    return trimmed.join();
+  }
+
   Iterable<String?> label() sync* {
     yield 'Running tasks for $name';
     for (final task in tasks) {
@@ -121,7 +131,7 @@ String label(
         isHalted: isHalted,
       );
 
-      yield '  $iconString ${command.resolvedName} $count';
+      yield trim('  $iconString ${command.resolvedName} $count');
 
       if (files.isEmpty) {
         continue;
@@ -137,39 +147,31 @@ String label(
 
       for (final (index, script) in command.commands(files).indexed) {
         final hasCompleted =
-            completedSubTaskIndex != null && index < completedSubTaskIndex;
+            completedSubTaskIndex != null && index - 1 < completedSubTaskIndex;
 
-        final iconString = icon(
-          script,
-          files.length,
-          isComplete: hasCompleted,
-          isError: switch (hasCompleted) {
-            false => isError,
-            _ => false,
-          },
-          isHalted: switch (hasCompleted) {
-            false => isHalted,
-            _ => false,
-          },
-        );
+        final isWorking = (completedSubTaskIndex == null && index == 0) ||
+            index - 1 == completedSubTaskIndex;
 
-        yield '    $iconString $script';
+        final iconString = switch (isWorking) {
+          true when isError => red.wrap(x),
+          true => loading,
+          _ when hasCompleted => green.wrap(checkMark),
+          _ => yellow.wrap(dot),
+        };
+
+        final scriptString = switch (script) {
+          final e when isWorking && isError => red.wrap(e),
+          final e => e,
+        };
+
+        yield trim('    $iconString $scriptString');
       }
     }
 
     yield '\n';
   }
 
-  return label().map((e) {
-    if (e == null) return null;
-    final trimmed = e.split('').take(maxWidth).toList();
-
-    if (trimmed.length < e.length) {
-      trimmed.add('…');
-    }
-
-    return trimmed.join();
-  }).join('\n');
+  return label().join('\n');
 }
 
 Future<int> run(
@@ -323,8 +325,11 @@ Future<int> _runShellScript(
   Logger logger, {
   required void Function(int) onCompleted,
 }) async {
-  var index = 0;
-  for (final command in script.commands(files)) {
+  if (files.isEmpty) {
+    return 0;
+  }
+
+  for (final (index, command) in script.commands(files).indexed) {
     final result = await Process.run(
       'bash',
       [
@@ -334,14 +339,31 @@ Future<int> _runShellScript(
     );
 
     if (result.exitCode != 0) {
+      final scriptString = yellow.wrap(script.resolvedName);
       logger
-        ..delayed(result.stdout as String)
-        ..delayed(result.stderr as String);
+        ..delayed('${red.wrap('Task failed:')} $scriptString')
+        ..delayed(darkGray.wrap('-- script --'))
+        ..delayed(command);
+
+      final output = result.stdout as String;
+      if (output.isNotEmpty) {
+        logger
+          ..delayed('\n')
+          ..delayed(darkGray.wrap('-- output --'))
+          ..delayed(output);
+      }
+
+      final error = result.stderr as String;
+      if (error.isNotEmpty) {
+        logger
+          ..delayed('\n')
+          ..delayed(darkGray.wrap('-- error --'))
+          ..delayed(error);
+      }
       return 1;
     }
 
     onCompleted(index);
-    index++;
   }
 
   return 0;
