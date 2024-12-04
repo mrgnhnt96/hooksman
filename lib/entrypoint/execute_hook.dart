@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' as io;
 import 'dart:io';
 
 import 'package:file/local.dart';
@@ -10,6 +9,7 @@ import 'package:git_hooks/models/resolver.dart';
 import 'package:git_hooks/models/resolving_tasks.dart';
 import 'package:git_hooks/models/shell_script.dart';
 import 'package:git_hooks/services/git_service.dart';
+import 'package:git_hooks/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 Future<void> executeHook(String name, Hook hook) async {
@@ -27,6 +27,7 @@ Future<void> executeHook(String name, Hook hook) async {
   );
 
   try {
+    logger.info('starting...');
     exitCode = await run(
       hook,
       hookName: name,
@@ -37,6 +38,8 @@ Future<void> executeHook(String name, Hook hook) async {
   } catch (e) {
     exitCode = 1;
   }
+
+  exit(exitCode);
 }
 
 String label(
@@ -177,7 +180,7 @@ Future<int> run(
   final tasks = <(ResolvingTask, Future<int>)>[];
 
   for (final (files, command) in resolvedHook.commands) {
-    final result = switch (command) {
+    final future = switch (command) {
       ShellScript() => _runShellScript(command, files, logger),
       DartScript() => _runDartScript(command, files, logger),
       _ => throw ArgumentError(
@@ -195,9 +198,14 @@ Future<int> run(
       },
     );
 
-    tasks.add((task, result));
+    tasks.add((task, future));
 
     resolvingTasks.add(task);
+  }
+
+  if (resolvingTasks.every((e) => e.files.isEmpty)) {
+    logger.info('No matching files');
+    return 0;
   }
 
   logger.info('Got ${resolvingTasks.length} tasks to run');
@@ -269,7 +277,10 @@ Future<int> _runDartScript(
       ),
     );
   } catch (e) {
-    logger.err(e.toString());
+    logger
+      ..delayed(red.wrap('Error when running ${script.resolvedName}'))
+      ..delayed('$e');
+
     return 1;
   }
 }
@@ -297,78 +308,4 @@ Future<int> _runShellScript(
   }
 
   return 0;
-}
-
-class MultiLineProgress {
-  MultiLineProgress({
-    required String Function(String) createLabel,
-  }) : this._(
-          stdout,
-          createLabel: createLabel,
-        );
-
-  MultiLineProgress._(
-    this._stdout, {
-    required this.createLabel,
-  });
-
-  final io.Stdout _stdout;
-  final String Function(String) createLabel;
-  Timer? _timer;
-
-  static const _frames = [
-    '⠋',
-    '⠙',
-    '⠹',
-    '⠸',
-    '⠼',
-    '⠴',
-    '⠦',
-    '⠧',
-    '⠇',
-    '⠏',
-  ];
-
-  int _index = 0;
-  void _onTick(Timer? _) {
-    _clear();
-    final frame = _frames[_index % _frames.length];
-
-    _stdout.write(createLabel(frame));
-    _index++;
-  }
-
-  void _clear() {
-    _stdout.write('\x1B[2J\x1B[H');
-  }
-
-  bool _running = false;
-
-  void start() {
-    if (_running) {
-      return;
-    }
-
-    stdin.echoMode = false;
-    stdin.lineMode = false;
-
-    // clear terminal
-    _clear();
-
-    _timer = Timer.periodic(const Duration(milliseconds: 80), _onTick);
-    _running = true;
-  }
-
-  void dispose() {
-    _timer?.cancel();
-    stdin.echoMode = true;
-    stdin.lineMode = true;
-    _running = false;
-  }
-
-  Future<void> closeNextFrame() async {
-    await Future<void>.delayed(const Duration(milliseconds: 80));
-
-    dispose();
-  }
 }

@@ -17,7 +17,7 @@ class ResolvingTask {
   bool get hasCompleted => _completer?.isCompleted ?? false;
   bool get isRunning => canRun && !hasCompleted;
   bool get isError => code != null && code != 0;
-  bool get isHalted => code == -1;
+  bool get isHalted => code == -99;
 
   Future<int>? get future => _completer?.future;
 
@@ -34,6 +34,6 @@ class ResolvingTask {
   }
 
   void kill() {
-    code = -1;
+    code = -99;
   }
 }

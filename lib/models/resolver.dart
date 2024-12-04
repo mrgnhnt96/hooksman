@@ -26,7 +26,7 @@ class Resolver extends Equatable {
 
     Iterable<(Iterable<String>, HookCommand)> commands() sync* {
       for (final command in hook.commands) {
-        yield (filesFor(command), command);
+        yield (filesFor(command).toList(), command);
       }
     }
 
