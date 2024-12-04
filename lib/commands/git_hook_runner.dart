@@ -33,7 +33,7 @@ class GitHookRunner extends CommandRunner<int> {
     final args = [...results.arguments];
 
     if (args.isEmpty) {
-      results = argParser.parse(['resolve']);
+      results = argParser.parse(['register']);
     }
 
     return super.runCommand(results);
