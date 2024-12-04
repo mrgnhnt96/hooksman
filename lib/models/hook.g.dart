@@ -8,7 +8,7 @@ part of 'hook.dart';
 
 extension _$HookAutoequal on Hook {
   List<Object?> get _$props => [
-        diffFilters,
+        diff,
         commands,
       ];
 }

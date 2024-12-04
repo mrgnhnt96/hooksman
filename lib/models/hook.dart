@@ -6,10 +6,10 @@ part 'hook.g.dart';
 class Hook extends Equatable {
   const Hook({
     required this.commands,
-    this.diffFilters = const [],
+    this.diff = const [],
   });
 
-  final List<String> diffFilters;
+  final List<String> diff;
   final List<HookCommand> commands;
 
   @override

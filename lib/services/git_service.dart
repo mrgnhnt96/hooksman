@@ -12,7 +12,7 @@ class GitService {
   final Logger logger;
   final FileSystem fs;
 
-  Future<List<String>?> getChangedFiles() async {
+  Future<List<String>?> getChangedFiles(List<String> diff) async {
     const gitDiffArgs = [
       '--name-only',
       '--binary', // support binary files
@@ -27,14 +27,15 @@ class GitService {
     ];
     final result = await Process.run('git', [
       'diff',
-      '--staged',
+      if (diff.isEmpty) '--staged' else ...diff,
       'HEAD',
       ...gitDiffArgs,
     ]);
 
     // TODO(mrgnhnt): Handle error:
     /*
-    fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+    fatal: ambiguous argument 'HEAD': unknown revision or path not in
+    the working tree.
 Use '--' to separate paths from revisions, like this:
 'git <command> [<revision>...] -- [<file>...]'
      */
