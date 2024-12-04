@@ -16,7 +16,15 @@ class Resolver extends Equatable {
   final FileSystem fs;
 
   ResolvedHook resolve(Iterable<String> files) {
-    Iterable<HookCommand> commands() sync* {
+    Iterable<String> filesFor(HookCommand command) sync* {
+      for (final file in files) {
+        if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
+          yield file;
+        }
+      }
+    }
+
+    Iterable<(List<String>, HookCommand)> commands() sync* {
       final commandsToResolve = [...hook.commands];
 
       for (final file in files) {
@@ -31,7 +39,8 @@ class Resolver extends Equatable {
 
           if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
             remove = () => commandsToResolve.remove(command);
-            yield command;
+            final files = filesFor(command).toList();
+            yield (files, command);
 
             break;
           }
