@@ -157,6 +157,8 @@ Future<int> run(
   required GitService gitService,
   required Resolver resolver,
 }) async {
+  logger.info('running $hookName hook');
+
   final allFiles = await gitService.getChangedFiles(hook.diff);
 
   if (allFiles == null) {
@@ -198,6 +200,8 @@ Future<int> run(
     resolvingTasks.add(task);
   }
 
+  logger.info('Got ${resolvingTasks.length} tasks to run');
+
   final progress = MultiLineProgress(
     createLabel: (frame) => label(
       resolvingTasks,
@@ -226,6 +230,7 @@ Future<int> run(
     [
       for (final (task, _) in tasks) task.future,
     ].whereType(),
+    eagerError: true,
   );
 
   await progress.closeNextFrame();
@@ -233,6 +238,13 @@ Future<int> run(
   logger
     ..flush()
     ..write('\n');
+
+  for (final (task, _) in tasks) {
+    if (task.code case final int code when code != 0) {
+      return code;
+    }
+  }
+
   return 0;
 }
 
