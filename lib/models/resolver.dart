@@ -24,29 +24,9 @@ class Resolver extends Equatable {
       }
     }
 
-    Iterable<(List<String>, HookCommand)> commands() sync* {
-      final commandsToResolve = [...hook.commands];
-
-      for (final file in files) {
-        if (commandsToResolve.isEmpty) {
-          break;
-        }
-
-        void Function()? remove;
-
-        for (final command in commandsToResolve) {
-          if (!commandsToResolve.contains(command)) break;
-
-          if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
-            remove = () => commandsToResolve.remove(command);
-            final files = filesFor(command).toList();
-            yield (files, command);
-
-            break;
-          }
-        }
-
-        remove?.call();
+    Iterable<(Iterable<String>, HookCommand)> commands() sync* {
+      for (final command in hook.commands) {
+        yield (filesFor(command), command);
       }
     }
 

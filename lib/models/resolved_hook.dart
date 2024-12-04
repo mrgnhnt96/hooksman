@@ -10,7 +10,7 @@ class ResolvedHook extends Equatable {
   });
 
   final List<String> files;
-  final List<(List<String> files, HookCommand)> commands;
+  final List<(Iterable<String> files, HookCommand)> commands;
 
   @override
   List<Object?> get props => _$props;

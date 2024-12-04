@@ -1,6 +1,6 @@
 import 'package:git_hooks/git_hooks.dart';
 
-class ReRegisterHooks extends ShellScript {
+final class ReRegisterHooks extends ShellScript {
   ReRegisterHooks({String? pathToHooksDir})
       : super(
           pathPatterns: [
