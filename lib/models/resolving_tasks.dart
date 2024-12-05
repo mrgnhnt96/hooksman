@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:git_hooks/models/hook_command.dart';
 import 'package:git_hooks/models/shell_script.dart';
+import 'package:uuid/uuid.dart';
 
 class ResolvingTask {
   ResolvingTask({
@@ -10,13 +11,16 @@ class ResolvingTask {
     required Completer<int>? completer,
     required StreamController<int>? subTaskController,
   })  : _completer = completer,
-        _subTaskController = subTaskController {
+        _subTaskController = subTaskController,
+        id = const Uuid().v4() {
     _listener = _subTaskController?.stream.listen((index) {
       completedSubTaskIndex = index;
     });
   }
 
   StreamSubscription<int>? _listener;
+
+  final String id;
   final Iterable<String> files;
   final Completer<int>? _completer;
   final StreamController<int>? _subTaskController;

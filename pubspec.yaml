@@ -12,6 +12,7 @@ dependencies:
   glob: ^2.1.2
   mason_logger: ^0.3.1
   path: ^1.9.1
+  uuid: ^4.5.1
 
 dev_dependencies:
   autoequal_gen: ^0.9.1
