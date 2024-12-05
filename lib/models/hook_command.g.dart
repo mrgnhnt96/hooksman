@@ -10,5 +10,6 @@ extension _$HookCommandAutoequal on HookCommand {
   List<Object?> get _$props => [
         name,
         pathPatterns,
+        excludePatterns,
       ];
 }

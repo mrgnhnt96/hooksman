@@ -11,5 +11,6 @@ extension _$ShellScriptAutoequal on ShellScript {
         commands,
         name,
         pathPatterns,
+        excludePatterns,
       ];
 }

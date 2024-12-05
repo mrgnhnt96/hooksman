@@ -11,5 +11,6 @@ extension _$DartScriptAutoequal on DartScript {
         script,
         name,
         pathPatterns,
+        excludePatterns,
       ];
 }
