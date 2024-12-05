@@ -13,7 +13,6 @@ Hook main() {
       ShellScript(
         pathPatterns: [Glob('**.dart')],
         commands: (files) => [
-          'sleep 3',
           'sip run build_runner build',
         ],
       ),
