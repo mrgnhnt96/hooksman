@@ -10,30 +10,6 @@ import 'package:git_hooks/services/git_service.dart';
 import 'package:git_hooks/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-// TODO(mrgnhnt): Handle when user presses CTRL+C
-/*
-var attemptsToKill = 0;
-final stream = Platform.isWindows
-    ? ProcessSignal.sigint.watch()
-    : StreamGroup.merge(
-        [
-          ProcessSignal.sigterm.watch(),
-          ProcessSignal.sigint.watch(),
-        ],
-      );
-
-_killSubscription ??= stream.listen((event) {
-  logger.detail('Received SIGINT');
-  if (attemptsToKill > 0) {
-    exit(1);
-  } else if (attemptsToKill == 0) {
-    stop().ignore();
-  }
-
-  attemptsToKill++;
-});
-*/
-
 Future<void> executeHook(String name, Hook hook) async {
   const fs = LocalFileSystem();
 
@@ -71,7 +47,7 @@ Future<int> run(
   required GitService gitService,
   required Resolver resolver,
 }) async {
-  logger.info('running $hookName hook');
+  logger.info('Running $hookName hook');
 
   final allFiles = await gitService.getChangedFiles(hook.diff);
 
@@ -108,6 +84,13 @@ Future<int> run(
   pendingTasks.start();
 
   await pendingTasks.wait();
+
+  if (pendingTasks.wasKilled) {
+    progress
+      ..dispose()
+      ..print();
+    return 1;
+  }
 
   await progress.closeNextFrame();
 

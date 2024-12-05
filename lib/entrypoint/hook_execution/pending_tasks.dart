@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:git_hooks/entrypoint/hook_execution/task_runner.dart';
 import 'package:git_hooks/models/resolved_hook.dart';
 import 'package:git_hooks/models/resolving_tasks.dart';
@@ -48,13 +50,46 @@ class PendingTasks {
     return PendingTasks._(mappedTasks, logger: logger);
   }
 
-  const PendingTasks._(
+  PendingTasks._(
     this._tasks, {
     required this.logger,
-  });
+  }) {
+    _listenToKillSignal();
+  }
 
   final Map<String, ({ResolvingTask task, TaskRunner runner})> _tasks;
   final Logger logger;
+  StreamSubscription<ProcessSignal>? _killSubscription;
+
+  bool _wasKilled = false;
+  bool get wasKilled => _wasKilled;
+
+  Future<void> _listenToKillSignal() async {
+    if (_killSubscription != null) {
+      return;
+    }
+
+    final stream = Platform.isWindows
+        ? ProcessSignal.sigint.watch()
+        : StreamGroup.merge(
+            [
+              ProcessSignal.sigterm.watch(),
+              ProcessSignal.sigint.watch(),
+            ],
+          );
+
+    _killSubscription = stream.listen((signal) async {
+      _wasKilled = true;
+      killAll();
+      await Future<void>.delayed(const Duration(seconds: 1));
+      _stopKillSignalListener();
+    });
+  }
+
+  void _stopKillSignalListener() {
+    _killSubscription?.cancel().ignore();
+    _killSubscription = null;
+  }
 
   List<ResolvingTask> get tasks => List<ResolvingTask>.unmodifiable(
         _tasks.values.map<ResolvingTask>((e) => e.task),

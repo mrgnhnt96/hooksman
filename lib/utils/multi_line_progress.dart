@@ -63,6 +63,11 @@ class MultiLineProgress {
     _running = false;
   }
 
+  void print() {
+    _clear();
+    _stdout.writeln(createLabel(''));
+  }
+
   Future<void> closeNextFrame() async {
     await Future<void>.delayed(const Duration(milliseconds: 80));
 
