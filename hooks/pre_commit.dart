@@ -15,12 +15,8 @@ Hook main() {
         ],
       ),
       ShellScript(
-        pathPatterns: [Glob('**/models/**.dart')],
-        excludePatterns: [
-          Glob('**.g.dart'),
-          Glob('hooks/**'),
-          Glob('test/**'),
-        ],
+        pathPatterns: [Glob('lib/models/**.dart')],
+        excludePatterns: [Glob('**.g.dart')],
         commands: (files) => [
           'sip run build_runner build',
         ],
