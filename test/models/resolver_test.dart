@@ -45,7 +45,7 @@ void main() {
       expect(command2, hook.commands[1]);
     });
 
-    test('resolves no commands if no files match', () {
+    test('resolves commands when no files match', () {
       final hook = Hook(
         commands: [
           HookCommand(
@@ -58,7 +58,10 @@ void main() {
       final result = resolver(hook).resolve(['README.md']);
 
       expect(result.files, ['README.md']);
-      expect(result.commands, isEmpty);
+      expect(result.commands, hasLength(1));
+      final (files, command) = result.commands.single;
+      expect(files, isEmpty);
+      expect(command, hook.commands.first);
     });
 
     test('resolves commands with multiple matching files', () {
