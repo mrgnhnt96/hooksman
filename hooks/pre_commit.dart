@@ -19,6 +19,7 @@ Hook main() {
         excludePatterns: [
           Glob('**.g.dart'),
           Glob('hooks/**'),
+          Glob('test/**'),
         ],
         commands: (files) => [
           'sip run build_runner build',
