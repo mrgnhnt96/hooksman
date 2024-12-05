@@ -101,5 +101,56 @@ void main() {
       expect(files, ['lib/main.dart', 'README.md']);
       expect(command, hook.commands.first);
     });
+
+    test('excludes files matching exclude patterns', () {
+      final hook = Hook(
+        commands: [
+          HookCommand(
+            name: 'command1',
+            pathPatterns: [RegExp(r'.*\.dart')],
+            excludePatterns: [RegExp(r'.*\.g\.dart')],
+          ),
+        ],
+      );
+
+      final result =
+          resolver(hook).resolve(['lib/main.dart', 'lib/main.g.dart']);
+
+      expect(result.files, ['lib/main.dart', 'lib/main.g.dart']);
+      expect(result.commands, hasLength(1));
+
+      final (files, command) = result.commands.single;
+      expect(files, ['lib/main.dart']);
+      expect(command, hook.commands.first);
+    });
+
+    test('excludes files matching multiple exclude patterns', () {
+      final hook = Hook(
+        commands: [
+          HookCommand(
+            name: 'command1',
+            pathPatterns: [RegExp(r'.*\.dart')],
+            excludePatterns: [
+              RegExp(r'.*\.g\.dart'),
+              RegExp(r'.*\.freezed\.dart'),
+            ],
+          ),
+        ],
+      );
+
+      final result = resolver(hook).resolve(
+        ['lib/main.dart', 'lib/main.g.dart', 'lib/main.freezed.dart'],
+      );
+
+      expect(
+        result.files,
+        ['lib/main.dart', 'lib/main.g.dart', 'lib/main.freezed.dart'],
+      );
+      expect(result.commands, hasLength(1));
+
+      final (files, command) = result.commands.single;
+      expect(files, ['lib/main.dart']);
+      expect(command, hook.commands.first);
+    });
   });
 }

@@ -9,6 +9,7 @@ final class DartScript extends HookCommand {
   const DartScript({
     required super.pathPatterns,
     required this.script,
+    super.excludePatterns,
     super.name,
   });
 

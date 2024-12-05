@@ -18,6 +18,10 @@ class Resolver extends Equatable {
   ResolvedHook resolve(Iterable<String> files) {
     Iterable<String> filesFor(HookCommand command) sync* {
       for (final file in files) {
+        if (command.excludePatterns.any((e) => e.allMatches(file).isNotEmpty)) {
+          continue;
+        }
+
         if (command.pathPatterns.any((e) => e.allMatches(file).isNotEmpty)) {
           yield file;
         }

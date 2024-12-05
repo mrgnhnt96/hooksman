@@ -6,11 +6,13 @@ part 'hook_command.g.dart';
 base class HookCommand extends Equatable {
   const HookCommand({
     required this.pathPatterns,
+    this.excludePatterns = const [],
     this.name,
   });
 
   final String? name;
   final List<Pattern> pathPatterns;
+  final List<Pattern> excludePatterns;
 
   String get resolvedName => switch (name) {
         final String name => name,
@@ -23,6 +25,7 @@ base class HookCommand extends Equatable {
             };
           }).join(', '),
       };
+
   @override
   List<Object?> get props => _$props;
 }

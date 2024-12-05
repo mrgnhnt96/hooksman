@@ -7,6 +7,7 @@ base class ShellScript extends HookCommand {
   const ShellScript({
     required super.pathPatterns,
     required this.commands,
+    super.excludePatterns,
     super.name,
   });
 
