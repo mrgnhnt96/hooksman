@@ -85,4 +85,20 @@ class HookExecutor {
 
     return 0;
   }
+
+  Future<bool> runChecks() async {
+    if (!await gitService.isGitInstalled()) {
+      return false;
+    }
+
+    if (!await gitService.isGitRepository()) {
+      return false;
+    }
+
+    if (!await gitService.hasAtLeastOneCommit()) {
+      return false;
+    }
+
+    return true;
+  }
 }

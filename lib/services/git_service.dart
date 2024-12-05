@@ -25,6 +25,7 @@ class GitService {
       '--submodule=short', // always use the default short format for submodules
       '--diff-filter=ACMRT', // added, copied, modified, renamed, or type change
     ];
+
     final result = await Process.run('git', [
       'diff',
       if (diff.isEmpty) '--staged' else ...diff,
@@ -60,5 +61,47 @@ Use '--' to separate paths from revisions, like this:
         out.split('\n').where((element) => element.isNotEmpty).toList();
 
     return files;
+  }
+
+  Future<bool> isGitInstalled() async {
+    final result = await Process.run('git', ['--version']);
+
+    if (result.exitCode != 0) {
+      logger
+        ..err('Git is not installed')
+        ..detail('Error: ${result.stderr}');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<bool> isGitRepository() async {
+    final result =
+        await Process.run('git', ['rev-parse', '--is-inside-work-tree']);
+
+    if (result.exitCode != 0) {
+      logger
+        ..err('Not a git repository')
+        ..detail('Error: ${result.stderr}');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<bool> hasAtLeastOneCommit() async {
+    final result = await Process.run('git', ['rev-list', '--count', 'HEAD']);
+
+    if (result.exitCode != 0) {
+      logger
+        ..err('Failed to get commit count')
+        ..detail('Error: ${result.stderr}');
+      return false;
+    }
+
+    final count = int.tryParse(result.stdout as String);
+
+    return count != null && count > 0;
   }
 }

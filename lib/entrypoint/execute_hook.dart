@@ -41,7 +41,13 @@ Future<void> executeHook(String name, Hook hook) async {
       resolver: resolver,
     );
 
-    exitCode = await executor.run();
+    final canRun = await executor.runChecks();
+
+    if (!canRun) {
+      exitCode = 1;
+    } else {
+      exitCode = await executor.run();
+    }
   } catch (e) {
     exitCode = 1;
   }
