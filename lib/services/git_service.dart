@@ -104,4 +104,26 @@ Use '--' to separate paths from revisions, like this:
 
     return count != null && count > 0;
   }
+
+  Future<bool> isClean() async {
+    final result = await Process.run('git', ['status', '--porcelain']);
+
+    if (result.exitCode != 0) {
+      logger
+        ..err('Failed to get git status')
+        ..detail('Error: ${result.stderr}');
+      return false;
+    }
+
+    final out = result.stdout;
+
+    if (out is! String) {
+      logger
+        ..err('Failed to get git status')
+        ..detail('Error: ${result.stderr}');
+      return false;
+    }
+
+    return out.isEmpty;
+  }
 }
