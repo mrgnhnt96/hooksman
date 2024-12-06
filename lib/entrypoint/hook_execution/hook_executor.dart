@@ -53,7 +53,7 @@ class HookExecutor {
   }) get durations => (
         short: const Duration(milliseconds: 1000),
         medium: const Duration(milliseconds: 2000),
-        long: const Duration(milliseconds: 5000),
+        long: const Duration(milliseconds: 3000),
       );
 
   Future<void> _wait(Duration duration) async {
@@ -94,7 +94,10 @@ class HookExecutor {
     if (debug) await _wait(durations.short);
 
     if (context.hidePartiallyStaged) {
-      logger.info('Hiding partially staged files');
+      logger.info(
+        'Hiding partially staged files '
+        '(${context.partiallyStagedFiles.length})',
+      );
       await gitService.checkoutFiles(context.partiallyStagedFiles);
     }
 

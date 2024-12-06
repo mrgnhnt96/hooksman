@@ -22,7 +22,6 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
 
   @override
   List<String> get gitDiffArgs => [
-        '--name-only',
         // support binary files
         '--binary',
         // do not add lines around diff for consistent behavior
@@ -239,6 +238,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     final result = await Process.run('git', [
       'diff',
       'HEAD',
+      '--name-only',
       '--diff-filter=D',
       ...gitDiffArgs,
     ]);

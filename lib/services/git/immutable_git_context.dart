@@ -1,15 +1,16 @@
 import 'package:git_hooks/services/git/git_context.dart';
 
 class ImmutableGitContext implements GitContext {
-  const ImmutableGitContext({
+  ImmutableGitContext({
     required this.partiallyStagedFiles,
     required this.deletedFiles,
     required this.mergeHead,
     required this.mergeMode,
     required this.mergeMsg,
     required this.stashHash,
-    required this.hidePartiallyStaged,
-  });
+    required bool hidePartiallyStaged,
+  }) : hidePartiallyStaged =
+            hidePartiallyStaged && partiallyStagedFiles.isNotEmpty;
 
   @override
   final List<String> partiallyStagedFiles;

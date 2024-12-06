@@ -63,6 +63,8 @@ class PendingTasks {
 
   bool _wasKilled = false;
   bool get wasKilled => _wasKilled;
+  bool get hasCompleted => tasks.every((e) => e.hasCompleted);
+  bool get isDead => wasKilled || hasCompleted;
 
   Future<void> _listenToKillSignal() async {
     if (_killSubscription != null) {
@@ -79,6 +81,12 @@ class PendingTasks {
           );
 
     _killSubscription = stream.listen((signal) async {
+      logger.detail('SIGINT detected!');
+      if (isDead) {
+        exitCode = 1;
+        exit(exitCode);
+      }
+
       _wasKilled = true;
       killAll();
       _stopKillSignalListener();

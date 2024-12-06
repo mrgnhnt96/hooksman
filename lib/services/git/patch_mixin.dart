@@ -5,7 +5,7 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as p;
 
 mixin PatchMixin {
-  static const _patch = '.git_hooks.patch';
+  static const _patch = 'git_hooks.patch';
 
   String get gitDir;
   List<String> get gitDiffArgs;
@@ -37,10 +37,21 @@ mixin PatchMixin {
         ..detail('Error: ${result.stderr}');
       throw Exception('Failed to create path files');
     }
+
+    logger.detail('Create patch output: ${result.stdout}');
+
+    // ensure file exists
+    if (!fs.file(_patchPath).existsSync()) {
+      logger
+        ..err('Failed to create patch')
+        ..detail('Output: ${result.stdout}');
+      throw Exception('Failed to create patch');
+    }
   }
 
   Future<bool> applyPatch() async {
     final patch = _patchPath;
+    logger.detail('Applying patch from $patch');
     final firstTry = await Process.run(
       'git',
       [
@@ -56,6 +67,10 @@ mixin PatchMixin {
     if (firstTry.exitCode == 0) {
       return true;
     }
+
+    logger
+      ..detail('First patch try failed')
+      ..detail('Error: ${firstTry.stderr}');
 
     // retry with --3way
     final secondTry = await Process.run(
@@ -85,8 +100,12 @@ mixin PatchMixin {
 
     final file = fs.file(path);
 
-    if (!file.existsSync()) return;
+    if (!file.existsSync()) {
+      logger.detail('no patch file to delete');
+      return;
+    }
 
-    file.deleteSync();
+    logger.detail('deleting patch file');
+    // file.deleteSync();
   }
 }
