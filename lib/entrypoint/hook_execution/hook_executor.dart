@@ -140,7 +140,7 @@ class HookExecutor {
     }
 
     if (hook.backupFiles) {
-      logger.info('Applying modifications');
+      logger.detail('Applying modifications');
       if (debug) await _wait(durations.short);
       await gitService.applyModifications();
       if (debug) await _wait(durations.long);
@@ -169,7 +169,7 @@ class HookExecutor {
     }
 
     if (context.hidePartiallyStaged) {
-      logger.info('Restoring unstaged changes');
+      logger.detail('Restoring unstaged changes');
       if (!await gitService.applyPatch()) {
         logger.err('Failed to restore unstaged changes due to merge conflicts');
         if (debug) await _wait(durations.long);
