@@ -23,6 +23,12 @@ Hook main() {
       ),
       ShellScript(
         pathPatterns: [Glob('**.dart')],
+        commands: (files) => [
+          'dart format ${files.join(' ')}',
+        ],
+      ),
+      ShellScript(
+        pathPatterns: [Glob('**.dart')],
         excludePatterns: [Glob('hooks/**')],
         commands: (files) => [
           'sip test --concurrent --bail',
