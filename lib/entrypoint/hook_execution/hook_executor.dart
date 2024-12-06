@@ -80,6 +80,9 @@ class HookExecutor {
     }
     final (allFiles, _) = allFilesResult;
     logger.detail('Found ${allFiles.length} files');
+    for (final file in allFiles) {
+      logger.detail('  - $file');
+    }
 
     if (debug) await _wait(durations.short);
 
