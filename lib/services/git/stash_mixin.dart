@@ -26,6 +26,10 @@ mixin StashMixin {
       throw Exception('Failed to create stash');
     }
 
+    // dart is running to fast for git to cache the stash,
+    // resulting in a error throwing race condition
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
     final storeResult = await Process.run(
       'git',
       [
@@ -33,7 +37,7 @@ mixin StashMixin {
         'store',
         '--message',
         '"$_stashMessage"',
-        '"$hash"',
+        hash,
       ],
     );
 
