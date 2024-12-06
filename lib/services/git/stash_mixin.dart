@@ -46,4 +46,39 @@ mixin StashMixin {
 
     return hash;
   }
+
+  Future<int?> stash() async {
+    final stashes = await Process.run('git', ['stash', 'list']);
+
+    final out = switch (stashes.stdout) {
+      final String stashes => stashes,
+      _ => null,
+    };
+
+    if (out == null) {
+      logger
+        ..err('Failed to get stashes')
+        ..detail('Error: ${stashes.stderr}');
+      return null;
+    }
+
+    for (final (index, line) in out.split('\n').indexed) {
+      if (!line.contains(_stashMessage)) continue;
+
+      return index;
+    }
+
+    return null;
+  }
+
+  Future<void> dropBackupStash() async {
+    final index = await stash();
+    if (index == null) return;
+
+    await Process.run('git', [
+      'stash',
+      'drop',
+      '$index',
+    ]);
+  }
 }

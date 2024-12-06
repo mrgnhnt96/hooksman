@@ -372,7 +372,13 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     return false;
   }
 
-  Future<bool> restoreStash(String stashHash) async {
+  Future<bool> restoreStash() async {
+    final stashIndex = await stash();
+
+    if (stashIndex == null) {
+      return false;
+    }
+
     // hard reset
     final reset = await Process.run('git', [
       'reset',
@@ -393,7 +399,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
       'apply',
       '--quiet',
       '--index',
-      stashHash,
+      '$stashIndex',
     ]);
 
     if (apply.exitCode != 0) {
@@ -424,16 +430,5 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     if (!file.existsSync()) return;
 
     file.deleteSync();
-  }
-
-  Future<void> dropBackupStash(String? stashHash) async {
-    if (stashHash == null) return;
-    if (stashHash.isEmpty) return;
-
-    await Process.run('git', [
-      'stash',
-      'drop',
-      stashHash,
-    ]);
   }
 }
