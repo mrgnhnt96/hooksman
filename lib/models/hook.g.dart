@@ -11,5 +11,7 @@ extension _$HookAutoequal on Hook {
         diffArgs,
         diffFilters,
         commands,
+        backupFiles,
+        allowEmpty,
       ];
 }
