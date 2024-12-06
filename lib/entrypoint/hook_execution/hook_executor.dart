@@ -164,7 +164,7 @@ class HookExecutor {
 
       if (debug) await _wait(durations.short);
 
-      logger.detail('deleting stash');
+      logger.detail('dropping stash');
       await gitService.dropBackupStash();
     }
 
