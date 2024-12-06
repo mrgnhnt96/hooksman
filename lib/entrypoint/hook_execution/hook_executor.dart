@@ -25,9 +25,7 @@ class HookExecutor {
   final GitService gitService;
   final Resolver resolver;
 
-  Future<int> run() async {
-    logger.info('Running $hookName hook');
-
+  Future<(List<String>, int?)> get allFiles async {
     final allFiles = await gitService.diffFiles(
       diffArgs: hook.diffArgs,
       diffFilters: hook.diffFilters,
@@ -35,13 +33,34 @@ class HookExecutor {
 
     if (allFiles == null) {
       logger.err('Could not get changed files');
-      return 1;
+      return (<String>[], 1);
     }
 
     if (allFiles.isEmpty) {
       logger.info('No files to process');
-      return 0;
+      return (<String>[], 0);
     }
+
+    return (allFiles, null);
+  }
+
+  Future<int> run() async {
+    logger.info('Preparing files');
+    final context = await gitService.prepareFiles(backup: hook.backupFiles);
+
+    if (context.hidePartiallyStaged) {
+      logger.info('Hiding partially staged files');
+      await gitService.checkoutFiles(context.partiallyStagedFiles);
+    }
+
+    logger.info('Running $hookName hook');
+
+    final allFilesResult = await this.allFiles;
+
+    if (allFilesResult case (_, final int code)) {
+      return code;
+    }
+    final (allFiles, _) = allFilesResult;
 
     final resolvedHook = resolver.resolve(allFiles);
 
@@ -86,6 +105,51 @@ class HookExecutor {
       }
     }
 
+    if (hook.backupFiles) {
+      logger.info('Applying modifications');
+      await gitService.applyModifications();
+    }
+
+    Future<void> finish() async {
+      await gitService.ensureDeletedFiles(context.deletedFiles);
+
+      await gitService.deletePatch();
+
+      await gitService.dropBackupStash(context.stashHash);
+    }
+
+    logger.info('Restoring unstaged changes');
+    if (!await gitService.restoreUnstagedChanges()) {
+      logger.err('Failed to restore unstaged changes due to merge conflicts');
+
+      final stash = context.stashHash;
+      if (stash == null) {
+        return 1;
+      }
+
+      await gitService.restoreStash(stash);
+
+      await finish();
+
+      return 1;
+    }
+
+    await finish();
+
+    if (hook.allowEmpty) {
+      return 0;
+    }
+
+    final files = await gitService.diffFiles(
+      diffArgs: hook.diffArgs,
+      diffFilters: hook.diffFilters,
+    );
+
+    if (files != null && files.isEmpty) {
+      logger.info('No changes to commit');
+      return 1;
+    }
+
     return 0;
   }
 
@@ -95,10 +159,6 @@ class HookExecutor {
     }
 
     if (!await gitService.isGitRepository()) {
-      return false;
-    }
-
-    if (!await gitService.hasAtLeastOneCommit()) {
       return false;
     }
 

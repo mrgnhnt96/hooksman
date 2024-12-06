@@ -73,6 +73,37 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     return files;
   }
 
+  Future<List<String>?> nonStagedFiles() async {
+    final result = await Process.run('git', [
+      'diff',
+      '--name-only',
+      '-z',
+      '--diff-filter=ACMR',
+    ]);
+
+    final out = switch (result.stdout) {
+      final String files => files,
+      _ => null,
+    };
+
+    if (out == null) {
+      logger
+        ..err('Failed to get non-staged files')
+        ..detail('Error: ${result.stderr}');
+      return null;
+    }
+
+    final allFiles =
+        out.split('\x00').where((element) => element.isNotEmpty).toSet();
+
+    // filter out staged files
+    final staged = await stagedFiles();
+
+    final difference = staged?.toSet().difference(allFiles);
+
+    return difference?.toList();
+  }
+
   /// From list of files, split renames and flatten into
   /// two files `to`NUL`from`.
   ///
@@ -260,7 +291,8 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
         ..mergeMode = mergeMode
         ..mergeMsg = mergeMsg
         ..deletedFiles = await getDeletedFiles()
-        ..stashHash = await createStash();
+        ..stashHash = await createStash()
+        ..hidePartiallyStaged = backup;
     } catch (e) {
       logger
         ..err('Failed to prepare files')
@@ -268,5 +300,140 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     }
 
     return context.toImmutable();
+  }
+
+  Future<void> checkoutFiles(List<String> files) async {
+    final processed = processRenames(files);
+
+    await Process.run('git', [
+      'checkout',
+      '--force',
+      '--',
+      ...processed,
+    ]);
+  }
+
+  Future<void> add(List<String> files) async {
+    await Process.run('git', [
+      'add',
+      '--',
+      ...files,
+    ]);
+  }
+
+  Future<void> applyModifications() async {
+    final changedFiles = await nonStagedFiles();
+
+    if (changedFiles == null || changedFiles.isEmpty) {
+      return;
+    }
+
+    await add(changedFiles);
+  }
+
+  Future<bool> restoreUnstagedChanges() async {
+    final patch = hiddenFilePath;
+    final firstTry = await Process.run(
+      'git',
+      [
+        'apply',
+        '-v',
+        '--whitespace=nowarn',
+        '--recount',
+        '--unidiff-zero',
+        patch,
+      ],
+    );
+
+    if (firstTry.exitCode == 0) {
+      return true;
+    }
+
+    // retry with --3way
+    final secondTry = await Process.run(
+      'git',
+      [
+        'apply',
+        '-v',
+        '--whitespace=nowarn',
+        '--recount',
+        '--unidiff-zero',
+        '--3way',
+        patch,
+      ],
+    );
+
+    if (secondTry.exitCode != 0) {
+      logger
+        ..err('Failed to apply patch')
+        ..detail('Error: ${secondTry.stderr}');
+    }
+
+    return false;
+  }
+
+  Future<bool> restoreStash(String stashHash) async {
+    // hard reset
+    final reset = await Process.run('git', [
+      'reset',
+      '--hard',
+      'HEAD',
+    ]);
+
+    if (reset.exitCode != 0) {
+      logger
+        ..err('Failed to reset')
+        ..detail('Error: ${reset.stderr}');
+      return false;
+    }
+
+    // apply stash
+    final apply = await Process.run('git', [
+      'stash',
+      'apply',
+      '--quiet',
+      '--index',
+      stashHash,
+    ]);
+
+    if (apply.exitCode != 0) {
+      logger
+        ..err('Failed to apply stash')
+        ..detail('Error: ${apply.stderr}');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> ensureDeletedFiles(List<String> deletedFiles) async {
+    for (final path in deletedFiles) {
+      final file = fs.file(path);
+
+      if (file.existsSync()) continue;
+
+      file.deleteSync();
+    }
+  }
+
+  Future<void> deletePatch() async {
+    final path = hiddenFilePath;
+
+    final file = fs.file(path);
+
+    if (!file.existsSync()) return;
+
+    file.deleteSync();
+  }
+
+  Future<void> dropBackupStash(String? stashHash) async {
+    if (stashHash == null) return;
+    if (stashHash.isEmpty) return;
+
+    await Process.run('git', [
+      'stash',
+      'drop',
+      stashHash,
+    ]);
   }
 }

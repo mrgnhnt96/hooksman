@@ -5,6 +5,8 @@ class GitContextSetter implements GitContext {
   GitContextSetter();
 
   @override
+  bool hidePartiallyStaged = true;
+  @override
   List<String> partiallyStagedFiles = <String>[];
   @override
   List<String> deletedFiles = <String>[];
@@ -27,6 +29,7 @@ class GitContextSetter implements GitContext {
       mergeMode: mergeMode,
       mergeMsg: mergeMsg,
       stashHash: stashHash,
+      hidePartiallyStaged: hidePartiallyStaged,
     );
   }
 }
