@@ -146,3 +146,4 @@ backend/pocketbase/pb_migrations
 backend/pocketbase/pb_data
 backend/scripts/json
 bin/tester.dart
+**/.test_optimizer.dart

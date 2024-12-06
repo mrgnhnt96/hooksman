@@ -4,7 +4,6 @@ import 'package:path/path.dart' as p;
 mixin MergeMixin {
   FileSystem get fs;
 
-  static const _hiddenPatch = '.git_hooks.patch';
   static const _mergeHead = 'MERGE_HEAD';
   static const _mergeMode = 'MERGE_MODE';
   static const _mergeMsg = 'MERGE_MSG';
@@ -46,10 +45,6 @@ mixin MergeMixin {
 
   String? get mergeMsg {
     return _content(p.join(gitDir, _mergeMsg));
-  }
-
-  String get hiddenFilePath {
-    return p.join(gitDir, _hiddenPatch);
   }
 
   void restoreMergeStatuses({

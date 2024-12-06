@@ -5,10 +5,11 @@ import 'package:git_hooks/services/git/git_checks_mixin.dart';
 import 'package:git_hooks/services/git/git_context.dart';
 import 'package:git_hooks/services/git/git_context_setter.dart';
 import 'package:git_hooks/services/git/merge_mixin.dart';
+import 'package:git_hooks/services/git/patch_mixin.dart';
 import 'package:git_hooks/services/git/stash_mixin.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-class GitService with MergeMixin, GitChecksMixin, StashMixin {
+class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   const GitService({
     required this.logger,
     required this.fs,
@@ -19,17 +20,26 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
   @override
   final FileSystem fs;
 
-  static const gitDiffArgs = [
-    '--name-only',
-    '--binary', // support binary files
-    '--unified=0', // do not add lines around diff for consistent behavior
-    '--no-color', // disable colors for consistent behavior
-    '--no-ext-diff', // disable external diff tools for consistent behavior
-    '--src-prefix=a/', // force prefix for consistent behavior
-    '--dst-prefix=b/', // force prefix for consistent behavior
-    '--patch', // output a patch that can be applied
-    '--submodule=short', // always use the default short format for submodules
-  ];
+  @override
+  List<String> get gitDiffArgs => [
+        '--name-only',
+        // support binary files
+        '--binary',
+        // do not add lines around diff for consistent behavior
+        '--unified=0',
+        // disable colors for consistent behavior
+        '--no-color',
+        // disable external diff tools for consistent behavior
+        '--no-ext-diff',
+        // force prefix for consistent behavior
+        '--src-prefix=a/',
+        // force prefix for consistent behavior
+        '--dst-prefix=b/',
+        // output a patch that can be applied
+        '--patch',
+        // always use the default short format for submodules
+        '--submodule=short',
+      ];
 
   @override
   String get gitDir {
@@ -244,27 +254,6 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     return files;
   }
 
-  Future<void> restoreGitFiles(
-    List<String> files,
-  ) async {
-    final result = await Process.run(
-      'git',
-      [
-        'diff',
-        ...gitDiffArgs,
-        '--output=$hiddenFilePath',
-        '--',
-        ...files,
-      ],
-    );
-
-    if (result.exitCode != 0) {
-      logger
-        ..err('Failed to checkout files')
-        ..detail('Error: ${result.stderr}');
-    }
-  }
-
   /// Prepare files for the task.
   /// If [backup] is true, stash the current state of the repository.
   /// Returns a [GitContext] object with the current state of the repository.
@@ -280,7 +269,8 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
           when partially.isNotEmpty) {
         final files = processRenames(partially);
 
-        await restoreGitFiles(files);
+        logger.detail('Creating patch');
+        await patch(files);
       }
 
       if (!backup) {
@@ -333,47 +323,6 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     await add(changedFiles);
   }
 
-  Future<bool> restoreUnstagedChanges() async {
-    final patch = hiddenFilePath;
-    final firstTry = await Process.run(
-      'git',
-      [
-        'apply',
-        '-v',
-        '--whitespace=nowarn',
-        '--recount',
-        '--unidiff-zero',
-        patch,
-      ],
-    );
-
-    if (firstTry.exitCode == 0) {
-      return true;
-    }
-
-    // retry with --3way
-    final secondTry = await Process.run(
-      'git',
-      [
-        'apply',
-        '-v',
-        '--whitespace=nowarn',
-        '--recount',
-        '--unidiff-zero',
-        '--3way',
-        patch,
-      ],
-    );
-
-    if (secondTry.exitCode != 0) {
-      logger
-        ..err('Failed to apply patch')
-        ..detail('Error: ${secondTry.stderr}');
-    }
-
-    return false;
-  }
-
   Future<bool> restoreStash() async {
     final stashIndex = await stash();
 
@@ -422,15 +371,5 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
 
       file.deleteSync();
     }
-  }
-
-  Future<void> deletePatch() async {
-    final path = hiddenFilePath;
-
-    final file = fs.file(path);
-
-    if (!file.existsSync()) return;
-
-    file.deleteSync();
   }
 }

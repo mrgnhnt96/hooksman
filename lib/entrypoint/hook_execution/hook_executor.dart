@@ -145,10 +145,9 @@ class HookExecutor {
 
     Future<void> finish() async {
       logger.detail('making sure all deleted files stay deleted');
+
       if (debug) await _wait(durations.short);
       await gitService.ensureDeletedFiles(context.deletedFiles);
-
-      if (debug) await _wait(durations.long);
 
       logger.detail('deleting patch');
       await gitService.deletePatch();
@@ -167,7 +166,7 @@ class HookExecutor {
     }
 
     logger.info('Restoring unstaged changes');
-    if (!await gitService.restoreUnstagedChanges()) {
+    if (!await gitService.applyPatch()) {
       logger.err('Failed to restore unstaged changes due to merge conflicts');
       if (debug) await _wait(durations.long);
 

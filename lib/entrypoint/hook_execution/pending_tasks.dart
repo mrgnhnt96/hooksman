@@ -81,7 +81,6 @@ class PendingTasks {
     _killSubscription = stream.listen((signal) async {
       _wasKilled = true;
       killAll();
-      await Future<void>.delayed(const Duration(seconds: 1));
       _stopKillSignalListener();
     });
   }
