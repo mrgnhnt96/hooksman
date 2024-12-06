@@ -62,16 +62,6 @@ class HookExecutor {
   }
 
   Future<int> run() async {
-    logger.info('Preparing files');
-    final context = await gitService.prepareFiles(backup: hook.backupFiles);
-
-    if (context.hidePartiallyStaged) {
-      logger.info('Hiding partially staged files');
-      await gitService.checkoutFiles(context.partiallyStagedFiles);
-    }
-
-    if (debug) await _wait(durations.short);
-
     logger.info('Running $hookName hook');
 
     final allFilesResult = await this.allFiles;
@@ -97,6 +87,15 @@ class HookExecutor {
     if (pendingTasks.tasks.every((e) => e.files.isEmpty)) {
       logger.info('No matching files');
       return 0;
+    }
+
+    logger.info('Preparing files');
+    final context = await gitService.prepareFiles(backup: hook.backupFiles);
+    if (debug) await _wait(durations.short);
+
+    if (context.hidePartiallyStaged) {
+      logger.info('Hiding partially staged files');
+      await gitService.checkoutFiles(context.partiallyStagedFiles);
     }
 
     final labelMaker = LabelMaker(
