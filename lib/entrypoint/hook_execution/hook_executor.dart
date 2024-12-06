@@ -168,24 +168,26 @@ class HookExecutor {
       await gitService.dropBackupStash();
     }
 
-    logger.info('Restoring unstaged changes');
-    if (!await gitService.applyPatch()) {
-      logger.err('Failed to restore unstaged changes due to merge conflicts');
-      if (debug) await _wait(durations.long);
+    if (context.hidePartiallyStaged) {
+      logger.info('Restoring unstaged changes');
+      if (!await gitService.applyPatch()) {
+        logger.err('Failed to restore unstaged changes due to merge conflicts');
+        if (debug) await _wait(durations.long);
 
-      final stash = context.stashHash;
-      if (stash == null) {
+        final stash = context.stashHash;
+        if (stash == null) {
+          return 1;
+        }
+
+        logger.detail('Forcing hard reset to HEAD');
+        await gitService.restoreStash();
+
+        if (debug) await _wait(durations.long);
+
+        await finish();
+
         return 1;
       }
-
-      logger.detail('Forcing hard reset to HEAD');
-      await gitService.restoreStash();
-
-      if (debug) await _wait(durations.long);
-
-      await finish();
-
-      return 1;
     }
 
     await finish();
