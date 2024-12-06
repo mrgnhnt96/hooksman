@@ -298,6 +298,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
       logger
         ..err('Failed to prepare files')
         ..detail('Error: $e');
+      throw Exception('Failed to prepare files');
     }
 
     return context.toImmutable();
