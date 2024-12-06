@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'hook_command.dart';
+part of 'hook_task.dart';
 
 // **************************************************************************
 // AutoequalGenerator
 // **************************************************************************
 
-extension _$HookCommandAutoequal on HookCommand {
+extension _$HookTaskAutoequal on HookTask {
   List<Object?> get _$props => [
         name,
         pathPatterns,

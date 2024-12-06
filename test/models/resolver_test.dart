@@ -1,7 +1,7 @@
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:git_hooks/models/hook.dart';
-import 'package:git_hooks/models/hook_command.dart';
+import 'package:git_hooks/models/hook_task.dart';
 import 'package:git_hooks/models/resolver.dart';
 import 'package:test/test.dart';
 
@@ -20,11 +20,11 @@ void main() {
     test('resolves multiple commands', () {
       final hook = Hook(
         commands: [
-          HookCommand(
+          HookTask(
             name: 'command1',
             pathPatterns: [RegExp(r'.*\.dart')],
           ),
-          HookCommand(
+          HookTask(
             name: 'command2',
             pathPatterns: [RegExp(r'.*\.md')],
           ),
@@ -48,7 +48,7 @@ void main() {
     test('resolves commands when no files match', () {
       final hook = Hook(
         commands: [
-          HookCommand(
+          HookTask(
             name: 'command1',
             pathPatterns: [RegExp(r'.*\.dart')],
           ),
@@ -67,7 +67,7 @@ void main() {
     test('resolves commands with multiple matching files', () {
       final hook = Hook(
         commands: [
-          HookCommand(
+          HookTask(
             name: 'command1',
             pathPatterns: [RegExp(r'.*\.dart')],
           ),
@@ -88,7 +88,7 @@ void main() {
     test('resolves commands with multiple patterns', () {
       final hook = Hook(
         commands: [
-          HookCommand(
+          HookTask(
             name: 'command1',
             pathPatterns: [RegExp(r'.*\.dart'), RegExp(r'.*\.md')],
           ),
@@ -108,7 +108,7 @@ void main() {
     test('excludes files matching exclude patterns', () {
       final hook = Hook(
         commands: [
-          HookCommand(
+          HookTask(
             name: 'command1',
             pathPatterns: [RegExp(r'.*\.dart')],
             excludePatterns: [RegExp(r'.*\.g\.dart')],
@@ -130,7 +130,7 @@ void main() {
     test('excludes files matching multiple exclude patterns', () {
       final hook = Hook(
         commands: [
-          HookCommand(
+          HookTask(
             name: 'command1',
             pathPatterns: [RegExp(r'.*\.dart')],
             excludePatterns: [

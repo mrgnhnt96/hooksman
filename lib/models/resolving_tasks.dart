@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:git_hooks/models/hook_command.dart';
-import 'package:git_hooks/models/shell_script.dart';
+import 'package:git_hooks/models/hook_task.dart';
+import 'package:git_hooks/models/shell_task.dart';
 import 'package:uuid/uuid.dart';
 
 class ResolvingTask {
@@ -24,7 +24,7 @@ class ResolvingTask {
   final Iterable<String> files;
   final Completer<int>? _completer;
   final StreamController<int>? _subTaskController;
-  final HookCommand command;
+  final HookTask command;
 
   bool get canRun => _completer != null;
   bool get hasCompleted => _completer?.isCompleted ?? false;
@@ -33,7 +33,7 @@ class ResolvingTask {
   bool get isHalted => code == -99;
   bool get hasCompletedSubTasks {
     final task = command;
-    if (task is! ShellScript) return true;
+    if (task is! ShellTask) return true;
     if (isError && !isHalted) return false;
 
     final subTasks = task.commands(files);

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:git_hooks/models/dart_script.dart';
-import 'package:git_hooks/models/hook_command.dart';
-import 'package:git_hooks/models/shell_script.dart';
+import 'package:git_hooks/models/dart_task.dart';
+import 'package:git_hooks/models/hook_task.dart';
+import 'package:git_hooks/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class TaskRunner {
@@ -17,7 +17,7 @@ class TaskRunner {
 
   final String taskId;
   final Logger logger;
-  final HookCommand task;
+  final HookTask task;
   final List<String> files;
   final void Function(int)? onSubTaskCompleted;
 
@@ -28,15 +28,15 @@ class TaskRunner {
 
     final task = this.task;
     final result = await switch (task) {
-      DartScript() => runDart(task),
-      ShellScript() => runShell(task),
+      DartTask() => runDart(task),
+      ShellTask() => runShell(task),
       _ => Future.value(1),
     };
 
     return result;
   }
 
-  Future<int> runDart(DartScript task) async {
+  Future<int> runDart(DartTask task) async {
     try {
       return await runZoned(
         () async {
@@ -57,7 +57,7 @@ class TaskRunner {
     }
   }
 
-  Future<int> runShell(ShellScript task) async {
+  Future<int> runShell(ShellTask task) async {
     for (final (index, command) in task.commands(files).indexed) {
       final result = await Process.run(
         'bash',

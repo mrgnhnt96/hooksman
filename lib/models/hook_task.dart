@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:glob/glob.dart';
 
-part 'hook_command.g.dart';
+part 'hook_task.g.dart';
 
-base class HookCommand extends Equatable {
-  const HookCommand({
+base class HookTask extends Equatable {
+  const HookTask({
     required this.pathPatterns,
     this.excludePatterns = const [],
     this.name,

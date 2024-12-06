@@ -1,7 +1,7 @@
-import 'package:git_hooks/models/shell_script.dart';
+import 'package:git_hooks/models/shell_task.dart';
 import 'package:glob/glob.dart';
 
-final class ReRegisterHooks extends ShellScript {
+final class ReRegisterHooks extends ShellTask {
   ReRegisterHooks({String? pathToHooksDir})
       : super(
           pathPatterns: [

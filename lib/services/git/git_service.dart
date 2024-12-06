@@ -231,7 +231,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       'diff',
       'HEAD',
       '--name-only',
-      '--diff-filter=RD',
+      '--diff-filter=D',
       ...gitDiffArgs,
     ]);
 
@@ -386,8 +386,10 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   Future<void> ensureDeletedFiles(List<String> deletedFiles) async {
     for (final path in deletedFiles) {
       final file = fs.file(path);
+      final exists = file.existsSync();
+      logger.detail('  - $file (exists: $exists)');
 
-      if (!file.existsSync()) continue;
+      if (!exists) continue;
 
       file.deleteSync();
     }

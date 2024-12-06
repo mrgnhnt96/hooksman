@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:git_hooks/models/hook_command.dart';
+import 'package:git_hooks/models/hook_task.dart';
 
 part 'hook.g.dart';
 
@@ -24,7 +24,7 @@ class Hook extends Equatable {
   ///
   /// Check out the git [docs](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-filterACDMRTUXB82308203) to view more options
   final String? diffFilters;
-  final List<HookCommand> commands;
+  final List<HookTask> commands;
 
   /// If true, the original files will be backed up before running the hook
   ///

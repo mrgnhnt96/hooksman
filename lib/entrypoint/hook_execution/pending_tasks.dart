@@ -5,7 +5,7 @@ import 'package:async/async.dart';
 import 'package:git_hooks/entrypoint/hook_execution/task_runner.dart';
 import 'package:git_hooks/models/resolved_hook.dart';
 import 'package:git_hooks/models/resolving_tasks.dart';
-import 'package:git_hooks/models/shell_script.dart';
+import 'package:git_hooks/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class PendingTasks {
@@ -16,7 +16,7 @@ class PendingTasks {
     Iterable<(ResolvingTask, TaskRunner)> tasks() sync* {
       for (final (files, command) in hook.commands) {
         final subTaskController = switch (command) {
-          ShellScript() => StreamController<int>(),
+          ShellTask() => StreamController<int>(),
           _ => null,
         };
 

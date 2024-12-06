@@ -1,17 +1,17 @@
-import 'package:git_hooks/models/hook_command.dart';
+import 'package:git_hooks/models/hook_task.dart';
 import 'package:git_hooks/utils/all_files.dart';
 
-part 'shell_script.g.dart';
+part 'shell_task.g.dart';
 
-base class ShellScript extends HookCommand {
-  const ShellScript({
+base class ShellTask extends HookTask {
+  const ShellTask({
     required super.pathPatterns,
     required this.commands,
     super.excludePatterns,
     super.name,
   });
 
-  ShellScript.always({
+  ShellTask.always({
     required this.commands,
     super.name,
   }) : super(pathPatterns: [AllFiles()]);

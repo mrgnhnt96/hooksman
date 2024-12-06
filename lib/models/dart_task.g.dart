@@ -1,14 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'shell_script.dart';
+part of 'dart_task.dart';
 
 // **************************************************************************
 // AutoequalGenerator
 // **************************************************************************
 
-extension _$ShellScriptAutoequal on ShellScript {
+extension _$DartTaskAutoequal on DartTask {
   List<Object?> get _$props => [
-        commands,
+        script,
         name,
         pathPatterns,
         excludePatterns,

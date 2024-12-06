@@ -1,8 +1,8 @@
 import 'dart:io' as io;
 
-import 'package:git_hooks/models/dart_script.dart';
+import 'package:git_hooks/models/dart_task.dart';
 import 'package:git_hooks/models/resolving_tasks.dart';
-import 'package:git_hooks/models/shell_script.dart';
+import 'package:git_hooks/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class LabelMaker {
@@ -59,8 +59,8 @@ class LabelMaker {
     }
 
     final icon = switch (command) {
-      ShellScript() => right,
-      DartScript() => loading,
+      ShellTask() => right,
+      DartTask() => loading,
       String() => loading,
       _ => '',
     };
@@ -114,7 +114,7 @@ class LabelMaker {
         continue;
       }
 
-      if (command is! ShellScript) {
+      if (command is! ShellTask) {
         continue;
       }
 
