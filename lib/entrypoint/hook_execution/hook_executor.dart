@@ -4,7 +4,7 @@ import 'package:git_hooks/entrypoint/hook_execution/label_maker.dart';
 import 'package:git_hooks/entrypoint/hook_execution/pending_tasks.dart';
 import 'package:git_hooks/models/hook.dart';
 import 'package:git_hooks/models/resolver.dart';
-import 'package:git_hooks/services/git_service.dart';
+import 'package:git_hooks/services/git/git_service.dart';
 import 'package:git_hooks/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
 
@@ -28,7 +28,10 @@ class HookExecutor {
   Future<int> run() async {
     logger.info('Running $hookName hook');
 
-    final allFiles = await gitService.getChangedFiles(hook.diff);
+    final allFiles = await gitService.diffFiles(
+      diffArgs: hook.diffArgs,
+      diffFilters: hook.diffFilters,
+    );
 
     if (allFiles == null) {
       logger.err('Could not get changed files');

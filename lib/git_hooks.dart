@@ -15,6 +15,6 @@ export 'models/hook_to_register.dart';
 export 'models/resolved_hook.dart';
 export 'models/resolver.dart';
 export 'models/shell_script.dart';
-export 'services/git_service.dart';
+export 'services/git/git_service.dart';
 export 'utils/all_files.dart';
 export 'utils/re_register_hooks.dart';

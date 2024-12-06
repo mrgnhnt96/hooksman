@@ -6,10 +6,22 @@ part 'hook.g.dart';
 class Hook extends Equatable {
   const Hook({
     required this.commands,
-    this.diff = const [],
+    this.diffArgs = const [],
+    this.diffFilters,
   });
 
-  final List<String> diff;
+  /// Defaults to ['--staged']
+  final List<String> diffArgs;
+
+  /// Defaults to 'ACMR'
+  ///
+  /// - A = Added
+  /// - C = Copied
+  /// - M = Modified
+  /// - R = Renamed
+  ///
+  /// Check out the git [docs](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-filterACDMRTUXB82308203) to view more options
+  final String? diffFilters;
   final List<HookCommand> commands;
 
   @override

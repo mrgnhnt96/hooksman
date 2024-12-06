@@ -6,7 +6,7 @@ import 'package:change_case/change_case.dart';
 import 'package:file/file.dart';
 import 'package:git_hooks/mixins/paths_mixin.dart';
 import 'package:git_hooks/models/compiler.dart';
-import 'package:git_hooks/services/git_service.dart';
+import 'package:git_hooks/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class RegisterCommand extends Command<int> with PathsMixin {
