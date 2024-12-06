@@ -31,7 +31,8 @@ mixin StashMixin {
       [
         'stash',
         'store',
-        '-m',
+        '--quiet',
+        '--message',
         _stashMessage,
         hash,
       ],
