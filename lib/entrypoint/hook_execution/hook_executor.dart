@@ -154,7 +154,7 @@ class HookExecutor {
       if (debug) await _wait(durations.short);
 
       logger.detail('deleting stash');
-      await gitService.dropBackupStash(context.stashHash);
+      await gitService.dropBackupStash();
     }
 
     logger.info('Restoring unstaged changes');
@@ -168,7 +168,7 @@ class HookExecutor {
       }
 
       logger.detail('Forcing hard reset to HEAD');
-      await gitService.restoreStash(stash);
+      await gitService.restoreStash();
 
       if (debug) await _wait(durations.long);
 
