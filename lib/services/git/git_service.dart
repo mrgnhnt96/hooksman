@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:file/file.dart';
+import 'package:git_hooks/services/git/git_context.dart';
+import 'package:git_hooks/services/git/git_context_setter.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as p;
 
@@ -385,71 +387,4 @@ class GitService {
 
     return context.toImmutable();
   }
-}
-
-abstract interface class GitContext {
-  const GitContext();
-
-  List<String> get partiallyStagedFiles;
-  List<String> get deletedFiles;
-  String? get mergeHead;
-  String? get mergeMode;
-  String? get mergeMsg;
-  String? get stashHash;
-}
-
-class GitContextSetter implements GitContext {
-  GitContextSetter();
-
-  @override
-  List<String> partiallyStagedFiles = <String>[];
-  @override
-  List<String> deletedFiles = <String>[];
-  @override
-  String? mergeHead;
-  @override
-  String? mergeMode;
-  @override
-  String? mergeMsg;
-  @override
-  String? stashHash;
-
-  bool get hasPartiallyStagedFiles => partiallyStagedFiles.isNotEmpty;
-
-  ImmutableGitContext toImmutable() {
-    return ImmutableGitContext(
-      partiallyStagedFiles: List.unmodifiable(partiallyStagedFiles),
-      deletedFiles: List.unmodifiable(deletedFiles),
-      mergeHead: mergeHead,
-      mergeMode: mergeMode,
-      mergeMsg: mergeMsg,
-      stashHash: stashHash,
-    );
-  }
-}
-
-class ImmutableGitContext implements GitContext {
-  const ImmutableGitContext({
-    required this.partiallyStagedFiles,
-    required this.deletedFiles,
-    required this.mergeHead,
-    required this.mergeMode,
-    required this.mergeMsg,
-    required this.stashHash,
-  });
-
-  @override
-  final List<String> partiallyStagedFiles;
-  @override
-  final List<String> deletedFiles;
-  @override
-  final String? mergeHead;
-  @override
-  final String? mergeMode;
-  @override
-  final String? mergeMsg;
-  @override
-  final String? stashHash;
-
-  bool get hasPartiallyStagedFiles => partiallyStagedFiles.isNotEmpty;
 }
