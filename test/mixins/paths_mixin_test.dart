@@ -87,8 +87,8 @@ void main() {
       });
 
       test(
-          'returns null when .git directory is not found in any parent directory',
-          () {
+          'returns null when .git directory is not '
+          'found in any parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
         fs.currentDirectory = subDir;
@@ -113,8 +113,8 @@ void main() {
       });
 
       test(
-          'returns the hooks directory when .git directory is found in a parent directory',
-          () {
+          'returns the hooks directory when .git directory is '
+          'found in a parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
         fs.currentDirectory = subDir;
@@ -125,8 +125,8 @@ void main() {
       });
 
       test(
-          'returns null when .git directory is not found in any parent directory',
-          () {
+          'returns null when .git directory is not '
+          'found in any parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
         fs.currentDirectory = subDir;

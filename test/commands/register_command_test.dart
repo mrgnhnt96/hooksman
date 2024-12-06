@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:git_hooks/git_hooks.dart';
-import 'package:git_hooks/models/compiler.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path/path.dart' as p;
