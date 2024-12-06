@@ -147,11 +147,6 @@ class HookExecutor {
     }
 
     Future<void> finish() async {
-      logger.detail('making sure all deleted files stay deleted');
-
-      if (debug) await _wait(durations.short);
-      await gitService.ensureDeletedFiles(context.deletedFiles);
-
       logger.detail('deleting patch');
       await gitService.deletePatch();
 
@@ -183,6 +178,12 @@ class HookExecutor {
         await gitService.restoreStash();
 
         if (debug) await _wait(durations.long);
+
+        logger.detail('making sure all deleted files stay deleted '
+            '(${context.deletedFiles.length})');
+
+        if (debug) await _wait(durations.short);
+        await gitService.ensureDeletedFiles(context.deletedFiles);
 
         await finish();
 
