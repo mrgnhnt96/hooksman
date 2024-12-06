@@ -74,20 +74,24 @@ class TaskRunner {
           ..delayed(darkGray.wrap('-- script --'))
           ..delayed(command);
 
-        final output = result.stdout as String;
-        if (output.isNotEmpty) {
-          logger
-            ..delayed('\n')
-            ..delayed(darkGray.wrap('-- output --'))
-            ..delayed(output);
+        if (result.stdout case final String out) {
+          final output = out.trim();
+          if (output.isNotEmpty) {
+            logger
+              ..delayed('\n')
+              ..delayed(darkGray.wrap('-- output --'))
+              ..delayed(output);
+          }
         }
 
-        final error = result.stderr as String;
-        if (error.isNotEmpty) {
-          logger
-            ..delayed('\n')
-            ..delayed(darkGray.wrap('-- error --'))
-            ..delayed(error);
+        if (result.stderr case final String err) {
+          final error = err.trim();
+          if (error.isNotEmpty) {
+            logger
+              ..delayed('\n')
+              ..delayed(darkGray.wrap('-- error --'))
+              ..delayed(error);
+          }
         }
         return 1;
       }

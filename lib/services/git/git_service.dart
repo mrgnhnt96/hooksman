@@ -56,7 +56,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     ]);
 
     final out = switch (result.stdout) {
-      final String files => files,
+      final String files => files.trim(),
       _ => null,
     };
 
@@ -82,7 +82,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     ]);
 
     final out = switch (result.stdout) {
-      final String files => files,
+      final String files => files.trim(),
       _ => null,
     };
 
@@ -159,7 +159,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     ]);
 
     final out = switch (result.stdout) {
-      final String files => files,
+      final String files => files.trim(),
       _ => null,
     };
 
@@ -234,7 +234,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     ]);
 
     final out = switch (result.stdout) {
-      final String files => files,
+      final String files => files.trim(),
       _ => '',
     };
 

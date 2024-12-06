@@ -15,7 +15,7 @@ mixin StashMixin {
     final result = await Process.run('git', ['stash', 'create']);
 
     final hash = switch (result.stdout) {
-      final String hash => hash,
+      final String hash => hash.trim(),
       _ => null,
     };
 
@@ -33,7 +33,7 @@ mixin StashMixin {
         'store',
         '--message',
         '"$_stashMessage"',
-        hash,
+        '"$hash"',
       ],
     );
 
