@@ -1,7 +1,7 @@
 import 'package:git_hooks/git_hooks.dart';
 
 Hook main() {
-  return Hook(
+  return DebugHook(
     commands: [
       ReRegisterHooks(),
       ShellScript(
