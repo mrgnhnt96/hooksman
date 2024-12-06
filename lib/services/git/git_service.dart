@@ -153,6 +153,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     final result = await Process.run('git', [
       'diff',
       'HEAD',
+      '--name-only',
       ...diff,
       '--diff-filter=$filters',
     ]);
