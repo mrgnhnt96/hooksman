@@ -11,7 +11,7 @@ mixin StashMixin {
   // The `stash create` command creates a dangling
   // commit without removing any files,
   // and `stash store` saves it as an actual stash.
-  Future<String?> createStash() async {
+  Future<String> createStash() async {
     final result = await Process.run('git', ['stash', 'create']);
 
     final hash = switch (result.stdout) {
@@ -23,7 +23,7 @@ mixin StashMixin {
       logger
         ..err('Failed to create stash')
         ..detail('Error: ${result.stderr}');
-      return null;
+      throw Exception('Failed to create stash');
     }
 
     final storeResult = await Process.run(
@@ -41,7 +41,7 @@ mixin StashMixin {
       logger
         ..err('Failed to store stash')
         ..detail('Error: ${storeResult.stderr}');
-      return null;
+      throw Exception('Failed to store stash');
     }
 
     return hash;
