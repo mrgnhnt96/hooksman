@@ -3,6 +3,9 @@ build_runner:
   build:
     (aliases): b
     (command): dart run build_runner build --delete-conflicting-outputs
+  clean:
+    (aliases): c
+    (command): dart run build_runner clean
   watch:
     (aliases): w
     (command): dart run build_runner watch --delete-conflicting-outputs
