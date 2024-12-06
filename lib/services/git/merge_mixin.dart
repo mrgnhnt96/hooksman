@@ -51,4 +51,14 @@ mixin MergeMixin {
   String get hiddenFilePath {
     return p.join(gitDir, _hiddenPatch);
   }
+
+  void restoreMergeStatuses({
+    required String? msg,
+    required String? mode,
+    required String? head,
+  }) {
+    mergeMsg = msg;
+    mergeMode = mode;
+    mergeHead = head;
+  }
 }

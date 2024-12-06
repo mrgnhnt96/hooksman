@@ -154,6 +154,13 @@ class HookExecutor {
       logger.detail('deleting patch');
       await gitService.deletePatch();
 
+      logger.detail('restoring merge statuses');
+      gitService.restoreMergeStatuses(
+        msg: context.mergeMsg,
+        mode: context.mergeMode,
+        head: context.mergeHead,
+      );
+
       if (debug) await _wait(durations.short);
 
       logger.detail('deleting stash');
