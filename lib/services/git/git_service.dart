@@ -310,13 +310,28 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   }
 
   Future<void> applyModifications(List<String> existing) async {
-    final changedFiles = await nonStagedFiles();
+    logger.detail('Checking for modifications');
+    final changed = await nonStagedFiles();
 
-    if (changedFiles == null || changedFiles.isEmpty) {
+    if (changed == null || changed.isEmpty) {
+      logger.detail('No files were found');
       return;
     }
 
-    final difference = existing.toSet().difference(changedFiles.toSet());
+    logger.detail('Pre-changed files: (${existing.length})');
+    for (final file in existing) {
+      logger.detail('  - $file');
+    }
+    logger.detail('Pre-changed files: (${changed.length})');
+    for (final file in changed) {
+      logger.detail('  - $file');
+    }
+
+    final difference = changed.toSet().difference(existing.toSet());
+    logger.detail('Difference: (${difference.length})');
+    for (final file in difference) {
+      logger.detail('  - $file');
+    }
 
     await add(difference.toList());
   }
