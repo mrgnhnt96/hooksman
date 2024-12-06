@@ -1,22 +1,23 @@
 import 'dart:io';
 
 import 'package:file/file.dart';
+import 'package:git_hooks/services/git/git_checks_mixin.dart';
 import 'package:git_hooks/services/git/git_context.dart';
 import 'package:git_hooks/services/git/git_context_setter.dart';
+import 'package:git_hooks/services/git/merge_mixin.dart';
+import 'package:git_hooks/services/git/stash_mixin.dart';
 import 'package:mason_logger/mason_logger.dart';
-import 'package:path/path.dart' as p;
 
-class GitService {
+class GitService with MergeMixin, GitChecksMixin, StashMixin {
   const GitService({
     required this.logger,
     required this.fs,
   });
 
+  @override
   final Logger logger;
+  @override
   final FileSystem fs;
-
-  static const stashMessage = 'stash | git_hooks';
-  static const hiddenPatch = '.git_hooks.patch';
 
   static const gitDiffArgs = [
     '--name-only',
@@ -30,6 +31,7 @@ class GitService {
     '--submodule=short', // always use the default short format for submodules
   ];
 
+  @override
   String get gitDir {
     final gitDir = Process.runSync(
       'git',
@@ -43,47 +45,6 @@ class GitService {
       final String dir => dir,
       _ => throw Exception('Failed to get git directory'),
     };
-  }
-
-  String? content(String path) {
-    final file = fs.file(path);
-
-    if (!file.existsSync()) return null;
-
-    return file.readAsStringSync();
-  }
-
-  void writeContent(String path, String? content) {
-    if (content == null) return;
-
-    fs.file(path)
-      ..createSync(recursive: true)
-      ..writeAsStringSync(content);
-  }
-
-  set mergeHead(String? content) =>
-      writeContent(p.join(gitDir, 'MERGE_HEAD'), content);
-
-  String? get mergeHead {
-    return content(p.join(gitDir, 'MERGE_HEAD'));
-  }
-
-  set mergeMode(String? content) =>
-      writeContent(p.join(gitDir, 'MERGE_MODE'), content);
-
-  String? get mergeMode {
-    return content(p.join(gitDir, 'MERGE_MODE'));
-  }
-
-  set mergeMsg(String? content) =>
-      writeContent(p.join(gitDir, 'MERGE_MSG'), content);
-
-  String? get mergeMsg {
-    return content(p.join(gitDir, 'MERGE_MSG'));
-  }
-
-  String get hiddenFilePath {
-    return p.join(gitDir, hiddenPatch);
   }
 
   Future<List<String>?> stagedFiles() async {
@@ -183,48 +144,6 @@ class GitService {
     return files;
   }
 
-  Future<bool> isGitInstalled() async {
-    final result = await Process.run('git', ['--version']);
-
-    if (result.exitCode != 0) {
-      logger
-        ..err('Git is not installed')
-        ..detail('Error: ${result.stderr}');
-      return false;
-    }
-
-    return true;
-  }
-
-  Future<bool> isGitRepository() async {
-    final result =
-        await Process.run('git', ['rev-parse', '--is-inside-work-tree']);
-
-    if (result.exitCode != 0) {
-      logger
-        ..err('Not a git repository')
-        ..detail('Error: ${result.stderr}');
-      return false;
-    }
-
-    return true;
-  }
-
-  Future<bool> hasAtLeastOneCommit() async {
-    final result = await Process.run('git', ['rev-list', '--count', 'HEAD']);
-
-    if (result.exitCode != 0) {
-      logger
-        ..err('Failed to get commit count')
-        ..detail('Error: ${result.stderr}');
-      return false;
-    }
-
-    final count = int.tryParse(result.stdout as String);
-
-    return count != null && count > 0;
-  }
-
   // Get a list of files with both staged and unstaged changes.
   // Unstaged changes to these files should be hidden before the tasks run.
   Future<List<String>> partiallyStagedFiles() async {
@@ -293,46 +212,6 @@ class GitService {
     return files;
   }
 
-// Save stash of all staged files.
-  // The `stash create` command creates a dangling
-  // commit without removing any files,
-  // and `stash store` saves it as an actual stash.
-  Future<String?> createStash() async {
-    final result = await Process.run('git', ['stash', 'create']);
-
-    final hash = switch (result.stdout) {
-      final String hash => hash,
-      _ => null,
-    };
-
-    if (hash == null) {
-      logger
-        ..err('Failed to create stash')
-        ..detail('Error: ${result.stderr}');
-      return null;
-    }
-
-    final storeResult = await Process.run(
-      'git',
-      [
-        'stash',
-        'store',
-        '-m',
-        stashMessage,
-        hash,
-      ],
-    );
-
-    if (storeResult.exitCode != 0) {
-      logger
-        ..err('Failed to store stash')
-        ..detail('Error: ${storeResult.stderr}');
-      return null;
-    }
-
-    return hash;
-  }
-
   Future<void> restoreGitFiles(
     List<String> files,
   ) async {
@@ -354,6 +233,9 @@ class GitService {
     }
   }
 
+  /// Prepare files for the task.
+  /// If [backup] is true, stash the current state of the repository.
+  /// Returns a [GitContext] object with the current state of the repository.
   Future<GitContext> prepareFiles({
     bool backup = true,
   }) async {
