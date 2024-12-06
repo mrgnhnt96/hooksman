@@ -9,6 +9,8 @@ class GitContextSetter implements GitContext {
   @override
   List<String> partiallyStagedFiles = <String>[];
   @override
+  List<String> nonStagedFiles = <String>[];
+  @override
   List<String> deletedFiles = <String>[];
   @override
   String? mergeHead;
@@ -30,6 +32,7 @@ class GitContextSetter implements GitContext {
       mergeMsg: mergeMsg,
       stashHash: stashHash,
       hidePartiallyStaged: hidePartiallyStaged,
+      nonStagedFiles: nonStagedFiles,
     );
   }
 }

@@ -142,7 +142,7 @@ class HookExecutor {
     if (hook.backupFiles) {
       logger.detail('Applying modifications');
       if (debug) await _wait(durations.short);
-      await gitService.applyModifications();
+      await gitService.applyModifications(context.nonStagedFiles);
       if (debug) await _wait(durations.long);
     }
 

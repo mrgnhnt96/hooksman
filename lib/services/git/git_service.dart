@@ -103,14 +103,9 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     }
 
     final allFiles =
-        out.split('\x00').where((element) => element.isNotEmpty).toSet();
+        out.split('\x00').where((element) => element.isNotEmpty).toList();
 
-    // filter out staged files
-    final staged = await stagedFiles();
-
-    final difference = staged?.toSet().difference(allFiles);
-
-    return difference?.toList();
+    return allFiles;
   }
 
   /// From list of files, split renames and flatten into
@@ -283,6 +278,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
         ..mergeMsg = mergeMsg
         ..deletedFiles = await getDeletedFiles()
         ..stashHash = await createStash()
+        ..nonStagedFiles = await nonStagedFiles() ?? []
         ..hidePartiallyStaged = backup;
     } catch (e) {
       logger
@@ -313,14 +309,16 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     ]);
   }
 
-  Future<void> applyModifications() async {
+  Future<void> applyModifications(List<String> existing) async {
     final changedFiles = await nonStagedFiles();
 
     if (changedFiles == null || changedFiles.isEmpty) {
       return;
     }
 
-    await add(changedFiles);
+    final difference = existing.toSet().difference(changedFiles.toSet());
+
+    await add(difference.toList());
   }
 
   Future<bool> restoreStash() async {
