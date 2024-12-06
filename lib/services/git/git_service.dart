@@ -42,7 +42,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin {
     );
 
     return switch (gitDir.stdout) {
-      final String dir => dir,
+      final String dir => dir.trim(),
       _ => throw Exception('Failed to get git directory'),
     };
   }
