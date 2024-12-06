@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:mason_logger/mason_logger.dart';
 
 mixin StashMixin {
-  static const _stashMessage = 'stash | git_hooks';
+  static const _stashMessage = '__stash__git-hooks__';
 
   Logger get logger;
 
@@ -33,7 +33,7 @@ mixin StashMixin {
         'store',
         '--quiet',
         '--message',
-        _stashMessage,
+        '"$_stashMessage"',
         hash,
       ],
     );
