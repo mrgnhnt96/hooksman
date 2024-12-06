@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file/local.dart';
 import 'package:git_hooks/entrypoint/hook_execution/hook_executor.dart';
+import 'package:git_hooks/models/debug_hook.dart';
 import 'package:git_hooks/models/hook.dart';
 import 'package:git_hooks/models/resolver.dart';
 import 'package:git_hooks/services/git/git_service.dart';
@@ -11,13 +12,11 @@ import 'package:mason_logger/mason_logger.dart';
 Future<void> executeHook(String name, Hook hook) async {
   const fs = LocalFileSystem();
 
-  final level = switch (Platform.environment['LOG_LEVEL']) {
-    'loud' || 'all' || 'verbose' => Level.verbose,
-    'info' => Level.info,
-    'warning' => Level.warning,
-    'error' => Level.error,
-    'critical' => Level.critical,
-    _ => Level.info,
+  final debug = hook is DebugHook;
+
+  final level = switch (debug) {
+    true => Level.verbose,
+    false => Level.info,
   };
 
   final logger = Logger()..level = level;
@@ -39,6 +38,7 @@ Future<void> executeHook(String name, Hook hook) async {
       logger: logger,
       gitService: gitService,
       resolver: resolver,
+      debug: debug,
     );
 
     final canRun = await executor.runChecks();

@@ -7,9 +7,9 @@ class Hook extends Equatable {
   Hook({
     required this.commands,
     this.diffArgs = const [],
+    this.allowEmpty = false,
     this.diffFilters,
     bool? backupFiles,
-    this.allowEmpty = false,
   }) : backupFiles = backupFiles ?? diffArgs.isEmpty;
 
   /// Defaults to ['--staged']

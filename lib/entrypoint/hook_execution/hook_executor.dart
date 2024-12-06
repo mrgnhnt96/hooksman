@@ -16,6 +16,7 @@ class HookExecutor {
     required this.logger,
     required this.gitService,
     required this.resolver,
+    required this.debug,
   });
 
   final Hook hook;
@@ -24,6 +25,7 @@ class HookExecutor {
   final Logger logger;
   final GitService gitService;
   final Resolver resolver;
+  final bool debug;
 
   Future<(List<String>, int?)> get allFiles async {
     final allFiles = await gitService.diffFiles(
@@ -44,6 +46,21 @@ class HookExecutor {
     return (allFiles, null);
   }
 
+  ({
+    Duration short,
+    Duration medium,
+    Duration long,
+  }) get durations => (
+        short: const Duration(milliseconds: 1000),
+        medium: const Duration(milliseconds: 2000),
+        long: const Duration(milliseconds: 5000),
+      );
+
+  Future<void> _wait(Duration duration) async {
+    logger.detail('Waiting for $duration');
+    await Future<void>.delayed(duration);
+  }
+
   Future<int> run() async {
     logger.info('Preparing files');
     final context = await gitService.prepareFiles(backup: hook.backupFiles);
@@ -53,15 +70,20 @@ class HookExecutor {
       await gitService.checkoutFiles(context.partiallyStagedFiles);
     }
 
+    if (debug) await _wait(durations.short);
+
     logger.info('Running $hookName hook');
 
     final allFilesResult = await this.allFiles;
-
     if (allFilesResult case (_, final int code)) {
       return code;
     }
     final (allFiles, _) = allFilesResult;
+    logger.detail('Found ${allFiles.length} files');
 
+    if (debug) await _wait(durations.short);
+
+    logger.detail('Resolving files');
     final resolvedHook = resolver.resolve(allFiles);
 
     final pendingTasks = PendingTasks(
@@ -80,6 +102,9 @@ class HookExecutor {
       nameOfHook: hookName,
     );
 
+    logger.detail('Starting tasks');
+    if (debug) await _wait(durations.short);
+
     final progress = MultiLineProgress(createLabel: labelMaker.create)..start();
 
     pendingTasks.start();
@@ -90,44 +115,62 @@ class HookExecutor {
       progress
         ..dispose()
         ..print();
+
+      logger.detail('Hook was killed');
       return 1;
     }
 
     await progress.closeNextFrame();
 
     logger
+      ..detail('Tasks finished')
       ..flush()
       ..write('\n');
 
     for (final task in pendingTasks.tasks) {
       if (task.code case final int code when code != 0) {
+        logger.detail('Task failed: ${task.command.name}');
         return code;
       }
     }
 
     if (hook.backupFiles) {
       logger.info('Applying modifications');
+      if (debug) await _wait(durations.short);
       await gitService.applyModifications();
+      if (debug) await _wait(durations.long);
     }
 
     Future<void> finish() async {
+      logger.detail('making sure all deleted files stay deleted');
+      if (debug) await _wait(durations.short);
       await gitService.ensureDeletedFiles(context.deletedFiles);
 
+      if (debug) await _wait(durations.long);
+
+      logger.detail('deleting patch');
       await gitService.deletePatch();
 
+      if (debug) await _wait(durations.short);
+
+      logger.detail('deleting stash');
       await gitService.dropBackupStash(context.stashHash);
     }
 
     logger.info('Restoring unstaged changes');
     if (!await gitService.restoreUnstagedChanges()) {
       logger.err('Failed to restore unstaged changes due to merge conflicts');
+      if (debug) await _wait(durations.long);
 
       final stash = context.stashHash;
       if (stash == null) {
         return 1;
       }
 
+      logger.detail('Forcing hard reset to HEAD');
       await gitService.restoreStash(stash);
+
+      if (debug) await _wait(durations.long);
 
       await finish();
 
