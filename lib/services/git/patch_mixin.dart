@@ -34,7 +34,11 @@ mixin PatchMixin {
     if (result.exitCode != 0) {
       logger
         ..err('Failed to create patch files')
-        ..detail('Error: ${result.stderr}');
+        ..detail('Error: ${result.stderr}')
+        ..detail('Files (${files.length})');
+      for (final file in files) {
+        logger.detail('  - $file');
+      }
       throw Exception('Failed to create path files');
     }
 

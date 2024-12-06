@@ -118,7 +118,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     bool includeRenameFrom = true,
   }) {
     final flattened = <String>[];
-    final renameRegExp = RegExp(' -> ');
+    final renameRegExp = RegExp('/\x00/');
 
     for (final file in files) {
       if (renameRegExp.hasMatch(file)) {
@@ -208,19 +208,16 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     }
 
     final partiallyStaged = out
-        .split('\x00')
+        .split(RegExp('\x00(?=[ AMDRCU?!])'))
         .where((line) {
           if (line.length < 2) return false;
 
           final [index, workingTree, ...] = line.split('');
 
-          // index != ' ' && workingTree != ' '
-          final isPartiallyStaged = index != ' ' && workingTree != ' ';
-
-          // index != '?' && workingTree != '?';
-          final isUntracked = index == '?' && workingTree == '?';
-
-          return isPartiallyStaged && !isUntracked;
+          return index != ' ' &&
+              workingTree != ' ' &&
+              index != '?' &&
+              workingTree != '?';
         })
         .map((line) => line.substring(3))
         .where((element) => element.isNotEmpty)
@@ -234,7 +231,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       'diff',
       'HEAD',
       '--name-only',
-      '--diff-filter=D',
+      '--diff-filter=RD',
       ...gitDiffArgs,
     ]);
 
@@ -262,7 +259,17 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
 
       if (context.partiallyStagedFiles case final partially
           when partially.isNotEmpty) {
+        logger
+            .detail('Preparing partial files for patch (${partially.length})');
+        for (final file in partially) {
+          logger.detail('  $file');
+        }
         final files = processRenames(partially);
+
+        logger.detail('Processed files (${partially.length})');
+        for (final file in files) {
+          logger.detail('  $file');
+        }
 
         logger.detail('Creating patch');
         await patch(files);
@@ -291,7 +298,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   }
 
   Future<void> checkoutFiles(List<String> files) async {
-    final processed = processRenames(files);
+    final processed = processRenames(files, includeRenameFrom: false);
 
     await Process.run('git', [
       'checkout',
@@ -380,7 +387,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     for (final path in deletedFiles) {
       final file = fs.file(path);
 
-      if (file.existsSync()) continue;
+      if (!file.existsSync()) continue;
 
       file.deleteSync();
     }
