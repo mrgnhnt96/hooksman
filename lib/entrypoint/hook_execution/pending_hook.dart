@@ -14,7 +14,7 @@ class PendingHook {
   }) {
     Iterable<(PendingTask, TaskRunner)> tasks() sync* {
       for (final task in hook.tasks) {
-        final subTaskController = StreamController<int>();
+        final subTaskController = StreamController<int>.broadcast();
 
         final resolving = PendingTask(
           files: task.files,
@@ -31,7 +31,16 @@ class PendingHook {
           task: resolving,
           files: task.files.toList(),
           logger: logger,
-          completeSubTask: subTaskController.add,
+          completeSubTask: (finished) {
+            final task = hook.tasksById[finished.id];
+
+            if (task == null) {
+              logger.err('Task ${finished.id} not found');
+              throw StateError('Task ${finished.id} not found');
+            }
+
+            subTaskController.add(task.index);
+          },
         );
 
         yield (resolving, runner);

@@ -100,7 +100,7 @@ class HookExecutor {
 
     final labelMaker = LabelMaker(
       stdout: stdout,
-      tasks: pendingTasks.tasks,
+      topLevelTasks: pendingTasks.tasks,
       nameOfHook: hookName,
       debug: debug,
     );

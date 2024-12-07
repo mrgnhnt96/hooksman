@@ -50,7 +50,7 @@ class _OneShellTask extends HookTask {
   FutureOr<int> run(
     List<String> files, {
     required void Function(String? p1) print,
-    required void Function(int p1) completeSubTask,
+    required void Function(HookTask) completeTask,
   }) async {
     final coreCommand = switch (Platform.operatingSystem) {
       'windows' => 'cmd',
@@ -91,7 +91,7 @@ class _OneShellTask extends HookTask {
       return 1;
     }
 
-    completeSubTask.call(index);
+    completeTask.call(this);
     return 0;
   }
 

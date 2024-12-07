@@ -16,7 +16,7 @@ class TaskRunner {
   final Logger logger;
   final PendingTask task;
   final List<String> files;
-  final void Function(int) completeSubTask;
+  final void Function(HookTask) completeSubTask;
 
   Future<int> run() async {
     if (files.isEmpty) {
@@ -40,7 +40,7 @@ class TaskRunner {
           return await task.run(
             files,
             print: logger.delayed,
-            completeSubTask: completeSubTask,
+            completeTask: completeSubTask,
           );
         },
         zoneSpecification: ZoneSpecification(

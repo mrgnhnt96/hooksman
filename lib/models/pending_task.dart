@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:uuid/uuid.dart';
 
@@ -41,27 +42,22 @@ class PendingTask {
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(int) completeSubTask,
+    required void Function(HookTask) completeSubTask,
   }) =>
       resolvedTask.original.run(
         files,
         print: print,
-        completeSubTask: completeSubTask,
+        completeTask: completeSubTask,
       );
 
   bool get canRun => _completer != null;
-  bool get hasCompleted => _completer?.isCompleted ?? false;
+  bool get hasCompleted =>
+      (_completer?.isCompleted ?? false) &&
+      subTasks.every((task) => task.hasCompleted);
   bool get isRunning => canRun && !hasCompleted;
-  bool get isError => code != null && code != 0;
-  bool get isHalted => code == -99;
-  bool get hasCompletedSubTasks {
-    final task = resolvedTask;
-    if (isError && !isHalted) return false;
-
-    final subTasks = task.label;
-
-    return completedTasks.length != subTasks.depth;
-  }
+  bool get isError =>
+      (code != null && code != 0) || subTasks.any((task) => task.isError);
+  bool get isHalted => code == -99 || subTasks.any((task) => task.isHalted);
 
   final completedTasks = <int>{};
 

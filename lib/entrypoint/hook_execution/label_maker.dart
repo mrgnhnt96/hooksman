@@ -1,19 +1,18 @@
 import 'dart:io' as io;
 
 import 'package:hooksman/models/pending_task.dart';
-import 'package:hooksman/models/task_label.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class LabelMaker {
   const LabelMaker({
     required io.Stdout stdout,
-    required this.tasks,
+    required this.topLevelTasks,
     required this.nameOfHook,
     this.debug = false,
   }) : _stdout = stdout;
 
   final io.Stdout _stdout;
-  final List<PendingTask> tasks;
+  final List<PendingTask> topLevelTasks;
   final String nameOfHook;
   final bool debug;
 
@@ -59,7 +58,7 @@ class LabelMaker {
     String? loading,
   ) sync* {
     yield 'Running tasks for $nameOfHook';
-    for (final task in tasks) {
+    for (final task in topLevelTasks) {
       final PendingTask(
         :resolvedTask,
         :code,
@@ -93,30 +92,28 @@ class LabelMaker {
       };
 
   String? icon(
-    TaskLabel command, // HookCommand | String
+    PendingTask task,
     int fileCount, {
     required String? loading,
-    required bool isError,
-    required bool isHalted,
   }) {
     if (fileCount == 0) {
       return yellow.wrap(down);
     }
 
-    if (isHalted) {
+    if (task.isHalted) {
       return blue.wrap(dot);
     }
 
-    if (isError) {
+    if (task.isError) {
       return red.wrap(x);
     }
 
-    // if (isComplete) {
-    //   return green.wrap(checkMark);
-    // }
+    if (task.hasCompleted) {
+      return green.wrap(checkMark);
+    }
 
-    final icon = switch (command) {
-      _ when command.hasChildren => right,
+    final icon = switch (true) {
+      _ when task.subTasks.isNotEmpty => right,
       _ => loading,
     };
 
@@ -149,11 +146,7 @@ class LabelMaker {
       '$indexString$spacing$iconString ${task.name} $fileCountString',
     );
 
-    if (!task.hasChildren) {
-      return;
-    }
-
-    if (pending.hasCompleted && pending.hasCompletedSubTasks) {
+    if (pending.hasCompleted) {
       return;
     }
 
@@ -176,7 +169,7 @@ class LabelMaker {
 
       final scriptString = switch (subTask) {
         final e when isWorking && pending.isError => red.wrap(e.name),
-        final e => e,
+        final e => e.name,
       };
 
       final indexString = getIndexString(subTask.index);

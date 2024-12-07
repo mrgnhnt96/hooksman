@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:hooksman/models/hook_task.dart';
-import 'package:hooksman/models/task_label.dart';
 import 'package:hooksman/utils/all_files.dart';
 
 part 'dart_task.g.dart';
@@ -28,19 +27,24 @@ class DartTask extends HookTask {
   final String? name;
 
   @override
-  FutureOr<int> run(
+  Future<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(int) completeSubTask,
-  }) =>
-      _run(files);
+    required void Function(HookTask) completeTask,
+  }) async {
+    try {
+      final result = await _run(files);
 
-  @override
-  TaskLabel label(Iterable<String> files, [int? index]) => TaskLabel(
-        resolvedName,
-        taskId: id,
-        fileCount: files.length,
-      );
+      completeTask(this);
+
+      return result;
+    } catch (e) {
+      print('Error when running $resolvedName');
+      print('$e');
+
+      return 1;
+    }
+  }
 
   @override
   List<Object?> get props => _$props;

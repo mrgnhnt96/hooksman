@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:hooksman/hooksman.dart';
-import 'package:hooksman/models/task_label.dart';
 
 part 'sequential_task.g.dart';
 
@@ -15,37 +14,23 @@ abstract class SequentialTask extends HookTask {
   String get name;
 
   @override
-  TaskLabel label(Iterable<String> files) {
-    return TaskLabel(
-      resolvedName,
-      taskId: id,
-      fileCount: files.length,
-      children: subTasks(files).map((task) {
-        return task.label(files);
-      }).toList(),
-    );
-  }
-
-  @override
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(int) completeSubTask,
+    required void Function(HookTask) completeTask,
   }) async {
-    var index = 0;
     for (final task in subTasks(files)) {
       final result = await task.run(
         files,
         print: print,
-        completeSubTask: completeSubTask,
+        completeTask: completeTask,
       );
 
       if (result != 0) return result;
-      index = task.label(files).length;
-      completeSubTask(index);
+      completeTask(task);
     }
 
-    completeSubTask(0);
+    completeTask(this);
 
     return 0;
   }

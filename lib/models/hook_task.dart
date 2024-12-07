@@ -23,7 +23,7 @@ abstract class HookTask extends Equatable {
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(int) completeSubTask,
+    required void Function(HookTask) completeTask,
   });
 
   List<HookTask> subTasks(Iterable<String> files) => [];
