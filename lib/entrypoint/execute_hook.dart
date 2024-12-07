@@ -5,7 +5,6 @@ import 'package:file/local.dart';
 import 'package:hooksman/entrypoint/hook_execution/hook_executor.dart';
 import 'package:hooksman/models/debug_hook.dart';
 import 'package:hooksman/models/hook.dart';
-import 'package:hooksman/models/resolver.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
@@ -25,11 +24,6 @@ Future<void> executeHook(String name, Hook hook) async {
     fs: fs,
   );
 
-  final resolver = Resolver(
-    hook: hook,
-    fs: fs,
-  );
-
   try {
     final executor = HookExecutor(
       hook,
@@ -37,7 +31,6 @@ Future<void> executeHook(String name, Hook hook) async {
       hookName: name,
       logger: logger,
       gitService: gitService,
-      resolver: resolver,
       debug: debug,
     );
 

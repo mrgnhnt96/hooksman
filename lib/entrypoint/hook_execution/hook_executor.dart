@@ -3,7 +3,6 @@ import 'dart:io' as io;
 import 'package:hooksman/entrypoint/hook_execution/label_maker.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_tasks.dart';
 import 'package:hooksman/models/hook.dart';
-import 'package:hooksman/models/resolver.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:hooksman/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
@@ -15,7 +14,6 @@ class HookExecutor {
     required this.hookName,
     required this.logger,
     required this.gitService,
-    required this.resolver,
     required this.debug,
   });
 
@@ -24,7 +22,6 @@ class HookExecutor {
   final String hookName;
   final Logger logger;
   final GitService gitService;
-  final Resolver resolver;
   final bool debug;
 
   Future<(List<String>, int?)> get allFiles async {
@@ -75,10 +72,9 @@ class HookExecutor {
     if (debug) await _wait(durations.short);
 
     logger.detail('Resolving files');
-    final resolvedHook = resolver.resolve(allFiles);
 
     final pendingTasks = PendingTasks(
-      resolvedHook,
+      hook.resolve(allFiles),
       logger: logger,
     );
 
@@ -135,7 +131,8 @@ class HookExecutor {
       for (final task in pendingTasks.tasks) {
         if (task.code case final int code when code != 0) {
           logger.detail(
-              'Task failed: ${task.resolvedTask.original.resolvedName}');
+            'Task failed: ${task.resolvedTask.original.resolvedName}',
+          );
           return code;
         }
       }

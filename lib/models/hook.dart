@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/hooksman.dart';
 
 part 'hook.g.dart';
 
@@ -34,6 +34,19 @@ class Hook extends Equatable {
   /// If true, the hook will exit successfully even if
   /// there are no files after the tasks have run
   final bool allowEmpty;
+
+  ResolvedHook resolve(List<String> files) {
+    final resolvedTasks = tasks.indexed.expand((e) {
+      final (index, task) = e;
+
+      return task.resolve(files, index);
+    }).toList();
+
+    return ResolvedHook(
+      files: files,
+      tasks: resolvedTasks,
+    );
+  }
 
   @override
   List<Object?> get props => _$props;
