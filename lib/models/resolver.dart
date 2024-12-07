@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:file/file.dart';
 import 'package:hooksman/models/hook.dart';
-import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/resolved_hook.dart';
+import 'package:hooksman/models/resolved_hook_task.dart';
 
 part 'resolver.g.dart';
 
@@ -16,27 +16,22 @@ class Resolver extends Equatable {
   final FileSystem fs;
 
   ResolvedHook resolve(Iterable<String> files) {
-    Iterable<String> filesFor(HookTask command) sync* {
-      for (final file in files) {
-        if (command.exclude.any((e) => e.allMatches(file).isNotEmpty)) {
-          continue;
-        }
+    Iterable<ResolvedHookTask> commands() sync* {
+      for (final task in hook.tasks) {
+        final filtered = task.filterFiles(files);
 
-        if (command.include.any((e) => e.allMatches(file).isNotEmpty)) {
-          yield file;
-        }
-      }
-    }
-
-    Iterable<(Iterable<String>, HookTask)> commands() sync* {
-      for (final command in hook.commands) {
-        yield (filesFor(command).toList(), command);
+        yield ResolvedHookTask(
+          files: filtered.toList(),
+          original: task,
+          index: hook.tasks.indexOf(task),
+          label: task.label(filtered),
+        );
       }
     }
 
     return ResolvedHook(
       files: files.toList(),
-      commands: commands().toList(),
+      tasks: commands().toList(),
     );
   }
 

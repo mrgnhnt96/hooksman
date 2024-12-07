@@ -134,7 +134,8 @@ class HookExecutor {
 
       for (final task in pendingTasks.tasks) {
         if (task.code case final int code when code != 0) {
-          logger.detail('Task failed: ${task.command.name}');
+          logger.detail(
+              'Task failed: ${task.resolvedTask.original.resolvedName}');
           return code;
         }
       }

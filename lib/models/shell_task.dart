@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/models/task_label.dart';
 import 'package:hooksman/utils/all_files.dart';
 import 'package:mason_logger/mason_logger.dart';
 
@@ -26,9 +27,16 @@ class ShellTask extends HookTask {
   final ShellCommands _commands;
 
   @override
-  CommandLabel label(Iterable<String> files) => CommandLabel(
+  TaskLabel label(Iterable<String> files, [int? index]) => TaskLabel(
         resolvedName,
-        children: _commands(files).map(CommandLabel.new).toList(),
+        fileCount: files.length,
+        children: _commands(files).indexed.map((e) {
+          final (i, file) = e;
+          return TaskLabel(
+            file,
+            fileCount: files.length,
+          );
+        }).toList(),
       );
 
   @override

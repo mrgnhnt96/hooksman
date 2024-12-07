@@ -13,28 +13,28 @@ class PendingTasks {
     required Logger logger,
   }) {
     Iterable<(ResolvingTask, TaskRunner)> tasks() sync* {
-      for (final (files, command) in hook.commands) {
+      for (final task in hook.tasks) {
         final subTaskController = StreamController<int>();
 
-        final task = ResolvingTask(
-          files: files,
-          command: command,
+        final resolving = ResolvingTask(
+          files: task.files,
+          resolvedTask: task,
           subTaskController: subTaskController,
-          completer: switch (files.length) {
+          completer: switch (task.files.length) {
             0 => null,
             _ => Completer<int>(),
           },
         );
 
         final runner = TaskRunner(
-          taskId: task.id,
-          task: command,
-          files: files.toList(),
+          taskId: resolving.id,
+          task: resolving,
+          files: task.files.toList(),
           logger: logger,
           completeSubTask: subTaskController.add,
         );
 
-        yield (task, runner);
+        yield (resolving, runner);
       }
     }
 

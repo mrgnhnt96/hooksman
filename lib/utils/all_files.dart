@@ -12,4 +12,7 @@ class AllFiles implements Pattern {
   Match? matchAsPrefix(String string, [int start = 0]) {
     return _pattern.matchAsPrefix(string, start);
   }
+
+  @override
+  String toString() => 'all files';
 }

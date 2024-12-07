@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:glob/glob.dart';
+import 'package:hooksman/models/task_label.dart';
 
 part 'hook_task.g.dart';
 
@@ -33,41 +34,24 @@ abstract class HookTask extends Equatable {
           }).join(', '),
       };
 
-  CommandLabel label(Iterable<String> files);
+  TaskLabel label(Iterable<String> files);
+
+  List<String> filterFiles(Iterable<String> files) {
+    Iterable<String> filesFor(Iterable<String> files) sync* {
+      for (final file in files) {
+        if (exclude.any((e) => e.allMatches(file).isNotEmpty)) {
+          continue;
+        }
+
+        if (include.any((e) => e.allMatches(file).isNotEmpty)) {
+          yield file;
+        }
+      }
+    }
+
+    return filesFor(files).toList();
+  }
 
   @override
   List<Object?> get props => _$props;
-}
-
-class CommandLabel {
-  const CommandLabel(
-    this.name, {
-    this.children = const [],
-  });
-
-  final String name;
-  final List<CommandLabel> children;
-
-  bool get hasChildren => children.isNotEmpty;
-
-  int get length {
-    if (!hasChildren) {
-      return 1;
-    }
-
-    return children.length;
-  }
-
-  int get depth {
-    if (!hasChildren) {
-      return 1;
-    }
-
-    return children
-        .map((e) => e.depth)
-        .reduce((value, element) => value > element ? value : element);
-  }
-
-  @override
-  String toString() => name;
 }

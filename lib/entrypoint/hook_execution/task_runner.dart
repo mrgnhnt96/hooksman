@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:hooksman/models/dart_task.dart';
-import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/hooksman.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class TaskRunner {
@@ -15,7 +14,7 @@ class TaskRunner {
 
   final String taskId;
   final Logger logger;
-  final HookTask task;
+  final ResolvingTask task;
   final List<String> files;
   final void Function(int) completeSubTask;
 

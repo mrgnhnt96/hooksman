@@ -69,6 +69,10 @@ class MultiLineProgress {
   }
 
   Future<void> closeNextFrame() async {
+    if (!_running) {
+      return;
+    }
+
     await Future<void>.delayed(const Duration(milliseconds: 80));
 
     dispose();

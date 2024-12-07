@@ -1,21 +1,18 @@
 import 'dart:async';
 
-import 'package:hooksman/models/hook_task.dart';
-import 'package:hooksman/models/shell_task.dart';
+import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:uuid/uuid.dart';
 
 class ResolvingTask {
   ResolvingTask({
     required this.files,
-    required this.command,
+    required this.resolvedTask,
     required Completer<int>? completer,
     required StreamController<int>? subTaskController,
   })  : _completer = completer,
         _subTaskController = subTaskController,
         id = const Uuid().v4() {
-    _listener = _subTaskController?.stream.listen((index) {
-      completedSubTaskIndex = index;
-    });
+    _listener = _subTaskController?.stream.listen(completedTasks.add);
   }
 
   StreamSubscription<int>? _listener;
@@ -24,7 +21,20 @@ class ResolvingTask {
   final Iterable<String> files;
   final Completer<int>? _completer;
   final StreamController<int>? _subTaskController;
-  final HookTask command;
+  final ResolvedHookTask resolvedTask;
+
+  String get name => resolvedTask.label.name;
+
+  FutureOr<int> run(
+    List<String> files, {
+    required void Function(String?) print,
+    required void Function(int) completeSubTask,
+  }) =>
+      resolvedTask.original.run(
+        files,
+        print: print,
+        completeSubTask: completeSubTask,
+      );
 
   bool get canRun => _completer != null;
   bool get hasCompleted => _completer?.isCompleted ?? false;
@@ -32,32 +42,15 @@ class ResolvingTask {
   bool get isError => code != null && code != 0;
   bool get isHalted => code == -99;
   bool get hasCompletedSubTasks {
-    final task = command;
-    if (task is! ShellTask) return true;
+    final task = resolvedTask;
     if (isError && !isHalted) return false;
 
-    final subTasks = task.label(files);
+    final subTasks = task.label;
 
-    if (subTasks.children.isEmpty) return true;
-
-    Iterable<int> childLength(CommandLabel label) sync* {
-      if (label.children.isEmpty) {
-        yield 1;
-        return;
-      }
-
-      for (final child in label.children) {
-        yield* childLength(child);
-      }
-    }
-
-    final length =
-        childLength(subTasks).reduce((value, element) => value + element);
-
-    return completedSubTaskIndex != length;
+    return completedTasks.length != subTasks.depth;
   }
 
-  int? completedSubTaskIndex;
+  final completedTasks = <int>{};
 
   Future<int>? get future => _completer?.future;
 

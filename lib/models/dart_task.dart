@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/models/task_label.dart';
 import 'package:hooksman/utils/all_files.dart';
 
 part 'dart_task.g.dart';
@@ -32,7 +33,10 @@ class DartTask extends HookTask {
       _run(files);
 
   @override
-  CommandLabel label(Iterable<String> files) => CommandLabel(resolvedName);
+  TaskLabel label(Iterable<String> files, [int? index]) => TaskLabel(
+        resolvedName,
+        fileCount: files.length,
+      );
 
   @override
   List<Object?> get props => _$props;

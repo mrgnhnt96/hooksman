@@ -352,17 +352,22 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       return;
     }
 
-    logger.detail('Pre-changed files: (${existing.length})');
+    logger.detail('Pre-Task files: (${existing.length})');
     for (final file in existing) {
       logger.detail('  - $file');
     }
-    logger.detail('Pre-changed files: (${changed.length})');
+    logger.detail('Post-Task files: (${changed.length})');
     for (final file in changed) {
       logger.detail('  - $file');
     }
 
     final difference = changed.toSet().difference(existing.toSet());
-    logger.detail('Difference: (${difference.length})');
+    if (difference.isEmpty) {
+      logger.detail('No files to add to commit');
+      return;
+    }
+
+    logger.detail('Found ${difference.length} files to add to commit');
     for (final file in difference) {
       logger.detail('  - $file');
     }
