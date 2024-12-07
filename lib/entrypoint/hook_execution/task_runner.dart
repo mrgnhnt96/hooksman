@@ -58,9 +58,14 @@ class TaskRunner {
   }
 
   Future<int> runShell(ShellTask task) async {
+    final coreCommand = switch (Platform.operatingSystem) {
+      'windows' => 'cmd',
+      _ => 'bash',
+    };
+
     for (final (index, command) in task.commands(files).indexed) {
       final result = await Process.run(
-        'bash',
+        coreCommand,
         [
           '-c',
           command,
