@@ -1,11 +1,11 @@
 import 'dart:io' as io;
 
-import 'package:git_hooks/entrypoint/hook_execution/label_maker.dart';
-import 'package:git_hooks/entrypoint/hook_execution/pending_tasks.dart';
-import 'package:git_hooks/models/hook.dart';
-import 'package:git_hooks/models/resolver.dart';
-import 'package:git_hooks/services/git/git_service.dart';
-import 'package:git_hooks/utils/multi_line_progress.dart';
+import 'package:hooksman/entrypoint/hook_execution/label_maker.dart';
+import 'package:hooksman/entrypoint/hook_execution/pending_tasks.dart';
+import 'package:hooksman/models/hook.dart';
+import 'package:hooksman/models/resolver.dart';
+import 'package:hooksman/services/git/git_service.dart';
+import 'package:hooksman/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class HookExecutor {

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:git_hooks/models/dart_task.dart';
-import 'package:git_hooks/models/hook_task.dart';
-import 'package:git_hooks/models/shell_task.dart';
+import 'package:hooksman/models/dart_task.dart';
+import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class TaskRunner {

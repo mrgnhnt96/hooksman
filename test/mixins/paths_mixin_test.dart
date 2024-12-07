@@ -1,6 +1,6 @@
 import 'package:file/memory.dart';
 import 'package:file/src/interface/file_system.dart';
-import 'package:git_hooks/mixins/paths_mixin.dart';
+import 'package:hooksman/mixins/paths_mixin.dart';
 import 'package:mason_logger/src/mason_logger.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';

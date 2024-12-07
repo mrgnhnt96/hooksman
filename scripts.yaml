@@ -1,3 +1,4 @@
+hooks: dart run hooksman register
 build_runner:
   (aliases): br
   build:

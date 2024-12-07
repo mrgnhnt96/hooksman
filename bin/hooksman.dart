@@ -1,7 +1,7 @@
 import 'package:file/local.dart';
-import 'package:git_hooks/commands/git_hook_runner.dart';
-import 'package:git_hooks/models/compiler.dart';
-import 'package:git_hooks/services/git/git_service.dart';
+import 'package:hooksman/commands/git_hook_runner.dart';
+import 'package:hooksman/models/compiler.dart';
+import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 Future<int> main(List<String> providedArgs) async {

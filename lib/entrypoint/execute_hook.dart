@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file/local.dart';
-import 'package:git_hooks/entrypoint/hook_execution/hook_executor.dart';
-import 'package:git_hooks/models/debug_hook.dart';
-import 'package:git_hooks/models/hook.dart';
-import 'package:git_hooks/models/resolver.dart';
-import 'package:git_hooks/services/git/git_service.dart';
+import 'package:hooksman/entrypoint/hook_execution/hook_executor.dart';
+import 'package:hooksman/models/debug_hook.dart';
+import 'package:hooksman/models/hook.dart';
+import 'package:hooksman/models/resolver.dart';
+import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 Future<void> executeHook(String name, Hook hook) async {

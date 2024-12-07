@@ -1,5 +1,5 @@
-import 'package:git_hooks/services/git/git_context.dart';
-import 'package:git_hooks/services/git/immutable_git_context.dart';
+import 'package:hooksman/services/git/git_context.dart';
+import 'package:hooksman/services/git/immutable_git_context.dart';
 
 class GitContextSetter implements GitContext {
   GitContextSetter();

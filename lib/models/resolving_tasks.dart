@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:git_hooks/models/hook_task.dart';
-import 'package:git_hooks/models/shell_task.dart';
+import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/models/shell_task.dart';
 import 'package:uuid/uuid.dart';
 
 class ResolvingTask {

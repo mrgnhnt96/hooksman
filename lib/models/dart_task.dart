@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:git_hooks/models/hook_task.dart';
-import 'package:git_hooks/utils/all_files.dart';
+import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/utils/all_files.dart';
 
 part 'dart_task.g.dart';
 

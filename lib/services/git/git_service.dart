@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:file/file.dart';
-import 'package:git_hooks/services/git/git_checks_mixin.dart';
-import 'package:git_hooks/services/git/git_context.dart';
-import 'package:git_hooks/services/git/git_context_setter.dart';
-import 'package:git_hooks/services/git/merge_mixin.dart';
-import 'package:git_hooks/services/git/patch_mixin.dart';
-import 'package:git_hooks/services/git/stash_mixin.dart';
+import 'package:hooksman/services/git/git_checks_mixin.dart';
+import 'package:hooksman/services/git/git_context.dart';
+import 'package:hooksman/services/git/git_context_setter.dart';
+import 'package:hooksman/services/git/merge_mixin.dart';
+import 'package:hooksman/services/git/patch_mixin.dart';
+import 'package:hooksman/services/git/stash_mixin.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {

@@ -1,8 +1,8 @@
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
-import 'package:git_hooks/models/hook.dart';
-import 'package:git_hooks/models/hook_task.dart';
-import 'package:git_hooks/models/resolver.dart';
+import 'package:hooksman/models/hook.dart';
+import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/models/resolver.dart';
 import 'package:test/test.dart';
 
 void main() {

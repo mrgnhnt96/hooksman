@@ -28,6 +28,7 @@ export 'services/git/git_context_setter.dart';
 export 'services/git/git_service.dart';
 export 'services/git/immutable_git_context.dart';
 export 'services/git/merge_mixin.dart';
+export 'services/git/patch_mixin.dart';
 export 'services/git/stash_mixin.dart';
 export 'tasks/re_register_hooks.dart';
 export 'utils/all_files.dart';

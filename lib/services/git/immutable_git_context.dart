@@ -1,4 +1,4 @@
-import 'package:git_hooks/services/git/git_context.dart';
+import 'package:hooksman/services/git/git_context.dart';
 
 class ImmutableGitContext implements GitContext {
   ImmutableGitContext({

@@ -5,7 +5,7 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as p;
 
 mixin PatchMixin {
-  static const _patch = 'git_hooks.patch';
+  static const _patch = 'hooksman.patch';
 
   String get gitDir;
   List<String> get gitDiffArgs;

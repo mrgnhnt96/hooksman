@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:args/command_runner.dart';
 import 'package:change_case/change_case.dart';
 import 'package:file/file.dart';
-import 'package:git_hooks/mixins/paths_mixin.dart';
-import 'package:git_hooks/models/compiler.dart';
-import 'package:git_hooks/services/git/git_service.dart';
+import 'package:hooksman/mixins/paths_mixin.dart';
+import 'package:hooksman/models/compiler.dart';
+import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class RegisterCommand extends Command<int> with PathsMixin {
@@ -73,7 +73,7 @@ class RegisterCommand extends Command<int> with PathsMixin {
           fs.path.basenameWithoutExtension(hook.path).toParamCase();
 
       final content = '''
-import 'package:git_hooks/git_hooks.dart';
+import 'package:hooksman/hooksman.dart';
 
 import '$relativePath' as hook;
 

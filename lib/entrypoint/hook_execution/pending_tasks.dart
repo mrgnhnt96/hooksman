@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'package:git_hooks/entrypoint/hook_execution/task_runner.dart';
-import 'package:git_hooks/models/resolved_hook.dart';
-import 'package:git_hooks/models/resolving_tasks.dart';
-import 'package:git_hooks/models/shell_task.dart';
+import 'package:hooksman/entrypoint/hook_execution/task_runner.dart';
+import 'package:hooksman/models/resolved_hook.dart';
+import 'package:hooksman/models/resolving_tasks.dart';
+import 'package:hooksman/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class PendingTasks {

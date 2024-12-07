@@ -11,7 +11,7 @@ defaults:
 
 dirs:
   - path: lib
-    name: git_hooks
+    name: hooksman
     exports:
       - export: package:glob/glob.dart
     include:

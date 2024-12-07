@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:file/file.dart';
-import 'package:git_hooks/models/hook.dart';
-import 'package:git_hooks/models/hook_task.dart';
-import 'package:git_hooks/models/resolved_hook.dart';
+import 'package:hooksman/models/hook.dart';
+import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/models/resolved_hook.dart';
 
 part 'resolver.g.dart';
 

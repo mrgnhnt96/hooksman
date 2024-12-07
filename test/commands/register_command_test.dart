@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
-import 'package:git_hooks/git_hooks.dart';
+import 'package:hooksman/commands/register_command.dart';
+import 'package:hooksman/models/compiler.dart';
+import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path/path.dart' as p;
@@ -95,7 +97,7 @@ void main() {
           ];
 
           final hooksDartToolDir =
-              fs.directory(p.join('.dart_tool', 'git_hooks'));
+              fs.directory(p.join('.dart_tool', 'hooksman'));
 
           command
               .prepareExecutables(
@@ -109,8 +111,8 @@ void main() {
           expect(
             hooksDartToolDir.listSync().map((e) => e.path),
             unorderedEquals([
-              p.join('.dart_tool', 'git_hooks', 'pre-commit.dart'),
-              p.join('.dart_tool', 'git_hooks', 'post-commit.dart'),
+              p.join('.dart_tool', 'hooksman', 'pre-commit.dart'),
+              p.join('.dart_tool', 'hooksman', 'post-commit.dart'),
             ]),
           );
         });
@@ -119,7 +121,7 @@ void main() {
           final command = cmd();
 
           final hooksDartToolDir =
-              fs.directory(p.join('.dart_tool', 'git_hooks'));
+              fs.directory(p.join('.dart_tool', 'hooksman'));
 
           command.prepareExecutables(
             [fs.file(p.join('hooks', 'pre_commit.dart'))],
@@ -128,11 +130,11 @@ void main() {
           ).toList();
 
           final content = await fs
-              .file(p.join('.dart_tool', 'git_hooks', 'pre_commit.dart'))
+              .file(p.join('.dart_tool', 'hooksman', 'pre_commit.dart'))
               .readAsLines();
 
           expect(content, [
-            "import 'package:git_hooks/git_hooks.dart';",
+            "import 'package:hooksman/hooksman.dart';",
             '',
             "import '../../hooks/pre_commit.dart' as hook;",
             '',
@@ -253,8 +255,8 @@ void main() {
         fs.directory('executables').createSync(recursive: true);
 
         final executables = [
-          fs.file(p.join('.dart_tool', 'git_hooks', 'execs', 'pre-commit')),
-          fs.file(p.join('.dart_tool', 'git_hooks', 'execs', 'pre-push')),
+          fs.file(p.join('.dart_tool', 'hooksman', 'execs', 'pre-commit')),
+          fs.file(p.join('.dart_tool', 'hooksman', 'execs', 'pre-push')),
         ];
 
         for (final exe in executables) {
