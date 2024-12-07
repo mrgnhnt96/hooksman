@@ -58,6 +58,38 @@ void main() {
       });
     });
 
+    group('#setHooksPath', () {
+      test('should return 1 when git.setHooksDir fails', () async {
+        when(() => git.setHooksDir()).thenAnswer((_) async => false);
+
+        final command = cmd();
+        final result = await command.setHooksPath();
+
+        expect(result, 1);
+        verify(() => logger.err('Could not set hooks path')).called(1);
+      });
+
+      test('should return 1 and log error when exception is thrown', () async {
+        when(() => git.setHooksDir()).thenThrow(Exception('error'));
+
+        final command = cmd();
+        final result = await command.setHooksPath();
+
+        expect(result, 1);
+        verify(() => logger.err('Could not set hooks path')).called(1);
+        verify(() => logger.detail('Exception: error')).called(1);
+      });
+
+      test('should return null when git.setHooksDir succeeds', () async {
+        when(() => git.setHooksDir()).thenAnswer((_) async => true);
+
+        final command = cmd();
+        final result = await command.setHooksPath();
+
+        expect(result, isNull);
+      });
+    });
+
     group('#prepareExecutables', () {
       test('should return an empty iterable when no hooks are defined',
           () async {

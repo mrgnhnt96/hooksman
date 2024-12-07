@@ -145,8 +145,29 @@ void main() {
     return executables;
   }
 
+  Future<int?> setHooksPath() async {
+    try {
+      final success = await git.setHooksDir();
+
+      if (!success) {
+        throw Exception('Could not set hooks path');
+      }
+    } catch (e) {
+      logger
+        ..err('Could not set hooks path')
+        ..detail(e.toString());
+      return 1;
+    }
+
+    return null;
+  }
+
   @override
   FutureOr<int>? run() async {
+    if (await setHooksPath() case final int code) {
+      return code;
+    }
+
     final root = this.root;
     if (root == null) {
       logger.err('Could not find root directory');

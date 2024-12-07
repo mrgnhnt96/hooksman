@@ -56,6 +56,33 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     };
   }
 
+  Future<bool> setHooksDir() async {
+    final gitDir = this.gitDir;
+
+    final hooksDir = fs.directory(fs.path.join(gitDir, 'hooks'));
+
+    if (!hooksDir.existsSync()) {
+      hooksDir.createSync(recursive: true);
+    }
+
+    final result = await Process.run('git', [
+      'config',
+      '--local',
+      'core.hooksPath',
+      hooksDir.path,
+    ]);
+
+    if (result.exitCode != 0) {
+      logger
+        ..err('Failed to set hooks directory')
+        ..detail('Error: ${result.stderr}');
+
+      return false;
+    }
+
+    return true;
+  }
+
   Future<List<String>?> stagedFiles() async {
     final result = await Process.run('git', [
       'diff',
