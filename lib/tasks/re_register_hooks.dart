@@ -1,5 +1,5 @@
 import 'package:glob/glob.dart';
-import 'package:hooksman/models/shell_task.dart';
+import 'package:hooksman/tasks/shell_task.dart';
 
 final class ReRegisterHooks extends ShellTask {
   ReRegisterHooks({String? pathToHooksDir})
