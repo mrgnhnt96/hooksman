@@ -20,7 +20,7 @@ export 'models/hook_task.dart';
 export 'models/hook_to_register.dart';
 export 'models/resolved_hook.dart';
 export 'models/resolver.dart';
-export 'models/resolving_tasks.dart';
+export 'models/resolving_task.dart';
 export 'models/sequential_task.dart';
 export 'models/shell_task.dart';
 export 'services/git/git_checks_mixin.dart';

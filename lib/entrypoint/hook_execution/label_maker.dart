@@ -1,6 +1,6 @@
 import 'dart:io' as io;
 
-import 'package:hooksman/models/resolving_tasks.dart';
+import 'package:hooksman/models/resolving_task.dart';
 import 'package:hooksman/models/task_label.dart';
 import 'package:mason_logger/mason_logger.dart';
 

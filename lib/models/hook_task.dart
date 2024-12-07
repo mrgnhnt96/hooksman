@@ -16,6 +16,7 @@ abstract class HookTask extends Equatable {
   final String? name;
   final List<Pattern> include;
   final List<Pattern> exclude;
+
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
