@@ -5,6 +5,7 @@ import 'package:file/memory.dart';
 import 'package:hooksman/models/hook.dart';
 import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/resolver.dart';
+import 'package:hooksman/models/task_label.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -38,13 +39,13 @@ void main() {
       expect(result.files, ['lib/main.dart', 'README.md']);
       expect(result.tasks, hasLength(2));
 
-      final (files1, command1) = result.tasks[0];
-      expect(files1, ['lib/main.dart']);
-      expect(command1, hook.tasks[0]);
+      final resolved1 = result.tasks[0];
+      expect(resolved1.files, ['lib/main.dart']);
+      expect(resolved1.original, hook.tasks[0]);
 
-      final (files2, command2) = result.tasks[1];
-      expect(files2, ['README.md']);
-      expect(command2, hook.tasks[1]);
+      final resolved2 = result.tasks[1];
+      expect(resolved2.files, ['README.md']);
+      expect(resolved2.original, hook.tasks[1]);
     });
 
     test('resolves commands when no files match', () {
@@ -61,9 +62,9 @@ void main() {
 
       expect(result.files, ['README.md']);
       expect(result.tasks, hasLength(1));
-      final (files, command) = result.tasks.single;
-      expect(files, isEmpty);
-      expect(command, hook.tasks.first);
+      final resolved = result.tasks.single;
+      expect(resolved.files, isEmpty);
+      expect(resolved.original, hook.tasks.first);
     });
 
     test('resolves commands with multiple matching files', () {
@@ -82,9 +83,9 @@ void main() {
       expect(result.files, ['lib/main.dart', 'lib/utils.dart']);
       expect(result.tasks, hasLength(1));
 
-      final (files, command) = result.tasks.single;
-      expect(files, ['lib/main.dart', 'lib/utils.dart']);
-      expect(command, hook.tasks.first);
+      final resolved = result.tasks.single;
+      expect(resolved.files, ['lib/main.dart', 'lib/utils.dart']);
+      expect(resolved.original, hook.tasks.first);
     });
 
     test('resolves commands with multiple patterns', () {
@@ -102,9 +103,9 @@ void main() {
       expect(result.files, ['lib/main.dart', 'README.md']);
       expect(result.tasks, hasLength(1));
 
-      final (files, command) = result.tasks.single;
-      expect(files, ['lib/main.dart', 'README.md']);
-      expect(command, hook.tasks.first);
+      final resolved = result.tasks.single;
+      expect(resolved.files, ['lib/main.dart', 'README.md']);
+      expect(resolved.original, hook.tasks.first);
     });
 
     test('excludes files matching exclude patterns', () {
@@ -124,9 +125,9 @@ void main() {
       expect(result.files, ['lib/main.dart', 'lib/main.g.dart']);
       expect(result.tasks, hasLength(1));
 
-      final (files, command) = result.tasks.single;
-      expect(files, ['lib/main.dart']);
-      expect(command, hook.tasks.first);
+      final resolved = result.tasks.single;
+      expect(resolved.files, ['lib/main.dart']);
+      expect(resolved.original, hook.tasks.first);
     });
 
     test('excludes files matching multiple exclude patterns', () {
@@ -153,9 +154,9 @@ void main() {
       );
       expect(result.tasks, hasLength(1));
 
-      final (files, command) = result.tasks.single;
-      expect(files, ['lib/main.dart']);
-      expect(command, hook.tasks.first);
+      final resolved = result.tasks.single;
+      expect(resolved.files, ['lib/main.dart']);
+      expect(resolved.original, hook.tasks.first);
     });
   });
 }
