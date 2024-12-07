@@ -24,15 +24,18 @@ class ShellTask extends SequentialTask {
   @override
   List<HookTask> tasks(Iterable<String> files) => [
         for (final (index, command) in _commands(files).indexed)
-          _ShellTask(
+          _OneShellTask(
             command: command,
             index: index,
           ),
       ];
+
+  @override
+  List<Object?> get props => _$props;
 }
 
-class _ShellTask extends HookTask {
-  _ShellTask({
+class _OneShellTask extends HookTask {
+  _OneShellTask({
     required this.command,
     required this.index,
   }) : super(include: [AllFiles()]);
@@ -91,4 +94,7 @@ class _ShellTask extends HookTask {
     completeSubTask.call(index);
     return 0;
   }
+
+  @override
+  List<Object?> get props => _$props;
 }

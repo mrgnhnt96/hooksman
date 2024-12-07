@@ -10,6 +10,7 @@ extension _$DartTaskAutoequal on DartTask {
   List<Object?> get _$props => [
         _run,
         name,
+        id,
         include,
         exclude,
       ];

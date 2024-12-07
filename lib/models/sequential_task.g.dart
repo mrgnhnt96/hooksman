@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'hook_task.dart';
+part of 'sequential_task.dart';
 
 // **************************************************************************
 // AutoequalGenerator
 // **************************************************************************
 
-extension _$HookTaskAutoequal on HookTask {
+extension _$SequentialTaskAutoequal on SequentialTask {
   List<Object?> get _$props => [
         id,
         include,

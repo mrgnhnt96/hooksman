@@ -9,6 +9,6 @@ part of 'resolved_hook.dart';
 extension _$ResolvedHookAutoequal on ResolvedHook {
   List<Object?> get _$props => [
         files,
-        commands,
+        tasks,
       ];
 }

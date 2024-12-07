@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:hooksman/hooksman.dart';
 import 'package:hooksman/models/task_label.dart';
 
+part 'sequential_task.g.dart';
+
 abstract class SequentialTask extends HookTask {
   SequentialTask({
     required super.include,
@@ -48,4 +50,7 @@ abstract class SequentialTask extends HookTask {
 
     return 0;
   }
+
+  @override
+  List<Object?> get props => _$props;
 }

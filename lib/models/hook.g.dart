@@ -10,7 +10,7 @@ extension _$HookAutoequal on Hook {
   List<Object?> get _$props => [
         diffArgs,
         diffFilters,
-        commands,
+        tasks,
         backupFiles,
         allowEmpty,
       ];
