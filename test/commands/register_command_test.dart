@@ -94,7 +94,7 @@ void main() {
       test('should return an empty iterable when no hooks are defined',
           () async {
         final command = cmd();
-        final definedHooks = <File>[];
+        final definedHooks = <String>[];
         final hooksDartToolDir = fs.directory('hooks_dart_tool');
         final executablesDir = fs.directory('executables');
 
@@ -124,8 +124,8 @@ void main() {
           final command = cmd();
 
           final definedHooks = [
-            fs.file('pre-commit.dart'),
-            fs.file('post-commit.dart'),
+            'pre-commit.dart',
+            'post-commit.dart',
           ];
 
           final hooksDartToolDir =
@@ -156,7 +156,7 @@ void main() {
               fs.directory(p.join('.dart_tool', 'hooksman'));
 
           command.prepareExecutables(
-            [fs.file(p.join('hooks', 'pre_commit.dart'))],
+            [p.join('hooks', 'pre_commit.dart')],
             hooksDartToolDir: hooksDartToolDir,
             executablesDir: fs.directory('executables'),
           ).toList();
@@ -181,8 +181,8 @@ void main() {
           final command = cmd();
 
           final definedHooks = [
-            fs.file('dart_file1.dart'),
-            fs.file('dart_file2.dart'),
+            'dart_file1.dart',
+            'dart_file2.dart',
           ];
 
           final executables = command
@@ -209,8 +209,8 @@ void main() {
           final command = cmd();
 
           final definedHooks = [
-            fs.file('hook1'),
-            fs.file('hook2'),
+            'hook1',
+            'hook2',
           ];
 
           command
