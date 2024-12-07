@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:glob/glob.dart';
 
 part 'hook_task.g.dart';
 
-base class HookTask extends Equatable {
+abstract class HookTask extends Equatable {
   const HookTask({
     required this.include,
     this.exclude = const [],
@@ -13,6 +15,7 @@ base class HookTask extends Equatable {
   final String? name;
   final List<Pattern> include;
   final List<Pattern> exclude;
+  FutureOr<int> run(List<String> files);
 
   String get resolvedName => switch (name) {
         final String name => name,

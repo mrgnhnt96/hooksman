@@ -12,14 +12,14 @@ class TaskRunner {
     required this.logger,
     required this.task,
     required this.files,
-    required this.onSubTaskCompleted,
+    required this.completeSubTask,
   });
 
   final String taskId;
   final Logger logger;
   final HookTask task;
   final List<String> files;
-  final void Function(int)? onSubTaskCompleted;
+  final void Function(int)? completeSubTask;
 
   Future<int> run() async {
     if (files.isEmpty) {
@@ -28,9 +28,13 @@ class TaskRunner {
 
     final task = this.task;
     final result = await switch (task) {
-      DartTask() => runDart(task),
-      ShellTask() => runShell(task),
-      _ => Future.value(1),
+      DartTask() => task.run(files),
+      ShellTask() => task.run(
+          files,
+          logger: logger,
+          completeSubTask: completeSubTask,
+        ),
+      _ => task.run(files),
     };
 
     return result;
@@ -101,7 +105,7 @@ class TaskRunner {
         return 1;
       }
 
-      onSubTaskCompleted?.call(index);
+      completeSubTask?.call(index);
     }
 
     return 0;

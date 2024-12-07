@@ -5,20 +5,26 @@ import 'package:hooksman/utils/all_files.dart';
 
 part 'dart_task.g.dart';
 
+typedef Run = FutureOr<int> Function(List<String> files);
+
 final class DartTask extends HookTask {
   const DartTask({
     required super.include,
-    required this.run,
+    required Run run,
     super.exclude,
     super.name,
-  });
+  }) : _run = run;
 
   DartTask.always({
-    required this.run,
+    required Run run,
     super.name,
-  }) : super(include: [AllFiles()]);
+  })  : _run = run,
+        super(include: [AllFiles()]);
 
-  final FutureOr<int> Function(Iterable<String> files) run;
+  final Run _run;
+
+  @override
+  FutureOr<int> run(List<String> files) => _run(files);
 
   @override
   List<Object?> get props => _$props;

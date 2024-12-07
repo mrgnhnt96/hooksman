@@ -8,7 +8,7 @@ part of 'dart_task.dart';
 
 extension _$DartTaskAutoequal on DartTask {
   List<Object?> get _$props => [
-        run,
+        _run,
         name,
         include,
         exclude,

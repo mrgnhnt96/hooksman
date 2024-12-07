@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:hooksman/models/hook.dart';
@@ -20,11 +22,11 @@ void main() {
     test('resolves multiple commands', () {
       final hook = Hook(
         commands: [
-          HookTask(
+          _TestTask(
             name: 'command1',
             include: [RegExp(r'.*\.dart')],
           ),
-          HookTask(
+          _TestTask(
             name: 'command2',
             include: [RegExp(r'.*\.md')],
           ),
@@ -48,7 +50,7 @@ void main() {
     test('resolves commands when no files match', () {
       final hook = Hook(
         commands: [
-          HookTask(
+          _TestTask(
             name: 'command1',
             include: [RegExp(r'.*\.dart')],
           ),
@@ -67,7 +69,7 @@ void main() {
     test('resolves commands with multiple matching files', () {
       final hook = Hook(
         commands: [
-          HookTask(
+          _TestTask(
             name: 'command1',
             include: [RegExp(r'.*\.dart')],
           ),
@@ -88,7 +90,7 @@ void main() {
     test('resolves commands with multiple patterns', () {
       final hook = Hook(
         commands: [
-          HookTask(
+          _TestTask(
             name: 'command1',
             include: [RegExp(r'.*\.dart'), RegExp(r'.*\.md')],
           ),
@@ -108,7 +110,7 @@ void main() {
     test('excludes files matching exclude patterns', () {
       final hook = Hook(
         commands: [
-          HookTask(
+          _TestTask(
             name: 'command1',
             include: [RegExp(r'.*\.dart')],
             exclude: [RegExp(r'.*\.g\.dart')],
@@ -130,7 +132,7 @@ void main() {
     test('excludes files matching multiple exclude patterns', () {
       final hook = Hook(
         commands: [
-          HookTask(
+          _TestTask(
             name: 'command1',
             include: [RegExp(r'.*\.dart')],
             exclude: [
@@ -156,4 +158,17 @@ void main() {
       expect(command, hook.commands.first);
     });
   });
+}
+
+class _TestTask extends HookTask {
+  const _TestTask({
+    required String name,
+    required List<RegExp> include,
+    List<RegExp> exclude = const [],
+  }) : super(name: name, include: include, exclude: exclude);
+
+  @override
+  FutureOr<int> run(List<String> files) async {
+    throw UnimplementedError();
+  }
 }

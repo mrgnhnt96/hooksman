@@ -35,7 +35,7 @@ class PendingTasks {
           task: command,
           files: files.toList(),
           logger: logger,
-          onSubTaskCompleted: subTaskController?.add,
+          completeSubTask: subTaskController?.add,
         );
 
         yield (task, runner);
