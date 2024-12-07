@@ -3,20 +3,20 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:hooksman/entrypoint/hook_execution/task_runner.dart';
+import 'package:hooksman/models/pending_task.dart';
 import 'package:hooksman/models/resolved_hook.dart';
-import 'package:hooksman/models/resolving_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-class PendingTasks {
-  factory PendingTasks(
+class PendingHook {
+  factory PendingHook(
     ResolvedHook hook, {
     required Logger logger,
   }) {
-    Iterable<(ResolvingTask, TaskRunner)> tasks() sync* {
+    Iterable<(PendingTask, TaskRunner)> tasks() sync* {
       for (final task in hook.tasks) {
         final subTaskController = StreamController<int>();
 
-        final resolving = ResolvingTask(
+        final resolving = PendingTask(
           files: task.files,
           resolvedTask: task,
           subTaskController: subTaskController,
@@ -43,17 +43,17 @@ class PendingTasks {
         task.id: (task: task, runner: runner),
     };
 
-    return PendingTasks._(mappedTasks, logger: logger);
+    return PendingHook._(mappedTasks, logger: logger);
   }
 
-  PendingTasks._(
+  PendingHook._(
     this._tasks, {
     required this.logger,
   }) {
     _listenToKillSignal();
   }
 
-  final Map<String, ({ResolvingTask task, TaskRunner runner})> _tasks;
+  final Map<String, ({PendingTask task, TaskRunner runner})> _tasks;
   final Logger logger;
   StreamSubscription<ProcessSignal>? _killSubscription;
 
@@ -94,8 +94,8 @@ class PendingTasks {
     _killSubscription = null;
   }
 
-  List<ResolvingTask> get tasks => List<ResolvingTask>.unmodifiable(
-        _tasks.values.map<ResolvingTask>((e) => e.task),
+  List<PendingTask> get tasks => List<PendingTask>.unmodifiable(
+        _tasks.values.map<PendingTask>((e) => e.task),
       );
 
   List<TaskRunner> get runners => List<TaskRunner>.unmodifiable(

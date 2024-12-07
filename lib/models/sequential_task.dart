@@ -13,7 +13,6 @@ abstract class SequentialTask extends HookTask {
 
   @override
   String get name;
-  List<HookTask> tasks(Iterable<String> files);
 
   @override
   TaskLabel label(Iterable<String> files) {
@@ -21,8 +20,8 @@ abstract class SequentialTask extends HookTask {
       resolvedName,
       taskId: id,
       fileCount: files.length,
-      children: tasks(files).map((e) {
-        return e.label(files);
+      children: subTasks(files).map((task) {
+        return task.label(files);
       }).toList(),
     );
   }
@@ -34,7 +33,7 @@ abstract class SequentialTask extends HookTask {
     required void Function(int) completeSubTask,
   }) async {
     var index = 0;
-    for (final task in tasks(files)) {
+    for (final task in subTasks(files)) {
       final result = await task.run(
         files,
         print: print,

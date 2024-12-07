@@ -41,7 +41,11 @@ Future<void> executeHook(String name, Hook hook) async {
     } else {
       exitCode = await executor.run();
     }
-  } catch (e) {
+  } catch (e, stack) {
+    logger
+      ..err('Error running hook')
+      ..detail('Error: $e')
+      ..detail('Stack:\n$stack');
     exitCode = 1;
   }
 

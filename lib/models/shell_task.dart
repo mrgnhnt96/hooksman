@@ -19,10 +19,10 @@ class ShellTask extends SequentialTask {
   final ShellCommands _commands;
 
   @override
-  String get name => resolvedName;
+  String get name => patternName;
 
   @override
-  List<HookTask> tasks(Iterable<String> files) => [
+  List<HookTask> subTasks(Iterable<String> files) => [
         for (final (index, command) in _commands(files).indexed)
           _OneShellTask(
             command: command,

@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:uuid/uuid.dart';
 
-class ResolvingTask {
-  ResolvingTask({
+class PendingTask {
+  PendingTask({
     required this.files,
     required this.resolvedTask,
     required Completer<int>? completer,
@@ -13,6 +13,17 @@ class ResolvingTask {
         _subTaskController = subTaskController,
         id = const Uuid().v4() {
     _listener = _subTaskController?.stream.listen(completedTasks.add);
+
+    subTasks = resolvedTask.subTasks.map((task) {
+      final subTask = PendingTask(
+        files: files,
+        resolvedTask: task,
+        completer: null,
+        subTaskController: _subTaskController,
+      );
+
+      return subTask;
+    }).toList();
   }
 
   StreamSubscription<int>? _listener;
@@ -22,6 +33,8 @@ class ResolvingTask {
   final Completer<int>? _completer;
   final StreamController<int>? _subTaskController;
   final ResolvedHookTask resolvedTask;
+
+  late final List<PendingTask> subTasks;
 
   String get name => resolvedTask.label.name;
 

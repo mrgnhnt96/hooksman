@@ -26,36 +26,51 @@ abstract class HookTask extends Equatable {
     required void Function(int) completeSubTask,
   });
 
-  List<ResolvedHookTask> resolve(List<String> files, int index) {
+  List<HookTask> subTasks(Iterable<String> files) => [];
+
+  ResolvedHookTask resolve(List<String> files, int index) {
     final filtered = filterFiles(files);
 
-    return [
-      ResolvedHookTask(
-        files: filtered,
-        original: this,
-        index: index,
-        label: label(filtered),
-      ),
-    ];
+    final subTasks = this.subTasks(filtered);
+
+    return ResolvedHookTask(
+      files: filtered,
+      original: this,
+      index: index,
+      label: label(filtered),
+      subTasks: subTasks.indexed.map((e) {
+        final (i, task) = e;
+        final subIndex = index * 100 + i;
+
+        final subFiltered = task.filterFiles(filtered);
+
+        return task.resolve(subFiltered, subIndex);
+      }).toList(),
+    );
   }
+
+  String get patternName => include.map((e) {
+        return switch (e) {
+          Glob() => e.pattern,
+          RegExp() => e.pattern,
+          String() => e,
+          _ => '$e',
+        };
+      }).join(', ');
 
   String get resolvedName => switch (name) {
         final String name => name,
-        _ => include.map((e) {
-            return switch (e) {
-              Glob() => e.pattern,
-              RegExp() => e.pattern,
-              String() => e,
-              _ => '$e',
-            };
-          }).join(', '),
+        _ => patternName,
       };
 
   TaskLabel label(Iterable<String> files) {
+    // ensure files are filtered
+    final filtered = filterFiles(files);
+
     return TaskLabel(
       resolvedName,
       taskId: id,
-      fileCount: files.length,
+      fileCount: filtered.length,
     );
   }
 

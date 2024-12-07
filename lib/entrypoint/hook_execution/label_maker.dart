@@ -1,6 +1,6 @@
 import 'dart:io' as io;
 
-import 'package:hooksman/models/resolving_task.dart';
+import 'package:hooksman/models/pending_task.dart';
 import 'package:hooksman/models/task_label.dart';
 import 'package:mason_logger/mason_logger.dart';
 
@@ -13,7 +13,7 @@ class LabelMaker {
   }) : _stdout = stdout;
 
   final io.Stdout _stdout;
-  final List<ResolvingTask> tasks;
+  final List<PendingTask> tasks;
   final String nameOfHook;
   final bool debug;
 
@@ -60,8 +60,8 @@ class LabelMaker {
   ) sync* {
     yield 'Running tasks for $nameOfHook';
     for (final task in tasks) {
-      final ResolvingTask(
-        resolvedTask: command,
+      final PendingTask(
+        :resolvedTask,
         :code,
         :isError,
         :isHalted,
@@ -69,24 +69,18 @@ class LabelMaker {
         :completedTasks,
       ) = task;
 
-      final label = command.label;
-
       if (debug) {
         yield darkGray.wrap('');
-        yield darkGray.wrap('Total depth: ${label.depth}');
+        yield darkGray.wrap('Total depth: ${resolvedTask.label.depth}');
         yield darkGray.wrap('Completed Tasks: ${completedTasks.join(', ')}');
         yield darkGray.wrap('Is error: $isError');
         yield darkGray.wrap('Is halted: $isHalted');
       }
 
       yield* retrieveLabels(
-        label,
-        index: command.index,
+        task,
         loading: loading,
         spacing: spacer,
-        completedTasks: completedTasks,
-        isError: isError,
-        isHalted: isHalted,
       );
     }
 
@@ -130,80 +124,79 @@ class LabelMaker {
   }
 
   Iterable<String?> retrieveLabels(
-    TaskLabel parentLabel, {
-    required int index,
+    PendingTask pending, {
     required String? loading,
     required String spacing,
-    required Set<int> completedTasks,
-    required bool isError,
-    required bool isHalted,
   }) sync* {
+    final task = pending.resolvedTask;
+
     final iconString = switch (null) {
-      _ when isError => red.wrap(x),
-      _ when isHalted => blue.wrap(dot),
-      _ when parentLabel.fileCount > 0 => yellow.wrap(down),
-      _ when parentLabel.hasChildren => yellow.wrap(right),
-      _ when index != 0 && !completedTasks.contains(index - 1) =>
+      _ when pending.isError => red.wrap(x),
+      _ when pending.isHalted => blue.wrap(dot),
+      _ when task.fileCount > 0 => yellow.wrap(down),
+      _ when task.hasChildren => yellow.wrap(right),
+      _
+          when task.index != 0 &&
+              !pending.completedTasks.contains(task.index - 1) =>
         magenta.wrap(loading),
       _ => yellow.wrap(loading),
     };
 
-    final fileCountString = fileCount(parentLabel.fileCount);
-    final indexString = getIndexString(index);
+    final fileCountString = fileCount(task.fileCount);
+    final indexString = getIndexString(task.index);
 
     yield trim(
-      '$indexString$spacing$iconString ${parentLabel.name} $fileCountString',
+      '$indexString$spacing$iconString ${task.name} $fileCountString',
     );
 
-    if (parentLabel.fileCount == 0) {
+    if (!task.hasChildren) {
       return;
     }
 
-    // if (hasCompleted && hasCompletedSubTasks) {
-    //   return;
-    // }
+    if (pending.hasCompleted && pending.hasCompletedSubTasks) {
+      return;
+    }
 
-    // final children = parentLabel.children;
-    // for (final label in children) {
-    //   final hasCompleted = completedTasks.contains(label.index);
-    //   final isWorking = !hasCompleted;
+    for (final subPending in pending.subTasks) {
+      final subTask = subPending.resolvedTask;
 
-    //   final iconString = switch (isWorking) {
-    //     true when isError => red.wrap(x),
-    //     true
-    //         when label.index != 0 && completedTasks.contains(label.index - 1) =>
-    //       magenta.wrap(loading),
-    //     true => yellow.wrap(loading),
-    //     _ when hasCompleted => green.wrap(checkMark),
-    //     _ => yellow.wrap(dot),
-    //   };
+      final hasCompleted = pending.completedTasks.contains(subTask.index);
+      final isWorking = !hasCompleted;
 
-    //   final scriptString = switch (label) {
-    //     final e when isWorking && isError => red.wrap(e.name),
-    //     final e => e,
-    //   };
+      final iconString = switch (isWorking) {
+        true when pending.isError => red.wrap(x),
+        true
+            when subTask.index != 0 &&
+                pending.completedTasks.contains(subTask.index - 1) =>
+          magenta.wrap(loading),
+        true => yellow.wrap(loading),
+        _ when hasCompleted => green.wrap(checkMark),
+        _ => yellow.wrap(dot),
+      };
 
-    //   final indexString = getIndexString(label.index);
-    //   final fileCountString =
-    //       switch (label.fileCount == parentLabel.fileCount) {
-    //     true => '',
-    //     _ => fileCount(label.fileCount),
-    //   };
-    //   yield trim(
-    //     '$indexString$spacing$spacer$iconString $scriptString $fileCountString',
-    //   );
+      final scriptString = switch (subTask) {
+        final e when isWorking && pending.isError => red.wrap(e.name),
+        final e => e,
+      };
 
-    //   for (final child in label.children) {
-    //     yield* retrieveLabels(
-    //       child,
-    //       loading: loading,
-    //       spacing: '$spacing$spacer$spacer',
-    //       completedTasks: completedTasks,
-    //       isError: isError,
-    //       isHalted: isHalted,
-    //     );
-    //   }
-    // }
+      final indexString = getIndexString(subTask.index);
+      final fileCountString = switch (subTask.fileCount == subTask.fileCount) {
+        true => '',
+        _ => fileCount(subTask.fileCount),
+      };
+
+      yield trim(
+        '$indexString$spacing$spacer$iconString $scriptString $fileCountString',
+      );
+
+      for (final subSubTask in subPending.subTasks) {
+        yield* retrieveLabels(
+          subSubTask,
+          loading: loading,
+          spacing: '$spacing$spacer$spacer',
+        );
+      }
+    }
   }
 }
 

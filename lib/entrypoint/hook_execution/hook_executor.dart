@@ -1,7 +1,7 @@
 import 'dart:io' as io;
 
 import 'package:hooksman/entrypoint/hook_execution/label_maker.dart';
-import 'package:hooksman/entrypoint/hook_execution/pending_tasks.dart';
+import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
 import 'package:hooksman/models/hook.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:hooksman/utils/multi_line_progress.dart';
@@ -73,7 +73,7 @@ class HookExecutor {
 
     logger.detail('Resolving files');
 
-    final pendingTasks = PendingTasks(
+    final pendingTasks = PendingHook(
       hook.resolve(allFiles),
       logger: logger,
     );

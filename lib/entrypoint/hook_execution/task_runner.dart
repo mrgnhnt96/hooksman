@@ -14,7 +14,7 @@ class TaskRunner {
 
   final String taskId;
   final Logger logger;
-  final ResolvingTask task;
+  final PendingTask task;
   final List<String> files;
   final void Function(int) completeSubTask;
 

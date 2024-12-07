@@ -36,7 +36,7 @@ class Hook extends Equatable {
   final bool allowEmpty;
 
   ResolvedHook resolve(List<String> files) {
-    final resolvedTasks = tasks.indexed.expand((e) {
+    final resolvedTasks = tasks.indexed.map((e) {
       final (index, task) = e;
 
       return task.resolve(files, index);
