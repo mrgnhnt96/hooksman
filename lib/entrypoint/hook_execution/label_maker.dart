@@ -1,18 +1,21 @@
 import 'dart:io' as io;
 
+import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
 import 'package:hooksman/models/pending_task.dart';
+import 'package:hooksman/models/resolved_hook_task.dart';
+import 'package:hooksman/models/task_label.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class LabelMaker {
   const LabelMaker({
     required io.Stdout stdout,
-    required this.topLevelTasks,
+    required this.pendingHook,
     required this.nameOfHook,
     this.debug = false,
   }) : _stdout = stdout;
 
   final io.Stdout _stdout;
-  final List<PendingTask> topLevelTasks;
+  final PendingHook pendingHook;
   final String nameOfHook;
   final bool debug;
 
@@ -58,24 +61,30 @@ class LabelMaker {
     String? loading,
   ) sync* {
     yield 'Running tasks for $nameOfHook';
-    for (final task in topLevelTasks) {
-      final PendingTask(
-        :resolvedTask,
-        :code,
-        :isError,
-        :isHalted,
-        :files,
+
+    if (debug) {
+      final PendingHook(
+        :isDead,
+        :wasKilled,
         :completedTasks,
+      ) = pendingHook;
+      yield darkGray.wrap('');
+      yield darkGray.wrap('Completed Tasks: ${completedTasks.join(', ')}');
+      yield darkGray.wrap('Killed: $wasKilled');
+      yield darkGray.wrap('Dead: $isDead');
+    }
+
+    for (final task in pendingHook.topLevelTasks) {
+      final PendingTask(
+        resolvedTask: ResolvedHookTask(
+          label: TaskLabel(:depth),
+        ),
+        :isError,
       ) = task;
 
-      if (debug) {
-        yield darkGray.wrap('');
-        yield darkGray.wrap('Total depth: ${resolvedTask.label.depth}');
-        yield darkGray.wrap('Completed Tasks: ${completedTasks.join(', ')}');
-        yield darkGray.wrap('Is error: $isError');
-        yield darkGray.wrap('Is halted: $isHalted');
-      }
-
+      yield '';
+      yield darkGray.wrap('Total depth: $depth');
+      yield darkGray.wrap('Is error: $isError');
       yield* retrieveLabels(
         task,
         loading: loading,
@@ -92,11 +101,10 @@ class LabelMaker {
       };
 
   String? icon(
-    PendingTask task,
-    int fileCount, {
+    PendingTask task, {
     required String? loading,
   }) {
-    if (fileCount == 0) {
+    if (task.resolvedTask.fileCount == 0) {
       return yellow.wrap(down);
     }
 
@@ -146,7 +154,7 @@ class LabelMaker {
       '$indexString$spacing$iconString ${task.name} $fileCountString',
     );
 
-    if (pending.hasCompleted) {
+    if (pending.hasCompleted || pending.isHalted) {
       return;
     }
 
@@ -182,9 +190,9 @@ class LabelMaker {
         '$indexString$spacing$spacer$iconString $scriptString $fileCountString',
       );
 
-      for (final subSubTask in subPending.subTasks) {
+      for (final subParent in subPending.subTasks) {
         yield* retrieveLabels(
-          subSubTask,
+          subParent,
           loading: loading,
           spacing: '$spacing$spacer$spacer',
         );

@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:hooksman/hooksman.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-part 'shell_task.g.dart';
-
 typedef ShellCommands = List<String> Function(Iterable<String> files);
 
 class ShellTask extends SequentialTask {
@@ -22,16 +20,13 @@ class ShellTask extends SequentialTask {
   String get name => patternName;
 
   @override
-  List<HookTask> subTasks(Iterable<String> files) => [
+  List<HookTask> getSubTasks(Iterable<String> files) => [
         for (final (index, command) in _commands(files).indexed)
           _OneShellTask(
             command: command,
             index: index,
           ),
       ];
-
-  @override
-  List<Object?> get props => _$props;
 }
 
 class _OneShellTask extends HookTask {
@@ -94,7 +89,4 @@ class _OneShellTask extends HookTask {
     completeTask.call(this);
     return 0;
   }
-
-  @override
-  List<Object?> get props => _$props;
 }

@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/utils/all_files.dart';
 
-part 'dart_task.g.dart';
-
 typedef Run = FutureOr<int> Function(List<String> files);
 
 class DartTask extends HookTask {
@@ -45,7 +43,4 @@ class DartTask extends HookTask {
       return 1;
     }
   }
-
-  @override
-  List<Object?> get props => _$props;
 }

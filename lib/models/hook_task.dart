@@ -1,14 +1,12 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:glob/glob.dart';
 import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:hooksman/models/task_label.dart';
+import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 
-part 'hook_task.g.dart';
-
-abstract class HookTask extends Equatable {
+abstract class HookTask {
   HookTask({
     required this.include,
     this.exclude = const [],
@@ -26,7 +24,12 @@ abstract class HookTask extends Equatable {
     required void Function(HookTask) completeTask,
   });
 
-  List<HookTask> subTasks(Iterable<String> files) => [];
+  List<HookTask>? _subTasks;
+  @nonVirtual
+  List<HookTask> subTasks(Iterable<String> files) =>
+      _subTasks ??= getSubTasks(files);
+
+  List<HookTask> getSubTasks(Iterable<String> files) => [];
 
   ResolvedHookTask resolve(List<String> files, int index) {
     final filtered = filterFiles(files);
@@ -89,7 +92,4 @@ abstract class HookTask extends Equatable {
 
     return filesFor(files).toList();
   }
-
-  @override
-  List<Object?> get props => _$props;
 }

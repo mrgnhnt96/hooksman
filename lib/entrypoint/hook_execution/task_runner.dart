@@ -5,42 +5,29 @@ import 'package:mason_logger/mason_logger.dart';
 
 class TaskRunner {
   const TaskRunner({
-    required this.taskId,
     required this.logger,
     required this.task,
-    required this.files,
-    required this.completeSubTask,
+    required this.completeTask,
   });
 
-  final String taskId;
   final Logger logger;
   final PendingTask task;
-  final List<String> files;
-  final void Function(HookTask) completeSubTask;
+  final void Function(HookTask) completeTask;
 
   Future<int> run() async {
-    if (files.isEmpty) {
+    final task = this.task;
+
+    if (task.files.isEmpty) {
       return 0;
     }
 
-    final task = this.task;
-    final result = await task.run(
-      files,
-      print: logger.delayed,
-      completeSubTask: completeSubTask,
-    );
-
-    return result;
-  }
-
-  Future<int> runDart(DartTask task) async {
     try {
       return await runZoned(
         () async {
           return await task.run(
-            files,
+            task.files.toList(),
             print: logger.delayed,
-            completeTask: completeSubTask,
+            completeTask: completeTask,
           );
         },
         zoneSpecification: ZoneSpecification(
@@ -51,8 +38,10 @@ class TaskRunner {
       );
     } catch (e) {
       logger
-        ..delayed(red.wrap('Error when running ${task.resolvedName}'))
+        ..delayed(red.wrap('Error when running ${task.name}'))
         ..delayed('$e');
+
+      completeTask(task.resolvedTask.original);
 
       return 1;
     }

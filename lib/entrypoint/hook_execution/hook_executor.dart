@@ -73,12 +73,12 @@ class HookExecutor {
 
     logger.detail('Resolving files');
 
-    final pendingTasks = PendingHook(
+    final pendingHook = PendingHook(
       hook.resolve(allFiles),
       logger: logger,
     );
 
-    if (pendingTasks.tasks.every((e) => e.files.isEmpty)) {
+    if (pendingHook.topLevelTasks.every((e) => e.files.isEmpty)) {
       logger
           .info(darkGray.wrap('Skipping $hookName, no files match any tasks'));
       return 0;
@@ -100,7 +100,7 @@ class HookExecutor {
 
     final labelMaker = LabelMaker(
       stdout: stdout,
-      topLevelTasks: pendingTasks.tasks,
+      pendingHook: pendingHook,
       nameOfHook: hookName,
       debug: debug,
     );
@@ -110,11 +110,11 @@ class HookExecutor {
 
     final progress = MultiLineProgress(createLabel: labelMaker.create)..start();
 
-    pendingTasks.start();
+    pendingHook.start();
 
-    await pendingTasks.wait();
+    await pendingHook.wait();
 
-    if (pendingTasks.wasKilled) {
+    if (pendingHook.wasKilled) {
       progress
         ..dispose()
         ..print();
@@ -128,7 +128,7 @@ class HookExecutor {
         ..flush()
         ..write('\n');
 
-      for (final task in pendingTasks.tasks) {
+      for (final task in pendingHook.topLevelTasks) {
         if (task.code case final int code when code != 0) {
           logger.detail(
             'Task failed: ${task.resolvedTask.original.resolvedName}',

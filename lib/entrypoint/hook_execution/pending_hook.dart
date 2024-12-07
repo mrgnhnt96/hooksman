@@ -12,34 +12,31 @@ class PendingHook {
     ResolvedHook hook, {
     required Logger logger,
   }) {
+    final killCompleter = Completer<void>();
+    final completedTasks = <int>{};
+
     Iterable<(PendingTask, TaskRunner)> tasks() sync* {
       for (final task in hook.tasks) {
-        final subTaskController = StreamController<int>.broadcast();
-
         final resolving = PendingTask(
           files: task.files,
           resolvedTask: task,
-          subTaskController: subTaskController,
-          completer: switch (task.files.length) {
-            0 => null,
-            _ => Completer<int>(),
-          },
+          completedTasks: completedTasks,
+          isHalted: () => killCompleter.isCompleted,
         );
 
         final runner = TaskRunner(
-          taskId: resolving.id,
           task: resolving,
-          files: task.files.toList(),
           logger: logger,
-          completeSubTask: (finished) {
+          completeTask: (finished) {
+            logger.delayed('Task ${finished.id} completed');
             final task = hook.tasksById[finished.id];
 
             if (task == null) {
-              logger.err('Task ${finished.id} not found');
+              logger.delayed('Task ${finished.id} not found');
               throw StateError('Task ${finished.id} not found');
             }
 
-            subTaskController.add(task.index);
+            completedTasks.add(task.index);
           },
         );
 
@@ -48,27 +45,38 @@ class PendingHook {
     }
 
     final mappedTasks = {
-      for (final (task, runner) in tasks().toList())
+      for (final (task, runner) in [...tasks()])
         task.id: (task: task, runner: runner),
     };
 
-    return PendingHook._(mappedTasks, logger: logger);
+    return PendingHook._(
+      mappedTasks,
+      logger: logger,
+      killCompleter: killCompleter,
+      completedTasks: completedTasks,
+    );
   }
 
   PendingHook._(
     this._tasks, {
     required this.logger,
-  }) {
+    required Completer<void> killCompleter,
+    required Set<int> completedTasks,
+  })  : _killCompleter = killCompleter,
+        _completedTasks = completedTasks {
     _listenToKillSignal();
   }
 
   final Map<String, ({PendingTask task, TaskRunner runner})> _tasks;
   final Logger logger;
+  final Completer<void> _killCompleter;
+  final Set<int> _completedTasks;
+  Set<int> get completedTasks => Set<int>.unmodifiable(_completedTasks);
   StreamSubscription<ProcessSignal>? _killSubscription;
 
   bool _wasKilled = false;
   bool get wasKilled => _wasKilled;
-  bool get hasCompleted => tasks.every((e) => e.hasCompleted);
+  bool get hasCompleted => topLevelTasks.every((e) => e.hasCompleted);
   bool get isDead => wasKilled || hasCompleted;
 
   Future<void> _listenToKillSignal() async {
@@ -93,6 +101,7 @@ class PendingHook {
       }
 
       _wasKilled = true;
+      _killCompleter.complete();
       killAll();
       _stopKillSignalListener();
     });
@@ -103,7 +112,7 @@ class PendingHook {
     _killSubscription = null;
   }
 
-  List<PendingTask> get tasks => List<PendingTask>.unmodifiable(
+  List<PendingTask> get topLevelTasks => List<PendingTask>.unmodifiable(
         _tasks.values.map<PendingTask>((e) => e.task),
       );
 
@@ -127,7 +136,7 @@ class PendingHook {
   }
 
   void killAll() {
-    for (final task in tasks) {
+    for (final task in topLevelTasks) {
       task.kill();
     }
   }
@@ -137,7 +146,7 @@ class PendingHook {
       final future = runner.run();
 
       future.then((code) {
-        complete(runner.taskId, code);
+        complete(runner.task.id, code);
       }).ignore();
     }
   }
@@ -145,7 +154,7 @@ class PendingHook {
   Future<void> wait() async {
     try {
       await Future.wait(
-        tasks.map((e) => e.future).whereType(),
+        topLevelTasks.map((e) => e.future).whereType(),
         eagerError: true,
       );
     } catch (e) {

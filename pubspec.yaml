@@ -12,6 +12,7 @@ dependencies:
   file: ^7.0.1
   glob: ^2.1.2
   mason_logger: ^0.3.1
+  meta: ^1.16.0
   path: ^1.9.1
   uuid: ^4.5.1
 
