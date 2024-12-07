@@ -3,21 +3,23 @@ import 'dart:async';
 import 'package:hooksman/hooksman.dart';
 import 'package:hooksman/models/task_label.dart';
 
-class SequentialTasks extends HookTask {
-  SequentialTasks({
-    required String super.name,
-    required this.tasks,
-    List<Pattern>? include,
-  }) : super(include: include ?? [AllFiles()]);
+abstract class SequentialTask extends HookTask {
+  SequentialTask({
+    required super.include,
+    super.exclude,
+  });
 
-  final List<HookTask> tasks;
+  @override
+  String get name;
+  List<HookTask> tasks(Iterable<String> files);
 
   @override
   TaskLabel label(Iterable<String> files) {
     return TaskLabel(
       resolvedName,
+      taskId: id,
       fileCount: files.length,
-      children: tasks.map((e) {
+      children: tasks(files).map((e) {
         return e.label(files);
       }).toList(),
     );
@@ -30,7 +32,7 @@ class SequentialTasks extends HookTask {
     required void Function(int) completeSubTask,
   }) async {
     var index = 0;
-    for (final task in tasks) {
+    for (final task in tasks(files)) {
       final result = await task.run(
         files,
         print: print,
@@ -47,5 +49,3 @@ class SequentialTasks extends HookTask {
     return 0;
   }
 }
-
-// should come back

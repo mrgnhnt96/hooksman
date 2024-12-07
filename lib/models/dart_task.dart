@@ -9,20 +9,23 @@ part 'dart_task.g.dart';
 typedef Run = FutureOr<int> Function(List<String> files);
 
 class DartTask extends HookTask {
-  const DartTask({
+  DartTask({
     required super.include,
     required Run run,
     super.exclude,
-    super.name,
+    this.name,
   }) : _run = run;
 
   DartTask.always({
     required Run run,
-    super.name,
+    this.name,
   })  : _run = run,
         super(include: [AllFiles()]);
 
   final Run _run;
+
+  @override
+  final String? name;
 
   @override
   FutureOr<int> run(
@@ -35,6 +38,7 @@ class DartTask extends HookTask {
   @override
   TaskLabel label(Iterable<String> files, [int? index]) => TaskLabel(
         resolvedName,
+        taskId: id,
         fileCount: files.length,
       );
 

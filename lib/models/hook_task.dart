@@ -2,26 +2,42 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:glob/glob.dart';
+import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:hooksman/models/task_label.dart';
+import 'package:uuid/uuid.dart';
 
 part 'hook_task.g.dart';
 
 abstract class HookTask extends Equatable {
-  const HookTask({
+  HookTask({
     required this.include,
     this.exclude = const [],
-    this.name,
-  });
+  }) : id = const Uuid().v4();
 
-  final String? name;
+  final String id;
   final List<Pattern> include;
   final List<Pattern> exclude;
+
+  String? get name;
 
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
     required void Function(int) completeSubTask,
   });
+
+  List<ResolvedHookTask> resolve(List<String> files, int index) {
+    final filtered = filterFiles(files);
+
+    return [
+      ResolvedHookTask(
+        files: filtered,
+        original: this,
+        index: index,
+        label: label(filtered),
+      ),
+    ];
+  }
 
   String get resolvedName => switch (name) {
         final String name => name,
@@ -35,7 +51,13 @@ abstract class HookTask extends Equatable {
           }).join(', '),
       };
 
-  TaskLabel label(Iterable<String> files);
+  TaskLabel label(Iterable<String> files) {
+    return TaskLabel(
+      resolvedName,
+      taskId: id,
+      fileCount: files.length,
+    );
+  }
 
   List<String> filterFiles(Iterable<String> files) {
     Iterable<String> filesFor(Iterable<String> files) sync* {

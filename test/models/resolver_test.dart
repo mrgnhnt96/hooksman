@@ -162,11 +162,14 @@ void main() {
 }
 
 class _TestTask extends HookTask {
-  const _TestTask({
-    required String name,
-    required List<RegExp> include,
-    List<RegExp> exclude = const [],
-  }) : super(name: name, include: include, exclude: exclude);
+  _TestTask({
+    required this.name,
+    required super.include,
+    super.exclude = const [],
+  });
+
+  @override
+  final String? name;
 
   @override
   FutureOr<int> run(

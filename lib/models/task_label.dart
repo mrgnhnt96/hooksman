@@ -1,13 +1,15 @@
 class TaskLabel {
   const TaskLabel(
     this.name, {
+    required this.taskId,
     required this.fileCount,
     this.children = const [],
   });
 
   final String name;
-  final List<TaskLabel> children;
   final int fileCount;
+  final String taskId;
+  final List<TaskLabel> children;
 
   bool get hasChildren => children.isNotEmpty;
 
