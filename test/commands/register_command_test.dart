@@ -296,6 +296,20 @@ void main() {
         expect(fs.directory(p.join('.git', 'hooks')).existsSync(), isTrue);
       });
 
+      test('should delete hooks dir when it does exist', () async {
+        final hooks = fs.directory(p.join('.git', 'hooks'))
+          ..createSync(recursive: true)
+          ..childFile('a-file-to-delete').createSync();
+
+        cmd().copyExecutables(
+          [],
+          gitHooksDir: hooks.path,
+        );
+
+        expect(hooks.existsSync(), isTrue);
+        expect(hooks.childFile('a-file-to-delete').existsSync(), isFalse);
+      });
+
       test('should return 0 when hooks are copied successfully', () async {
         final command = cmd();
 

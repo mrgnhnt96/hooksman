@@ -105,9 +105,12 @@ void main() {
   }) {
     final hooksDir = fs.directory(gitHooksDir);
 
-    if (!hooksDir.existsSync()) {
-      hooksDir.createSync(recursive: true);
+    if (hooksDir.existsSync()) {
+      // delete existing hooks, to reset any removed hooks
+      hooksDir.deleteSync(recursive: true);
     }
+
+    hooksDir.createSync(recursive: true);
 
     for (final exe in executables) {
       final name = fs.path.basename(exe).toParamCase();
