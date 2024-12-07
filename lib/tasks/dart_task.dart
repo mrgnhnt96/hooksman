@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:hooksman/models/hook_task.dart';
-import 'package:hooksman/utils/all_files.dart';
 
 typedef Run = FutureOr<int> Function(List<String> files);
 
@@ -12,12 +11,6 @@ class DartTask extends HookTask {
     super.exclude,
     this.name,
   }) : _run = run;
-
-  DartTask.always({
-    required Run run,
-    this.name,
-  })  : _run = run,
-        super(include: [AllFiles()]);
 
   final Run _run;
 
