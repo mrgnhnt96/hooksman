@@ -10,7 +10,7 @@ extension _$ShellTaskAutoequal on ShellTask {
   List<Object?> get _$props => [
         commands,
         name,
-        pathPatterns,
-        excludePatterns,
+        include,
+        exclude,
       ];
 }

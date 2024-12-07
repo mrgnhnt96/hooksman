@@ -8,9 +8,9 @@ part of 'dart_task.dart';
 
 extension _$DartTaskAutoequal on DartTask {
   List<Object?> get _$props => [
-        script,
+        run,
         name,
-        pathPatterns,
-        excludePatterns,
+        include,
+        exclude,
       ];
 }

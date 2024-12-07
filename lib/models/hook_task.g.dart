@@ -9,7 +9,7 @@ part of 'hook_task.dart';
 extension _$HookTaskAutoequal on HookTask {
   List<Object?> get _$props => [
         name,
-        pathPatterns,
-        excludePatterns,
+        include,
+        exclude,
       ];
 }

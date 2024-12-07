@@ -4,7 +4,7 @@ import 'package:glob/glob.dart';
 final class ReRegisterHooks extends ShellTask {
   ReRegisterHooks({String? pathToHooksDir})
       : super(
-          pathPatterns: [
+          include: [
             if (pathToHooksDir case final String path)
               Glob('$path/*.dart')
             else

@@ -7,18 +7,18 @@ part 'dart_task.g.dart';
 
 final class DartTask extends HookTask {
   const DartTask({
-    required super.pathPatterns,
-    required this.script,
-    super.excludePatterns,
+    required super.include,
+    required this.run,
+    super.exclude,
     super.name,
   });
 
   DartTask.always({
-    required this.script,
+    required this.run,
     super.name,
-  }) : super(pathPatterns: [AllFiles()]);
+  }) : super(include: [AllFiles()]);
 
-  final FutureOr<int> Function(Iterable<String> files) script;
+  final FutureOr<int> Function(Iterable<String> files) run;
 
   @override
   List<Object?> get props => _$props;

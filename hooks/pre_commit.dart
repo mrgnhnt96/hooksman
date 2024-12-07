@@ -5,8 +5,8 @@ Hook main() {
     commands: [
       ReRegisterHooks(),
       ShellTask(
-        pathPatterns: [Glob('**.dart')],
-        excludePatterns: [
+        include: [Glob('**.dart')],
+        exclude: [
           Glob('**.g.dart'),
           Glob('hooks/**'),
         ],
@@ -15,21 +15,21 @@ Hook main() {
         ],
       ),
       ShellTask(
-        pathPatterns: [Glob('lib/models/**.dart')],
-        excludePatterns: [Glob('**.g.dart')],
+        include: [Glob('lib/models/**.dart')],
+        exclude: [Glob('**.g.dart')],
         commands: (files) => [
           'sip run build_runner build',
         ],
       ),
       ShellTask(
-        pathPatterns: [Glob('**.dart')],
+        include: [Glob('**.dart')],
         commands: (files) => [
           'dart format ${files.join(' ')}',
         ],
       ),
       ShellTask(
-        pathPatterns: [Glob('**.dart')],
-        excludePatterns: [Glob('hooks/**')],
+        include: [Glob('**.dart')],
+        exclude: [Glob('hooks/**')],
         commands: (files) => [
           'sip test --concurrent --bail',
         ],

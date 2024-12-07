@@ -40,7 +40,7 @@ class TaskRunner {
     try {
       return await runZoned(
         () async {
-          return await task.script(files);
+          return await task.run(files);
         },
         zoneSpecification: ZoneSpecification(
           print: (self, parent, zone, line) {

@@ -22,11 +22,11 @@ void main() {
         commands: [
           HookTask(
             name: 'command1',
-            pathPatterns: [RegExp(r'.*\.dart')],
+            include: [RegExp(r'.*\.dart')],
           ),
           HookTask(
             name: 'command2',
-            pathPatterns: [RegExp(r'.*\.md')],
+            include: [RegExp(r'.*\.md')],
           ),
         ],
       );
@@ -50,7 +50,7 @@ void main() {
         commands: [
           HookTask(
             name: 'command1',
-            pathPatterns: [RegExp(r'.*\.dart')],
+            include: [RegExp(r'.*\.dart')],
           ),
         ],
       );
@@ -69,7 +69,7 @@ void main() {
         commands: [
           HookTask(
             name: 'command1',
-            pathPatterns: [RegExp(r'.*\.dart')],
+            include: [RegExp(r'.*\.dart')],
           ),
         ],
       );
@@ -90,7 +90,7 @@ void main() {
         commands: [
           HookTask(
             name: 'command1',
-            pathPatterns: [RegExp(r'.*\.dart'), RegExp(r'.*\.md')],
+            include: [RegExp(r'.*\.dart'), RegExp(r'.*\.md')],
           ),
         ],
       );
@@ -110,8 +110,8 @@ void main() {
         commands: [
           HookTask(
             name: 'command1',
-            pathPatterns: [RegExp(r'.*\.dart')],
-            excludePatterns: [RegExp(r'.*\.g\.dart')],
+            include: [RegExp(r'.*\.dart')],
+            exclude: [RegExp(r'.*\.g\.dart')],
           ),
         ],
       );
@@ -132,8 +132,8 @@ void main() {
         commands: [
           HookTask(
             name: 'command1',
-            pathPatterns: [RegExp(r'.*\.dart')],
-            excludePatterns: [
+            include: [RegExp(r'.*\.dart')],
+            exclude: [
               RegExp(r'.*\.g\.dart'),
               RegExp(r'.*\.freezed\.dart'),
             ],

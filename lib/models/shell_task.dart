@@ -5,16 +5,16 @@ part 'shell_task.g.dart';
 
 base class ShellTask extends HookTask {
   const ShellTask({
-    required super.pathPatterns,
+    required super.include,
     required this.commands,
-    super.excludePatterns,
+    super.exclude,
     super.name,
   });
 
   ShellTask.always({
     required this.commands,
     super.name,
-  }) : super(pathPatterns: [AllFiles()]);
+  }) : super(include: [AllFiles()]);
 
   final List<String> Function(Iterable<String> files) commands;
 
