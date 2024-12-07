@@ -5,7 +5,6 @@ import 'package:async/async.dart';
 import 'package:hooksman/entrypoint/hook_execution/task_runner.dart';
 import 'package:hooksman/models/resolved_hook.dart';
 import 'package:hooksman/models/resolving_tasks.dart';
-import 'package:hooksman/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class PendingTasks {
@@ -15,10 +14,7 @@ class PendingTasks {
   }) {
     Iterable<(ResolvingTask, TaskRunner)> tasks() sync* {
       for (final (files, command) in hook.commands) {
-        final subTaskController = switch (command) {
-          ShellTask() => StreamController<int>(),
-          _ => null,
-        };
+        final subTaskController = StreamController<int>();
 
         final task = ResolvingTask(
           files: files,
@@ -35,7 +31,7 @@ class PendingTasks {
           task: command,
           files: files.toList(),
           logger: logger,
-          completeSubTask: subTaskController?.add,
+          completeSubTask: subTaskController.add,
         );
 
         yield (task, runner);

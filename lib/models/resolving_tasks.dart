@@ -36,9 +36,25 @@ class ResolvingTask {
     if (task is! ShellTask) return true;
     if (isError && !isHalted) return false;
 
-    final subTasks = task.commands(files);
+    final subTasks = task.label(files);
 
-    return completedSubTaskIndex != subTasks.length;
+    if (subTasks.children.isEmpty) return true;
+
+    Iterable<int> childLength(CommandLabel label) sync* {
+      if (label.children.isEmpty) {
+        yield 1;
+        return;
+      }
+
+      for (final child in label.children) {
+        yield* childLength(child);
+      }
+    }
+
+    final length =
+        childLength(subTasks).reduce((value, element) => value + element);
+
+    return completedSubTaskIndex != length;
   }
 
   int? completedSubTaskIndex;

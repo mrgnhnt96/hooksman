@@ -8,7 +8,7 @@ part of 'shell_task.dart';
 
 extension _$ShellTaskAutoequal on ShellTask {
   List<Object?> get _$props => [
-        commands,
+        _commands,
         name,
         include,
         exclude,

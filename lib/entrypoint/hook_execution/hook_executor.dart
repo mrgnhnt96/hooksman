@@ -87,6 +87,7 @@ class HookExecutor {
           .info(darkGray.wrap('Skipping $hookName, no files match any tasks'));
       return 0;
     }
+
     logger
       ..info(darkGray.wrap('Running $hookName hook'))
       ..detail('Preparing files');

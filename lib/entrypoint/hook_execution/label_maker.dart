@@ -1,8 +1,7 @@
 import 'dart:io' as io;
 
-import 'package:hooksman/models/dart_task.dart';
+import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/resolving_tasks.dart';
-import 'package:hooksman/models/shell_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class LabelMaker {
@@ -35,7 +34,7 @@ class LabelMaker {
   }
 
   String? icon(
-    dynamic command, // HookCommand | String
+    CommandLabel command, // HookCommand | String
     int fileCount, {
     required String? loading,
     required bool isComplete,
@@ -59,10 +58,8 @@ class LabelMaker {
     }
 
     final icon = switch (command) {
-      ShellTask() => right,
-      DartTask() => loading,
-      String() => loading,
-      _ => '',
+      _ when command.hasChildren => right,
+      _ => loading,
     };
 
     return yellow.wrap(icon);
@@ -84,7 +81,11 @@ class LabelMaker {
     return label(loading).join('\n');
   }
 
-  Iterable<String?> label(String? loading) sync* {
+  Iterable<String?> label(
+    String? loading, {
+    String spacing = '  ',
+    int fromIndex = 0,
+  }) sync* {
     yield 'Running tasks for $nameOfHook';
     for (final task in tasks) {
       final ResolvingTask(
@@ -99,8 +100,9 @@ class LabelMaker {
       ) = task;
 
       final count = fileCount(files.length);
+      final label = command.label(files);
       final iconString = icon(
-        command,
+        label,
         files.length,
         isComplete: hasCompleted,
         isError: isError,
@@ -108,13 +110,9 @@ class LabelMaker {
         loading: loading,
       );
 
-      yield trim('  $iconString ${command.resolvedName} $count');
+      yield trim('$spacing$iconString ${command.resolvedName} $count');
 
       if (files.isEmpty) {
-        continue;
-      }
-
-      if (command is! ShellTask) {
         continue;
       }
 
@@ -122,7 +120,11 @@ class LabelMaker {
         continue;
       }
 
-      for (final (index, script) in command.commands(files).indexed) {
+      final children = label.children;
+
+      for (final (i, label) in children.indexed) {
+        final index = i + fromIndex;
+
         final hasCompleted =
             completedSubTaskIndex != null && index - 1 < completedSubTaskIndex;
 
@@ -136,12 +138,20 @@ class LabelMaker {
           _ => yellow.wrap(dot),
         };
 
-        final scriptString = switch (script) {
-          final e when isWorking && isError => red.wrap(e),
+        final scriptString = switch (label) {
+          final e when isWorking && isError => red.wrap(e.name),
           final e => e,
         };
 
-        yield trim('    $iconString $scriptString');
+        yield trim('$spacing  $iconString $scriptString');
+
+        if (label.hasChildren && index < children.length - 1) {
+          yield* this.label(
+            loading,
+            spacing: '$spacing  ',
+            fromIndex: index + 1,
+          );
+        }
       }
     }
 

@@ -168,7 +168,16 @@ class _TestTask extends HookTask {
   }) : super(name: name, include: include, exclude: exclude);
 
   @override
-  FutureOr<int> run(List<String> files) async {
+  FutureOr<int> run(
+    List<String> files, {
+    required void Function(String? p1) print,
+    required void Function(int p1) completeSubTask,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  CommandLabel label(Iterable<String> files) {
     throw UnimplementedError();
   }
 }

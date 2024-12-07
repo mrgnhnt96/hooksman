@@ -7,7 +7,7 @@ part 'dart_task.g.dart';
 
 typedef Run = FutureOr<int> Function(List<String> files);
 
-final class DartTask extends HookTask {
+class DartTask extends HookTask {
   const DartTask({
     required super.include,
     required Run run,
@@ -24,7 +24,15 @@ final class DartTask extends HookTask {
   final Run _run;
 
   @override
-  FutureOr<int> run(List<String> files) => _run(files);
+  FutureOr<int> run(
+    List<String> files, {
+    required void Function(String?) print,
+    required void Function(int) completeSubTask,
+  }) =>
+      _run(files);
+
+  @override
+  CommandLabel label(Iterable<String> files) => CommandLabel(resolvedName);
 
   @override
   List<Object?> get props => _$props;

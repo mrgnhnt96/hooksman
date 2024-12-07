@@ -7,33 +7,42 @@ import 'package:mason_logger/mason_logger.dart';
 
 part 'shell_task.g.dart';
 
-base class ShellTask extends HookTask {
+typedef ShellCommands = List<String> Function(Iterable<String> files);
+
+class ShellTask extends HookTask {
   const ShellTask({
     required super.include,
-    required this.commands,
+    required ShellCommands commands,
     super.exclude,
     super.name,
-  });
+  }) : _commands = commands;
 
   ShellTask.always({
-    required this.commands,
+    required ShellCommands commands,
     super.name,
-  }) : super(include: [AllFiles()]);
+  })  : _commands = commands,
+        super(include: [AllFiles()]);
 
-  final List<String> Function(Iterable<String> files) commands;
+  final ShellCommands _commands;
+
+  @override
+  CommandLabel label(Iterable<String> files) => CommandLabel(
+        resolvedName,
+        children: _commands(files).map(CommandLabel.new).toList(),
+      );
 
   @override
   FutureOr<int> run(
     List<String> files, {
-    Logger? logger,
-    void Function(int)? completeSubTask,
+    required void Function(String?) print,
+    required void Function(int) completeSubTask,
   }) async {
     final coreCommand = switch (Platform.operatingSystem) {
       'windows' => 'cmd',
       _ => 'bash',
     };
 
-    for (final (index, command) in commands(files).indexed) {
+    for (final (index, command) in _commands(files).indexed) {
       final result = await Process.run(
         coreCommand,
         [
@@ -44,34 +53,31 @@ base class ShellTask extends HookTask {
 
       if (result.exitCode != 0) {
         final scriptString = yellow.wrap(resolvedName);
-        logger
-          ?..delayed('${red.wrap('Task failed:')} $scriptString')
-          ..delayed(darkGray.wrap('-- script --'))
-          ..delayed(command);
+        print('${red.wrap('Task failed:')} $scriptString');
+        print(darkGray.wrap('-- script --'));
+        print(command);
 
         if (result.stdout case final String out) {
           final output = out.trim();
           if (output.isNotEmpty) {
-            logger
-              ?..delayed('\n')
-              ..delayed(darkGray.wrap('-- output --'))
-              ..delayed(output);
+            print('\n');
+            print(darkGray.wrap('-- output --'));
+            print(output);
           }
         }
 
         if (result.stderr case final String err) {
           final error = err.trim();
           if (error.isNotEmpty) {
-            logger
-              ?..delayed('\n')
-              ..delayed(darkGray.wrap('-- error --'))
-              ..delayed(error);
+            print('\n');
+            print(darkGray.wrap('-- error --'));
+            print(error);
           }
         }
         return 1;
       }
 
-      completeSubTask?.call(index);
+      completeSubTask.call(index);
     }
 
     return 0;
