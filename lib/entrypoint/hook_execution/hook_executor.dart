@@ -106,6 +106,7 @@ class HookExecutor {
       stdout: stdout,
       tasks: pendingTasks.tasks,
       nameOfHook: hookName,
+      debug: debug,
     );
 
     logger.detail('Starting tasks');
@@ -123,20 +124,19 @@ class HookExecutor {
         ..print();
 
       logger.detail('Hook was killed');
-      return 1;
-    }
+    } else {
+      await progress.closeNextFrame();
 
-    await progress.closeNextFrame();
+      logger
+        ..detail('Tasks finished')
+        ..flush()
+        ..write('\n');
 
-    logger
-      ..detail('Tasks finished')
-      ..flush()
-      ..write('\n');
-
-    for (final task in pendingTasks.tasks) {
-      if (task.code case final int code when code != 0) {
-        logger.detail('Task failed: ${task.command.name}');
-        return code;
+      for (final task in pendingTasks.tasks) {
+        if (task.code case final int code when code != 0) {
+          logger.detail('Task failed: ${task.command.name}');
+          return code;
+        }
       }
     }
 
