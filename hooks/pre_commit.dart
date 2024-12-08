@@ -5,16 +5,18 @@ Hook main() {
     tasks: [
       ReRegisterHooks(),
       ShellTask(
+        name: 'Lint & Format',
         include: [Glob('**.dart')],
         exclude: [
           Glob('**.g.dart'),
-          Glob('hooks/**'),
         ],
         commands: (files) => [
           'dart analyze --fatal-infos ${files.join(' ')}',
+          'dart format ${files.join(' ')}',
         ],
       ),
       ShellTask(
+        name: 'Build Runner',
         include: [Glob('lib/models/**.dart')],
         exclude: [Glob('**.g.dart')],
         commands: (files) => [
@@ -22,12 +24,7 @@ Hook main() {
         ],
       ),
       ShellTask(
-        include: [Glob('**.dart')],
-        commands: (files) => [
-          'dart format ${files.join(' ')}',
-        ],
-      ),
-      ShellTask(
+        name: 'Tests',
         include: [Glob('**.dart')],
         exclude: [Glob('hooks/**')],
         commands: (files) => [
