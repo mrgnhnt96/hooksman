@@ -197,6 +197,10 @@ class LabelMaker {
         '$scriptString $fileCountString',
       );
 
+      if (subPending.hasCompleted && !subPending.isError) {
+        return;
+      }
+
       for (final subParent in subPending.subTasks) {
         yield* retrieveLabels(
           subParent,
