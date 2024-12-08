@@ -86,16 +86,18 @@ class LabelMaker {
         :hasCompleted
       ) = task;
 
-      yield '';
-      yield darkGray.wrap('Total depth: $depth');
-      final status = switch ('') {
-        _ when isRunning => 'Running',
-        _ when isHalted => 'Halted',
-        _ when isError => 'Error',
-        _ when hasCompleted => 'Completed',
-        _ => '???',
-      };
-      yield darkGray.wrap('Status: $status');
+      if (debug) {
+        yield '';
+        yield darkGray.wrap('Total depth: $depth');
+        final status = switch ('') {
+          _ when isRunning => 'Running',
+          _ when isHalted => 'Halted',
+          _ when isError => 'Error',
+          _ when hasCompleted => 'Completed',
+          _ => '???',
+        };
+        yield darkGray.wrap('Status: $status');
+      }
       yield* retrieveLabels(
         task,
         loading: loading,
