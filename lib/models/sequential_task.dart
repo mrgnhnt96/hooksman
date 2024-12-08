@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:hooksman/hooksman.dart';
+import 'package:meta/meta.dart';
 
 abstract class SequentialTask extends HookTask {
   SequentialTask({
@@ -11,6 +12,7 @@ abstract class SequentialTask extends HookTask {
   @override
   String get name;
 
+  @nonVirtual
   @override
   FutureOr<int> run(
     List<String> files, {

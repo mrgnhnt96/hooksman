@@ -28,7 +28,12 @@ class PendingHook {
           task: resolving,
           logger: logger,
           completeTask: (finished, code) {
-            final pending = resolving.subTaskMap[finished.id];
+            final pending = switch (resolving.subTaskMap[finished.id]) {
+              final task? => task,
+              _ when resolving.id == finished.id => resolving,
+              _ => null,
+            };
+
             final task = hook.tasksById[finished.id];
 
             if (task == null || pending == null) {

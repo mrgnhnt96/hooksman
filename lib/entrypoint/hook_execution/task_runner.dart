@@ -35,7 +35,7 @@ class TaskRunner {
         },
         zoneSpecification: ZoneSpecification(
           print: (self, parent, zone, line) {
-            // don't print anything
+            logger.delayed(line);
           },
         ),
       );
