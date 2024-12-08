@@ -27,14 +27,18 @@ class PendingHook {
         final runner = TaskRunner(
           task: resolving,
           logger: logger,
-          completeTask: (finished) {
-            logger.delayed('Task ${finished.id} completed');
+          completeTask: (finished, code) {
+            final pending = resolving.subTaskMap[finished.id];
             final task = hook.tasksById[finished.id];
 
-            if (task == null) {
-              logger.delayed('Task ${finished.id} not found');
+            if (task == null || pending == null) {
+              logger.delayed(
+                'This is not expected, please consider reporting this issue.',
+              );
               throw StateError('Task ${finished.id} not found');
             }
+
+            pending.code = code;
 
             completedTasks.add(task.index);
           },

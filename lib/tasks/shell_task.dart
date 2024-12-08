@@ -11,13 +11,16 @@ class ShellTask extends SequentialTask {
     required super.include,
     required ShellCommands commands,
     super.exclude,
+    String? name,
   })  : _commands = commands,
+        _name = name,
         super();
 
   final ShellCommands _commands;
 
+  final String? _name;
   @override
-  String get name => patternName;
+  String get name => _name ?? patternName;
 
   @override
   List<HookTask> getSubTasks(Iterable<String> files) => [
@@ -44,8 +47,8 @@ class _OneShellTask extends HookTask {
   @override
   FutureOr<int> run(
     List<String> files, {
-    required void Function(String? p1) print,
-    required void Function(HookTask) completeTask,
+    required void Function(String?) print,
+    required void Function(HookTask, int) completeTask,
   }) async {
     final coreCommand = switch (Platform.operatingSystem) {
       'windows' => 'cmd',
@@ -59,6 +62,8 @@ class _OneShellTask extends HookTask {
         command,
       ],
     );
+
+    completeTask(this, result.exitCode);
 
     if (result.exitCode != 0) {
       final scriptString = yellow.wrap(resolvedName);
@@ -83,10 +88,8 @@ class _OneShellTask extends HookTask {
           print(error);
         }
       }
-      return 1;
     }
 
-    completeTask.call(this);
-    return 0;
+    return result.exitCode;
   }
 }

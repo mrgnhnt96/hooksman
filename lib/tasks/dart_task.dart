@@ -21,19 +21,12 @@ class DartTask extends HookTask {
   Future<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(HookTask) completeTask,
+    required void Function(HookTask, int) completeTask,
   }) async {
-    try {
-      final result = await _run(files);
+    final result = await _run(files);
 
-      completeTask(this);
+    completeTask(this, result);
 
-      return result;
-    } catch (e) {
-      print('Error when running $resolvedName');
-      print('$e');
-
-      return 1;
-    }
+    return result;
   }
 }

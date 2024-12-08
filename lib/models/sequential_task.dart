@@ -15,7 +15,7 @@ abstract class SequentialTask extends HookTask {
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(HookTask) completeTask,
+    required void Function(HookTask, int) completeTask,
   }) async {
     for (final task in subTasks(files)) {
       final result = await task.run(
@@ -24,11 +24,11 @@ abstract class SequentialTask extends HookTask {
         completeTask: completeTask,
       );
 
-      completeTask(task);
+      completeTask(task, result);
       if (result != 0) return result;
     }
 
-    completeTask(this);
+    completeTask(this, 0);
 
     return 0;
   }

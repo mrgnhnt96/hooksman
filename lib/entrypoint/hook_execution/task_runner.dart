@@ -12,7 +12,7 @@ class TaskRunner {
 
   final Logger logger;
   final PendingTask task;
-  final void Function(HookTask) completeTask;
+  final void Function(HookTask, int) completeTask;
 
   Future<int> run() async {
     final task = this.task;
@@ -24,11 +24,14 @@ class TaskRunner {
     try {
       return await runZoned(
         () async {
-          return await task.run(
+          final result = await task.run(
             task.files.toList(),
             print: logger.delayed,
             completeTask: completeTask,
           );
+
+          completeTask(task.resolvedTask.original, result);
+          return result;
         },
         zoneSpecification: ZoneSpecification(
           print: (self, parent, zone, line) {
@@ -41,7 +44,7 @@ class TaskRunner {
         ..delayed(red.wrap('Error when running ${task.name}'))
         ..delayed('$e');
 
-      completeTask(task.resolvedTask.original);
+      completeTask(task.resolvedTask.original, 1);
 
       return 1;
     }

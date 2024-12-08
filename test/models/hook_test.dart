@@ -161,7 +161,7 @@ class _TestTask extends HookTask {
   FutureOr<int> run(
     List<String> files, {
     required void Function(String? p1) print,
-    required void Function(int p1) completeTask,
+    required void Function(HookTask, int) completeTask,
   }) {
     throw UnimplementedError();
   }

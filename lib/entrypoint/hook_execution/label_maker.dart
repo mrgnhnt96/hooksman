@@ -24,6 +24,7 @@ class LabelMaker {
   static const dot = '•';
   static const checkMark = '✔️';
   static const x = 'ⅹ';
+  static const warning = '⚠️';
 
   int get maxWidth => _stdout.terminalColumns;
 
@@ -80,11 +81,21 @@ class LabelMaker {
           label: TaskLabel(:depth),
         ),
         :isError,
+        :isHalted,
+        :isRunning,
+        :hasCompleted
       ) = task;
 
       yield '';
       yield darkGray.wrap('Total depth: $depth');
-      yield darkGray.wrap('Is error: $isError');
+      final status = switch ('') {
+        _ when isRunning => 'Running',
+        _ when isHalted => 'Halted',
+        _ when isError => 'Error',
+        _ when hasCompleted => 'Completed',
+        _ => '???',
+      };
+      yield darkGray.wrap('Status: $status');
       yield* retrieveLabels(
         task,
         loading: loading,
@@ -95,37 +106,42 @@ class LabelMaker {
     yield '\n';
   }
 
+  String status(PendingTask task) {
+    if (!debug) {
+      return '';
+    }
+
+    final status = switch (task) {
+      _ when task.isRunning => 'R',
+      _ when task.isHalted => 'H',
+      _ when task.isError => 'E',
+      _ when task.hasCompleted => 'C',
+      _ => '?',
+    };
+
+    return darkGray.wrap(' ($status)') ?? '';
+  }
+
   String? getIndexString(int index) => switch (debug) {
         true => darkGray.wrap('($index) '),
         _ => '',
       };
 
   String? icon(
-    PendingTask task, {
+    PendingTask pending, {
     required String? loading,
   }) {
-    if (task.resolvedTask.fileCount == 0) {
-      return yellow.wrap(down);
-    }
-
-    if (task.isHalted) {
-      return blue.wrap(dot);
-    }
-
-    if (task.isError) {
-      return red.wrap(x);
-    }
-
-    if (task.hasCompleted) {
-      return green.wrap(checkMark);
-    }
-
-    final icon = switch (true) {
-      _ when task.subTasks.isNotEmpty => right,
-      _ => loading,
+    return switch (null) {
+      _ when pending.isError => red.wrap(x),
+      _ when pending.hasCompleted => green.wrap(checkMark),
+      _ when pending.isHalted => blue.wrap(dot),
+      _ when pending.files.isEmpty => yellow.wrap(down),
+      _ when pending.subTasks.isNotEmpty => yellow.wrap(right),
+      _ when pending.isRunning => yellow.wrap(loading),
+      _ when !pending.completedTasks.contains(pending.resolvedTask.index - 1) =>
+        magenta.wrap(loading),
+      _ => red.wrap(warning),
     };
-
-    return yellow.wrap(icon);
   }
 
   Iterable<String?> retrieveLabels(
@@ -135,48 +151,36 @@ class LabelMaker {
   }) sync* {
     final task = pending.resolvedTask;
 
-    final iconString = switch (null) {
-      _ when pending.isError => red.wrap(x),
-      _ when pending.isHalted => blue.wrap(dot),
-      _ when task.fileCount > 0 => yellow.wrap(down),
-      _ when task.hasChildren => yellow.wrap(right),
-      _
-          when task.index != 0 &&
-              !pending.completedTasks.contains(task.index - 1) =>
-        magenta.wrap(loading),
-      _ => yellow.wrap(loading),
-    };
-
+    final iconString = icon(pending, loading: loading);
     final fileCountString = fileCount(task.fileCount);
     final indexString = getIndexString(task.index);
 
+    final status = this.status(pending);
     yield trim(
-      '$indexString$spacing$iconString ${task.name} $fileCountString',
+      '$indexString$status$spacing$iconString ${task.name} $fileCountString',
     );
 
-    if (pending.hasCompleted || pending.isHalted) {
+    if (pending.files.isEmpty) {
+      return;
+    }
+
+    if (pending.isHalted) {
+      if (!debug) {
+        return;
+      }
+    }
+
+    if (pending.hasCompleted && !pending.isError) {
       return;
     }
 
     for (final subPending in pending.subTasks) {
       final subTask = subPending.resolvedTask;
 
-      final hasCompleted = pending.completedTasks.contains(subTask.index);
-      final isWorking = !hasCompleted;
-
-      final iconString = switch (isWorking) {
-        true when pending.isError => red.wrap(x),
-        true
-            when subTask.index != 0 &&
-                pending.completedTasks.contains(subTask.index - 1) =>
-          magenta.wrap(loading),
-        true => yellow.wrap(loading),
-        _ when hasCompleted => green.wrap(checkMark),
-        _ => yellow.wrap(dot),
-      };
+      final iconString = icon(subPending, loading: loading);
 
       final scriptString = switch (subTask) {
-        final e when isWorking && pending.isError => red.wrap(e.name),
+        final e when subPending.isError => red.wrap(e.name),
         final e => e.name,
       };
 
@@ -185,9 +189,10 @@ class LabelMaker {
         true => '',
         _ => fileCount(subTask.fileCount),
       };
-
+      final status = this.status(subPending);
       yield trim(
-        '$indexString$spacing$spacer$iconString $scriptString $fileCountString',
+        '$indexString$status$spacing$spacer$iconString '
+        '$scriptString $fileCountString',
       );
 
       for (final subParent in subPending.subTasks) {

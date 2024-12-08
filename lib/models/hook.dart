@@ -39,7 +39,7 @@ class Hook extends Equatable {
     final resolvedTasks = tasks.indexed.map((e) {
       final (index, task) = e;
 
-      return task.resolve(files, index);
+      return task.resolve(files, index + 1);
     }).toList();
 
     return ResolvedHook(

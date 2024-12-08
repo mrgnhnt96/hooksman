@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/resolved_hook_task.dart';
-import 'package:uuid/uuid.dart';
 
 class PendingTask {
   PendingTask({
@@ -11,7 +10,6 @@ class PendingTask {
     required bool Function() isHalted,
     required Iterable<int> completedTasks,
   })  : _completedTasks = completedTasks,
-        id = const Uuid().v4(),
         _isHalted = isHalted {
     subTasks = resolvedTask.subTasks.map((task) {
       final subTask = PendingTask(
@@ -23,12 +21,17 @@ class PendingTask {
 
       return subTask;
     }).toList();
+
+    subTaskMap = {
+      for (final task in subTasks) task.id: task,
+    };
   }
 
-  final String id;
+  String get id => resolvedTask.original.id;
   final Iterable<String> files;
   final ResolvedHookTask resolvedTask;
   late final List<PendingTask> subTasks;
+  late final Map<String, PendingTask> subTaskMap;
 
   final bool Function() _isHalted;
   bool get isHalted => _isHalted();
@@ -42,7 +45,7 @@ class PendingTask {
   FutureOr<int> run(
     List<String> files, {
     required void Function(String?) print,
-    required void Function(HookTask) completeTask,
+    required void Function(HookTask, int) completeTask,
   }) =>
       resolvedTask.original.run(
         files,
@@ -52,14 +55,15 @@ class PendingTask {
 
   bool get hasCompleted {
     var isComplete = true;
-    isComplete ^= _codeCompleter.isCompleted;
-    isComplete ^= subTasks.every((task) => task.hasCompleted);
+    isComplete &= code != null && code != -99;
+    isComplete &= completedTasks.contains(resolvedTask.index);
+    isComplete &= subTasks.every((task) => task.hasCompleted);
 
     return isComplete;
   }
 
   bool get isRunning {
-    return !hasCompleted;
+    return !hasCompleted && !isHalted;
   }
 
   bool get isError {

@@ -127,22 +127,6 @@ class HookExecutor {
         ..detail('Tasks finished')
         ..flush()
         ..write('\n');
-
-      for (final task in pendingHook.topLevelTasks) {
-        if (task.code case final int code when code != 0) {
-          logger.detail(
-            'Task failed: ${task.resolvedTask.original.resolvedName}',
-          );
-          return code;
-        }
-      }
-    }
-
-    if (hook.backupFiles) {
-      logger.detail('Applying modifications');
-      if (debug) await _wait(durations.short);
-      await gitService.applyModifications(context.nonStagedFiles);
-      if (debug) await _wait(durations.long);
     }
 
     Future<void> finish() async {
@@ -162,37 +146,64 @@ class HookExecutor {
       await gitService.dropBackupStash();
     }
 
+    Future<int> fail() async {
+      final stash = context.stashHash;
+      if (stash == null) {
+        return 1;
+      }
+
+      logger.detail('Forcing hard reset to HEAD');
+      await gitService.restoreStash();
+
+      if (debug) await _wait(durations.long);
+
+      logger.detail('making sure all deleted files stay deleted '
+          '(${context.deletedFiles.length})');
+
+      if (debug) await _wait(durations.short);
+      await gitService.ensureDeletedFiles(context.deletedFiles);
+
+      await finish();
+
+      return 1;
+    }
+
+    var failed = false;
+    for (final task in pendingHook.topLevelTasks) {
+      if (task.code case final int code when code != 0) {
+        failed = true;
+        logger.detail(
+          'Task failed: ${task.resolvedTask.original.resolvedName}',
+        );
+      }
+
+      if (failed) {
+        logger
+          ..detail('Task failed, stopping')
+          ..flush();
+        return await fail();
+      }
+    }
+
+    logger.detail('Applying modifications');
+    if (debug) await _wait(durations.short);
+    await gitService.applyModifications(context.nonStagedFiles);
+    if (debug) await _wait(durations.long);
+
     if (context.hidePartiallyStaged) {
       logger.detail('Restoring unstaged changes');
       if (!await gitService.applyPatch()) {
         logger.err('Failed to restore unstaged changes due to merge conflicts');
         if (debug) await _wait(durations.long);
 
-        final stash = context.stashHash;
-        if (stash == null) {
-          return 1;
-        }
-
-        logger.detail('Forcing hard reset to HEAD');
-        await gitService.restoreStash();
-
-        if (debug) await _wait(durations.long);
-
-        logger.detail('making sure all deleted files stay deleted '
-            '(${context.deletedFiles.length})');
-
-        if (debug) await _wait(durations.short);
-        await gitService.ensureDeletedFiles(context.deletedFiles);
-
-        await finish();
-
-        return 1;
+        await fail();
       }
     }
 
     await finish();
 
     if (hook.allowEmpty) {
+      logger.detail('--FINISHED--');
       return 0;
     }
 
@@ -202,10 +213,13 @@ class HookExecutor {
     );
 
     if (files != null && files.isEmpty) {
-      logger.info('No changes to commit');
+      logger
+        ..info('No changes to commit')
+        ..detail('--FINISHED--');
       return 1;
     }
 
+    logger.detail('--FINISHED--');
     return 0;
   }
 

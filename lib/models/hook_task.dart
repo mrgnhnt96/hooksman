@@ -20,8 +20,8 @@ abstract class HookTask {
 
   FutureOr<int> run(
     List<String> files, {
-    required void Function(String?) print,
-    required void Function(HookTask) completeTask,
+    required void Function(String? string) print,
+    required void Function(HookTask, int) completeTask,
   });
 
   List<HookTask>? _subTasks;
@@ -43,7 +43,7 @@ abstract class HookTask {
       label: label(filtered),
       subTasks: subTasks.indexed.map((e) {
         final (i, task) = e;
-        final subIndex = index * 100 + i;
+        final subIndex = int.parse('${index}0$i');
 
         final subFiltered = task.filterFiles(filtered);
 
