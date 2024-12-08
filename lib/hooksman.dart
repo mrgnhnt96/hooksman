@@ -30,6 +30,7 @@ export 'services/git/merge_mixin.dart';
 export 'services/git/patch_mixin.dart';
 export 'services/git/stash_mixin.dart';
 export 'tasks/dart_task.dart';
+export 'tasks/parallel_task.dart';
 export 'tasks/re_register_hooks.dart';
 export 'tasks/sequential_tasks.dart';
 export 'tasks/shell_task.dart';
