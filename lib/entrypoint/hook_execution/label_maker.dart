@@ -139,9 +139,10 @@ class LabelMaker {
       _ when pending.isHalted => blue.wrap(dot),
       _ when pending.files.isEmpty => yellow.wrap(down),
       _ when pending.subTasks.isNotEmpty => yellow.wrap(right),
-      _ when pending.isRunning => yellow.wrap(loading),
-      _ when !pending.completedTasks.contains(pending.resolvedTask.index - 1) =>
+      // TODO(mrgnhnt): get this working..
+      _ when !pending.completedTasks.contains(pending.resolvedTask.index) =>
         magenta.wrap(loading),
+      _ when pending.isRunning => yellow.wrap(loading),
       _ => red.wrap(warning),
     };
   }
@@ -197,9 +198,9 @@ class LabelMaker {
         '$scriptString $fileCountString',
       );
 
-      // if (subPending.hasCompleted && !subPending.isError) {
-      //   return;
-      // }
+      if (subPending.hasCompleted && !subPending.isError) {
+        continue;
+      }
 
       for (final subParent in subPending.subTasks) {
         yield* retrieveLabels(
