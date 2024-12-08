@@ -28,7 +28,7 @@ class PendingHook {
           task: resolving,
           logger: logger,
           completeTask: (finished, code) {
-            final pending = switch (resolving.subTaskMap[finished.id]) {
+            final pending = switch (resolving.taskMap[finished.id]) {
               final task? => task,
               _ when resolving.id == finished.id => resolving,
               _ => null,
@@ -40,11 +40,16 @@ class PendingHook {
               logger.delayed(
                 'This is not expected, please consider reporting this issue.',
               );
-              throw StateError('Task ${finished.id} not found');
+              final errorName = switch ((task, pending)) {
+                (null, null) => 'Task and pending task',
+                (null, _) => 'Task',
+                (_, null) => 'Pending task (index: ${task?.index})',
+                _ => 'Unknown',
+              };
+              throw StateError('$errorName ${finished.id} not found');
             }
 
             pending.code = code;
-
             completedTasks.add(task.index);
           },
         );
@@ -133,7 +138,7 @@ class PendingHook {
     final pending = _tasks[taskId];
 
     if (pending == null) {
-      logger.err('Task $taskId not found');
+      logger.err('Pending task $taskId not found');
       return;
     }
 

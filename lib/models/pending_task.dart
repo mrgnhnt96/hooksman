@@ -22,8 +22,15 @@ class PendingTask {
       return subTask;
     }).toList();
 
-    subTaskMap = {
-      for (final task in subTasks) task.id: task,
+    Iterable<PendingTask> allTasks(PendingTask task) sync* {
+      yield task;
+      for (final subTask in task.subTasks) {
+        yield* allTasks(subTask);
+      }
+    }
+
+    taskMap = {
+      for (final task in allTasks(this)) task.id: task,
     };
   }
 
@@ -31,7 +38,7 @@ class PendingTask {
   final Iterable<String> files;
   final ResolvedHookTask resolvedTask;
   late final List<PendingTask> subTasks;
-  late final Map<String, PendingTask> subTaskMap;
+  late final Map<String, PendingTask> taskMap;
 
   final bool Function() _isHalted;
   bool get isHalted => _isHalted();

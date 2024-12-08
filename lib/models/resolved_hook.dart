@@ -8,8 +8,19 @@ class ResolvedHook extends Equatable {
     required this.files,
     required this.tasks,
   }) {
-    final allTasks =
-        tasks.expand((task) => [task].followedBy(task.subTasks)).toList();
+    Iterable<ResolvedHookTask> subTasks(ResolvedHookTask task) sync* {
+      for (final subTask in task.subTasks) {
+        yield subTask;
+        yield* subTasks(subTask);
+      }
+    }
+
+    final allTasks = [
+      for (final task in tasks) ...[
+        task,
+        ...subTasks(task),
+      ],
+    ];
 
     tasksById = {
       for (final task in allTasks) task.original.id: task,
@@ -18,7 +29,6 @@ class ResolvedHook extends Equatable {
 
   final List<String> files;
   final List<ResolvedHookTask> tasks;
-
   late final Map<String, ResolvedHookTask> tasksById;
 
   @override
