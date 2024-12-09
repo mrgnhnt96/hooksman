@@ -22,7 +22,7 @@ final class ReRegisterHooks extends ShellTask {
             return [
               '''
 $changeDir
-if dart pub deps | grep -q "^[│├└─]* $package "; then
+if dart pub deps | grep -q "$package "; then
   dart run hooksman register
 elif dart pub global list | grep -q "^$package "; then
   dart run hooksman register
