@@ -176,6 +176,30 @@ ParallelTasks(
 ),
 ```
 
+## Predefined Tasks
+
+### ReRegisterHooks
+
+The `ReRegisterHooks` task re-registers the hooks with Git. This is useful when you want to update the hooks without having to manually run the `hooksman` command.
+
+```dart
+Hook main() {
+  return Hook(
+    tasks: [
+      ReRegisterHooks(),
+    ],
+  );
+}
+```
+
+> [!TIP]
+>
+> If your `hooks` directory is not found in the root of your project, you can specify the path to the `hooks` directory to the `ReRegisterHooks` task.
+>
+> ```dart
+> ReRegisterHooks(pathToHooksDir: 'path/to/hooks'),
+> ```
+
 ## Execute Hooks
 
 The hooks will be executed automatically by Git when the corresponding events occur (e.g., pre-commit, post-commit, etc.).
