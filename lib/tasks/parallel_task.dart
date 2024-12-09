@@ -25,15 +25,18 @@ class ParallelTasks extends HookTask {
     List<String> files, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   }) async {
     final futures = <Future<int>>[];
 
     for (final task in subTasks(files)) {
+      startTask(task);
       Future<int> value() async {
         return await task.run(
           files,
           print: print,
           completeTask: completeTask,
+          startTask: startTask,
         );
       }
 

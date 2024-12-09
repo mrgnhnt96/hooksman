@@ -8,11 +8,13 @@ class TaskRunner {
     required this.logger,
     required this.task,
     required this.completeTask,
+    required this.startTask,
   });
 
   final Logger logger;
   final PendingTask task;
   final void Function(HookTask, int) completeTask;
+  final void Function(HookTask) startTask;
 
   Future<int> run() async {
     final task = this.task;
@@ -28,6 +30,7 @@ class TaskRunner {
             task.files.toList(),
             print: logger.delayed,
             completeTask: completeTask,
+            startTask: startTask,
           );
 
           completeTask(task.resolvedTask.original, result);

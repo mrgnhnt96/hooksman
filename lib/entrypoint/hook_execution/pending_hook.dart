@@ -14,6 +14,7 @@ class PendingHook {
   }) {
     final killCompleter = Completer<void>();
     final completedTasks = <int>{};
+    final startedTasks = <int>{};
 
     Iterable<(PendingTask, TaskRunner)> tasks() sync* {
       for (final task in hook.tasks) {
@@ -21,6 +22,7 @@ class PendingHook {
           files: task.files,
           resolvedTask: task,
           completedTasks: completedTasks,
+          startedTasks: startedTasks,
           isHalted: () => killCompleter.isCompleted,
         );
 
@@ -51,6 +53,19 @@ class PendingHook {
 
             pending.code = code;
             completedTasks.add(task.index);
+            startedTasks.remove(task.index);
+          },
+          startTask: (started) {
+            final task = hook.tasksById[started.id];
+            if (task == null) {
+              logger.delayed(
+                'This is not expected, please consider reporting this issue.',
+              );
+
+              throw StateError('Tasks ${started.id} not found');
+            }
+
+            startedTasks.add(task.index);
           },
         );
 
@@ -68,6 +83,7 @@ class PendingHook {
       logger: logger,
       killCompleter: killCompleter,
       completedTasks: completedTasks,
+      startedTasks: startedTasks,
     );
   }
 
@@ -76,8 +92,10 @@ class PendingHook {
     required this.logger,
     required Completer<void> killCompleter,
     required Set<int> completedTasks,
+    required Set<int> startedTasks,
   })  : _killCompleter = killCompleter,
-        _completedTasks = completedTasks {
+        _completedTasks = completedTasks,
+        _startedTasks = startedTasks {
     _listenToKillSignal();
   }
 
@@ -86,6 +104,8 @@ class PendingHook {
   final Completer<void> _killCompleter;
   final Set<int> _completedTasks;
   Set<int> get completedTasks => Set<int>.unmodifiable(_completedTasks);
+  final Set<int> _startedTasks;
+  Set<int> get startedTasks => Set<int>.unmodifiable(_startedTasks);
   StreamSubscription<ProcessSignal>? _killSubscription;
 
   bool _wasKilled = false;

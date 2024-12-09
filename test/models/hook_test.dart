@@ -162,6 +162,7 @@ class _TestTask extends HookTask {
     List<String> files, {
     required void Function(String? p1) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   }) {
     throw UnimplementedError();
   }

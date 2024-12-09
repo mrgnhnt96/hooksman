@@ -22,6 +22,7 @@ abstract class HookTask {
     List<String> files, {
     required void Function(String? string) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   });
 
   List<HookTask>? _subTasks;

@@ -10,5 +10,6 @@ extension _$ResolvedHookAutoequal on ResolvedHook {
   List<Object?> get _$props => [
         files,
         tasks,
+        tasksById,
       ];
 }

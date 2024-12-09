@@ -22,7 +22,9 @@ class DartTask extends HookTask {
     List<String> files, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   }) async {
+    startTask(this);
     final result = await _run(files);
 
     completeTask(this, result);

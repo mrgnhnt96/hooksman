@@ -49,7 +49,9 @@ class _OneShellTask extends HookTask {
     List<String> files, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   }) async {
+    startTask(this);
     final coreCommand = switch (Platform.operatingSystem) {
       'windows' => 'cmd',
       _ => 'bash',

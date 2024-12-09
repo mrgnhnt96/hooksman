@@ -50,12 +50,8 @@ class LabelMaker {
     return trimmed.join().replaceAll(RegExp(r'\^'), '$invisible  $invisible');
   }
 
-  String create(String loadingFrame) {
-    final loading = yellow.wrap(loadingFrame);
-
-    return label(
-      loading,
-    ).join('\n');
+  String create(String loading) {
+    return label(loading).join('\n');
   }
 
   Iterable<String?> label(
@@ -68,8 +64,10 @@ class LabelMaker {
         :isDead,
         :wasKilled,
         :completedTasks,
+        :startedTasks,
       ) = pendingHook;
       yield darkGray.wrap('');
+      yield darkGray.wrap('Started Tasks: ${startedTasks.join(', ')}');
       yield darkGray.wrap('Completed Tasks: ${completedTasks.join(', ')}');
       yield darkGray.wrap('Killed: $wasKilled');
       yield darkGray.wrap('Dead: $isDead');
@@ -83,6 +81,7 @@ class LabelMaker {
         :isError,
         :isHalted,
         :isRunning,
+        :hasStarted,
         :hasCompleted
       ) = task;
 
@@ -93,7 +92,10 @@ class LabelMaker {
           _ when isRunning => 'Running',
           _ when isHalted => 'Halted',
           _ when isError => 'Error',
+          _ when hasStarted => 'Started',
           _ when hasCompleted => 'Completed',
+          _ when task.files.isEmpty => 'Skipped',
+          _ when !isRunning => 'Pending',
           _ => '???',
         };
         yield darkGray.wrap('Status: $status');
@@ -114,10 +116,12 @@ class LabelMaker {
     }
 
     final status = switch (task) {
+      _ when task.subTasks.isNotEmpty => '-',
       _ when task.isRunning => 'R',
       _ when task.isHalted => 'H',
       _ when task.isError => 'E',
       _ when task.hasCompleted => 'C',
+      _ when !task.hasStarted => 'P',
       _ => '?',
     };
 
@@ -139,9 +143,7 @@ class LabelMaker {
       _ when pending.isHalted => blue.wrap(dot),
       _ when pending.files.isEmpty => yellow.wrap(down),
       _ when pending.subTasks.isNotEmpty => yellow.wrap(right),
-      // TODO(mrgnhnt): get this working..
-      _ when !pending.completedTasks.contains(pending.resolvedTask.index) =>
-        magenta.wrap(loading),
+      _ when !pending.hasStarted => magenta.wrap(loading),
       _ when pending.isRunning => yellow.wrap(loading),
       _ => red.wrap(warning),
     };

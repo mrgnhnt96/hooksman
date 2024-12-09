@@ -18,12 +18,15 @@ abstract class SequentialTask extends HookTask {
     List<String> files, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   }) async {
     for (final task in subTasks(files)) {
+      startTask(task);
       final result = await task.run(
         files,
         print: print,
         completeTask: completeTask,
+        startTask: startTask,
       );
 
       completeTask(task, result);

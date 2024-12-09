@@ -9,7 +9,9 @@ class PendingTask {
     required this.resolvedTask,
     required bool Function() isHalted,
     required Iterable<int> completedTasks,
+    required Iterable<int> startedTasks,
   })  : _completedTasks = completedTasks,
+        _startedTasks = startedTasks,
         _isHalted = isHalted {
     subTasks = resolvedTask.subTasks.map((task) {
       final subTask = PendingTask(
@@ -17,6 +19,7 @@ class PendingTask {
         resolvedTask: task,
         isHalted: isHalted,
         completedTasks: completedTasks,
+        startedTasks: startedTasks,
       );
 
       return subTask;
@@ -46,6 +49,9 @@ class PendingTask {
   final Iterable<int> _completedTasks;
   Set<int> get completedTasks => Set.unmodifiable(_completedTasks);
 
+  final Iterable<int> _startedTasks;
+  Set<int> get startedTasks => Set.unmodifiable(_startedTasks);
+
   final _codeCompleter = Completer<int>();
   String get name => resolvedTask.label.name;
 
@@ -53,11 +59,13 @@ class PendingTask {
     List<String> files, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
   }) =>
       resolvedTask.original.run(
         files,
         print: print,
         completeTask: completeTask,
+        startTask: startTask,
       );
 
   bool get hasCompleted {
@@ -69,8 +77,13 @@ class PendingTask {
     return isComplete;
   }
 
+  bool get hasStarted => startedTasks.contains(resolvedTask.index);
+
   bool get isRunning {
-    return !hasCompleted && !isHalted;
+    if (hasCompleted) return false;
+    if (isHalted) return false;
+
+    return hasStarted;
   }
 
   bool get isError {
