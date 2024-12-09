@@ -345,10 +345,11 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
 
   Future<void> applyModifications(List<String> existing) async {
     logger.detail('Checking for modifications');
-    final changed = await nonStagedFiles();
+    final changed = await nonStagedFiles() ?? [];
+    final allDeletedFiles = await getDeletedFiles();
 
-    if (changed == null || changed.isEmpty) {
-      logger.detail('No files were found');
+    if (changed.isEmpty && allDeletedFiles.isEmpty) {
+      logger.detail('No post file modifications were found');
       return;
     }
 
@@ -356,23 +357,36 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     for (final file in existing) {
       logger.detail('  - $file');
     }
+
     logger.detail('Post-Task files: (${changed.length})');
     for (final file in changed) {
       logger.detail('  - $file');
     }
 
-    final difference = changed.toSet().difference(existing.toSet());
-    if (difference.isEmpty) {
-      logger.detail('No files to add to commit');
-      return;
-    }
-
-    logger.detail('Found ${difference.length} files to add to commit');
-    for (final file in difference) {
+    logger.detail('Post-Deleted Files (${allDeletedFiles.length})');
+    for (final file in allDeletedFiles) {
       logger.detail('  - $file');
     }
 
-    await add(difference.toList());
+    final modifiedFiles = changed.toSet().difference(existing.toSet());
+    logger.detail('Found ${modifiedFiles.length} files modified or created');
+    for (final file in modifiedFiles) {
+      logger.detail('  - $file');
+    }
+
+    final deletedFiles = allDeletedFiles.toSet().difference(existing.toSet());
+    logger.detail('Found ${deletedFiles.length} deleted files to add');
+    for (final file in deletedFiles) {
+      logger.detail('  - $file');
+    }
+
+    final filesToAdd = modifiedFiles.followedBy(deletedFiles);
+    if (filesToAdd.isEmpty) {
+      logger.detail('Nothing to add to commit');
+      return;
+    }
+
+    await add(filesToAdd.toList());
   }
 
   Future<bool> restoreStash() async {
