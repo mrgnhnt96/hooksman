@@ -21,6 +21,7 @@ final class ReRegisterHooks extends ShellTask {
 
             return [
               '''
+# Running hooksman register
 $changeDir
 if dart pub deps | grep -q "$package "; then
   dart run hooksman register
