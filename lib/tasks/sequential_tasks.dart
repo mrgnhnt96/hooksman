@@ -4,15 +4,15 @@ import 'package:hooksman/utils/all_files.dart';
 
 class SequentialTasks extends SequentialTask {
   SequentialTasks({
-    required this.name,
     required List<HookTask> tasks,
+    this.name,
     List<Pattern>? include,
     super.exclude,
   })  : _tasks = tasks,
         super(include: include ?? [AllFiles()]);
 
   @override
-  final String name;
+  final String? name;
 
   final List<HookTask> _tasks;
 

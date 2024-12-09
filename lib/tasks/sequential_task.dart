@@ -7,10 +7,11 @@ abstract class SequentialTask extends HookTask {
   SequentialTask({
     required super.include,
     super.exclude,
+    this.name,
   });
 
   @override
-  String get name;
+  final String? name;
 
   @nonVirtual
   @override
