@@ -42,7 +42,7 @@ class LabelMaker {
   String trim(String string) {
     final spacerCounts = RegExp(r'\^').allMatches(string).length;
     final max = maxWidth - (spacerCounts * 2) - 1;
-    final trimmed = string.split('').take(max).toList();
+    final trimmed = string.split('\n').first.split('').take(max).toList();
 
     if (trimmed.length < string.length) {
       trimmed.add('…');
