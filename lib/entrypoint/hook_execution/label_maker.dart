@@ -25,6 +25,7 @@ class LabelMaker {
   static const checkMark = '✓';
   static const x = 'ⅹ';
   static const warning = '⚠️';
+  static const waiting = '-';
 
   int get maxWidth => _stdout.terminalColumns;
 
@@ -143,7 +144,7 @@ class LabelMaker {
       _ when pending.isHalted => blue.wrap(dot),
       _ when pending.files.isEmpty => yellow.wrap(down),
       _ when pending.subTasks.isNotEmpty => yellow.wrap(right),
-      _ when !pending.hasStarted => magenta.wrap(loading),
+      _ when !pending.hasStarted => yellow.wrap(waiting),
       _ when pending.isRunning => yellow.wrap(loading),
       _ => red.wrap(warning),
     };
