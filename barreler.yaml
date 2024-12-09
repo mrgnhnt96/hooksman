@@ -17,3 +17,4 @@ dirs:
     include:
       - "tasks/*.dart"
       - "hooks/*.dart"
+      - "entrypoint/execute_hook.dart"

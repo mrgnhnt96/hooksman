@@ -4,6 +4,7 @@
 
 export 'package:glob/glob.dart';
 
+export 'entrypoint/execute_hook.dart';
 export 'hooks/debug_hook.dart';
 export 'hooks/hook.dart';
 export 'tasks/dart_task.dart';
