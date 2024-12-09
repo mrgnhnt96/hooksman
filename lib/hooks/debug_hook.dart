@@ -1,4 +1,4 @@
-import 'package:hooksman/models/hook.dart';
+import 'package:hooksman/hooks/hook.dart';
 
 class DebugHook extends Hook {
   DebugHook({

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/tasks/hook_task.dart';
 
 typedef Run = FutureOr<int> Function(List<String> files);
 

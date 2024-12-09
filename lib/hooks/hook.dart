@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:hooksman/hooksman.dart';
+import 'package:hooksman/models/resolved_hook.dart';
+import 'package:hooksman/tasks/hook_task.dart';
 
 part 'hook.g.dart';
 

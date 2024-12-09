@@ -2,7 +2,7 @@ import 'dart:io' as io;
 
 import 'package:hooksman/entrypoint/hook_execution/label_maker.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
-import 'package:hooksman/models/hook.dart';
+import 'package:hooksman/hooks/hook.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:hooksman/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';

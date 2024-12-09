@@ -1,5 +1,5 @@
-import 'package:hooksman/models/hook_task.dart';
-import 'package:hooksman/models/sequential_task.dart';
+import 'package:hooksman/tasks/hook_task.dart';
+import 'package:hooksman/tasks/sequential_task.dart';
 import 'package:hooksman/utils/all_files.dart';
 
 class SequentialTasks extends SequentialTask {

@@ -15,4 +15,5 @@ dirs:
     exports:
       - export: package:glob/glob.dart
     include:
-      - "**/*.dart"
+      - "tasks/*.dart"
+      - "hooks/*.dart"

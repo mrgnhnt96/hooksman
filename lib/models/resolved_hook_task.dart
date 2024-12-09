@@ -1,5 +1,5 @@
-import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/task_label.dart';
+import 'package:hooksman/tasks/hook_task.dart';
 
 class ResolvedHookTask {
   const ResolvedHookTask({

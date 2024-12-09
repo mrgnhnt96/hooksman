@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:hooksman/models/hook_task.dart';
 import 'package:hooksman/models/resolved_hook_task.dart';
+import 'package:hooksman/tasks/hook_task.dart';
 
 class PendingTask {
   PendingTask({

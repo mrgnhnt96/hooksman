@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:hooksman/models/hook.dart';
-import 'package:hooksman/models/hook_task.dart';
+import 'package:hooksman/hooks/hook.dart';
+import 'package:hooksman/tasks/hook_task.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:hooksman/hooksman.dart';
+import 'package:hooksman/models/pending_task.dart';
+import 'package:hooksman/tasks/hook_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class TaskRunner {
