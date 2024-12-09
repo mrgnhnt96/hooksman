@@ -22,7 +22,7 @@ class LabelMaker {
   static const down = '↓';
   static const right = '→';
   static const dot = '•';
-  static const checkMark = '✔️';
+  static const checkMark = '✓';
   static const x = 'ⅹ';
   static const warning = '⚠️';
 
