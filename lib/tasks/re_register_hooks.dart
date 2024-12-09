@@ -13,12 +13,24 @@ final class ReRegisterHooks extends ShellTask {
           ],
           commands: (_) {
             final changeDir = switch (pathToHooksDir) {
-              String() => 'cd $pathToHooksDir &&',
+              String() => 'cd $pathToHooksDir || exit 1;',
               _ => '',
             };
 
+            const package = 'hooksman';
+
             return [
-              '$changeDir dart run hooksman register',
+              '''
+$changeDir
+if dart pub deps | grep -q "^[│├└─]* $package "; then
+  dart run hooksman register
+elif dart pub global list | grep -q "^$package "; then
+  dart run hooksman register
+else
+  echo "Not installed"
+  exit 1
+fi
+''',
             ];
           },
         );
