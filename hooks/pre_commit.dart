@@ -6,7 +6,6 @@ Hook main() {
       ReRegisterHooks(),
       ShellTask(
         name: 'Lint & Format',
-        //
         include: [Glob('**.dart')],
         exclude: [
           Glob('**.g.dart'),
