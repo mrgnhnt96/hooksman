@@ -14,3 +14,4 @@ export 'tasks/re_register_hooks.dart';
 export 'tasks/sequential_task.dart';
 export 'tasks/sequential_tasks.dart';
 export 'tasks/shell_task.dart';
+export 'utils/all_files.dart';

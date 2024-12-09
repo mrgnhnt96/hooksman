@@ -18,3 +18,4 @@ dirs:
       - "tasks/*.dart"
       - "hooks/*.dart"
       - "entrypoint/execute_hook.dart"
+      - "utils/all_files.dart"
