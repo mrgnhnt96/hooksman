@@ -2,6 +2,8 @@
 
 [![Pub Version](https://img.shields.io/pub/v/hooksman)](https://pub.dev/packages/hooksman)
 
+![preview](./assets/preview.gif)
+
 ## Overview
 
 The `hooksman` package allows you to manage and execute Git hooks using Dart. You can define your hooks as Dart files and register them with Git to run automatically when the corresponding events occur (e.g., pre-commit, post-commit, etc.).
