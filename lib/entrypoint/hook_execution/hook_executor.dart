@@ -79,8 +79,9 @@ class HookExecutor {
     );
 
     if (pendingHook.topLevelTasks.every((e) => e.files.isEmpty)) {
-      logger
-          .info(darkGray.wrap('Skipping $hookName, no files match any tasks'));
+      logger.info(
+        darkGray.wrap('Skipping $hookName hook, no files match any tasks'),
+      );
       return 0;
     }
 
