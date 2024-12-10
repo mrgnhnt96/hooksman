@@ -6,9 +6,11 @@
 
 ## Overview
 
-The `hooksman` package allows you to manage and execute Git hooks using Dart. You can define your hooks as Dart files and register them with Git to run automatically when the corresponding events occur (e.g., pre-commit, post-commit, etc.).
+The `hooksman` package allows you to manage and execute Git hooks using Dart. You can define your hooks as Dart files and register them with Git to run automatically when the corresponding events occur (e.g., pre-commit, post-commit, etc.). Inspired by [lint-staged](https://npm.im/lint-staged) and [husky](https://npm.im/husky), `hooksman` provides a flexible and powerful way to automate tasks during your workflow and share them across your team.
 
-Run shell commands, Dart code, or a combination of both in your hooks to enforce coding standards, run tests, or perform other tasks.
+With `hooksman` you can run shell commands, Dart code, or a combination of both in your hooks to enforce coding standards, run tests, or perform other tasks.
+
+Tasks are used to safeguard your codebase, if a task fails, `hooksman` exits with a non-zero status code, preventing the hook from completing (like a pre-commit hook).
 
 ## Installation
 
@@ -74,13 +76,17 @@ Hook main() {
 >     └── pre_commit.dart # picked up
 > ```
 
+### Hook Names
+
+The name of the hook is derived from the file name. For example, a file named `pre_commit.dart` will be registered as the `pre-commit` hook. Be sure to follow the naming convention for Git hooks.
+
 > [!TIP]
 >
 > Look at the git hooks documentation for more information on the available hooks: [Git Hooks Documentation](https://git-scm.com/docs/githooks).
 
 ## Tasks
 
-Tasks are modular units of work that you define to be executed during specific Git hook events. They allow you to automate checks, validations, or any custom scripts to ensure code quality and consistency across your repository. Tasks are powerful because they can be customized to suit your project's needs while targeting specific files or patterns.
+Tasks are modular units of work that you define to be executed during specific Git hook events. They allow you to automate checks, validations, or any custom scripts to ensure code quality and consistency across your repository. Tasks are powerful because they can be customized to suit your project's needs while targeting specific file paths or patterns.
 
 All top level tasks are executed in parallel, while tasks within a group are executed sequentially. This allows you to run multiple tasks concurrently and group related tasks together.
 
@@ -90,15 +96,30 @@ You can specify file patterns to include or exclude from a task using any `Patte
 
 > [!TIP]
 >
-> `hooksman` exposes the `Glob` class.
+> `hooksman` exposes the `Glob` class from the [Glob](https://pub.dev/packages/glob) package to match file paths using glob patterns.
 >
-> `hooksman` also has an `AllFiles` class to match all files.
+> `hooksman` also has an `AllFiles` class to match all file paths.
 
 > [!NOTE]
 >
 > `exclude` filters any matching files before `include` is applied.
 
 After the filters are applied, the remaining files are passed to the task's `commands` or `run` function.
+
+### Task Naming
+
+Each task is assigned a name that is displayed when the task is executed. This is useful for identifying the task in the output. By default, the name of the task is the pattern(s) used to include files. If you would like to provide a custom name, you can do so by setting the `name` property of the task.
+
+```dart
+ShellTask(
+    name: 'Analyze',
+    include: [Glob('**.dart')],
+    exclude: [Glob('**.g.dart')],
+    commands: (filePaths) => [
+        'dart analyze --fatal-infos ${filePaths.join(' ')}',
+    ],
+),
+```
 
 ### Shell Task
 
@@ -109,8 +130,8 @@ ShellTask(
     name: 'Analyze',
     include: [Glob('**.dart')],
     exclude: [Glob('**.g.dart')],
-    commands: (files) => [
-        'dart analyze --fatal-infos ${files.join(' ')}',
+    commands: (filePaths) => [
+        'dart analyze --fatal-infos ${filePaths.join(' ')}',
     ],
 ),
 ```
@@ -122,7 +143,7 @@ A `DartTask` allows you to run Dart code.
 ```dart
 DartTask(
     include: [Glob('**.dart')],
-    run: (files) async {
+    run: (filePaths) async {
         print('Running custom task');
 
         return 0;
@@ -139,19 +160,23 @@ SequentialTasks(
     tasks: [
         ShellTask(
             include: [Glob('**.dart')],
-            commands: (files) => [
-                'dart format ${files.join(' ')}',
+            commands: (filePaths) => [
+                'dart format ${filePaths.join(' ')}',
             ],
         ),
         ShellTask(
             include: [Glob('**.dart')],
-            commands: (files) => [
+            commands: (filePaths) => [
                 'sip test --concurrent --bail',
             ],
         ),
     ],
 ),
 ```
+
+> [!TIP]
+>
+> Check out [`sip_cli`](https://pub.dev/packages/sip_cli) for a Dart-based CLI tool to manage mono-repos, maintain project scripts, and run `dart|flutter pub get` across multiple packages.
 
 ### Parallel Tasks
 
@@ -162,13 +187,13 @@ ParallelTasks(
     tasks: [
         ShellTask(
             include: [Glob('**.dart')],
-            commands: (files) => [
-                'dart format ${files.join(' ')}',
+            commands: (filePaths) => [
+                'dart format ${filePaths.join(' ')}',
             ],
         ),
         ShellTask(
             include: [Glob('**.dart')],
-            commands: (files) => [
+            commands: (filePaths) => [
                 'sip test --concurrent --bail',
             ],
         ),
@@ -176,11 +201,17 @@ ParallelTasks(
 ),
 ```
 
+> [!TIP]
+>
+> Check out [`sip_cli`](https://pub.dev/packages/sip_cli) for a Dart-based CLI tool to manage mono-repos, maintain project scripts, and run `dart|flutter pub get` across multiple packages.
+
 ## Predefined Tasks
 
 ### ReRegisterHooks
 
-The `ReRegisterHooks` task re-registers the hooks with Git. This is useful when you want to update the hooks without having to manually run the `hooksman` command.
+It can be easy to forget to re-register the hooks with Git after making changes. Re-registering the hooks is necessary to ensure that the changes are applied, since your dart files are compiled into executables then copied to the `.git/hooks` directory.
+
+To automate this process, you can use the `ReRegisterHooks` task. This task will re-register your hooks with Git whenever any hook files are created, modified, or deleted.
 
 ```dart
 Hook main() {
@@ -200,9 +231,70 @@ Hook main() {
 > ReRegisterHooks(pathToHooksDir: 'path/to/hooks'),
 > ```
 
-## Execute Hooks
+## Hook Execution
 
 The hooks will be executed automatically by Git when the corresponding events occur (e.g., pre-commit, post-commit, etc.).
+
+### Amending to the Commit
+
+`hooksman`, similar to `lint-staged`, will add any created/deleted/modified files to the commit after running the tasks. Ensuring that the changes are included in the commit.
+
+An example of this behavior is when you have a `ShellTask` that formats the code using `dart format`. If the code is not formatted correctly, `hooksman` will format the code and add the changes to the commit.
+
+### Partially Staged Files
+
+A partially staged file is when you have `some_file.dart` staged in the index, along with some changes to the same `some_file.dart` file in the working directory.
+
+When the tasks are executed, `hooksman` will stash any non-staged changes to partially staged files, run the tasks, then pop the stash with the changes. The is beneficial because it ensures that the tasks are run on the version of the file that is staged in the index, rather than the working directory.
+
+### Error Handling
+
+If an error occurs during the execution of a task, `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code. This will prevent the commit from being made, allowing you to fix the issue before committing again.
+
+### Signal Interruption
+
+If the user interrupts the hook execution (e.g., by pressing `Ctrl+C`), `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code. Extra precautions are taken to ensure that the repository is left in a clean state.
+
+## Configuration
+
+Hooks are initially setup to run for the `pre-commit` hook, but you can configure the hooks to run for other events by specifying the `diff` and `diffFilters` parameters in the `Hook` object.
+
+### Diff Filters
+
+The `diffFilters` parameter allows you to specify the statuses of files to include or exclude, such as `added`, `modified`, or `deleted`.
+
+```dart
+
+Hook main() {
+  return Hook(
+    diffFilters: 'AM', // Include added and modified files
+    tasks: [
+      ...
+    ],
+  );
+}
+```
+
+### Diff
+
+The `diff` parameter allows you to specify how files are compared with the working directory, index, or commit.
+
+The example below demonstrates how to compare files with the remote branch (e.g., `origin/main`). This could be useful for a `pre-push` hook.
+
+```dart
+Hook main() {
+  return Hook(
+    diffArgs: ['@{u}', 'HEAD'], // Compare files with the remote branch
+    tasks: [
+      ...
+    ],
+  );
+}
+```
+
+## Verbose Output
+
+You can enable verbose output by using the `VerboseHook` class. This will _slow_ down the execution of the tasks and output detailed information about the tasks being executed. This can be useful to understand the order of execution and the files being processed. This is not intended to be used in non-developing environments.
 
 ## Example
 
@@ -221,16 +313,16 @@ Hook main() {
         exclude: [
           Glob('**.g.dart'),
         ],
-        commands: (files) => [
-          'dart analyze --fatal-infos ${files.join(' ')}',
-          'dart format ${files.join(' ')}',
+        commands: (filePaths) => [
+          'dart analyze --fatal-infos ${filePaths.join(' ')}',
+          'dart format ${filePaths.join(' ')}',
         ],
       ),
       ShellTask(
         name: 'Build Runner',
         include: [Glob('lib/models/**.dart')],
         exclude: [Glob('**.g.dart')],
-        commands: (files) => [
+        commands: (filePaths) => [
           'sip run build_runner build',
         ],
       ),
@@ -238,7 +330,7 @@ Hook main() {
         name: 'Tests',
         include: [Glob('**.dart')],
         exclude: [Glob('hooks/**')],
-        commands: (files) => [
+        commands: (filePaths) => [
           'sip test --concurrent --bail',
         ],
       ),
