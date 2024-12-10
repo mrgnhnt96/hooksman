@@ -186,10 +186,14 @@ class HookExecutor {
       }
     }
 
-    logger.detail('Applying modifications');
-    if (debug) await _wait(durations.short);
-    await gitService.applyModifications(context.nonStagedFiles);
-    if (debug) await _wait(durations.long);
+    if (hook.diffArgs.isEmpty) {
+      logger.detail('Applying modifications');
+      if (debug) await _wait(durations.short);
+      await gitService.applyModifications(context.nonStagedFiles);
+      if (debug) await _wait(durations.long);
+    } else {
+      logger.detail('Skipping modifications due to diffArgs being set');
+    }
 
     if (context.hidePartiallyStaged) {
       logger.detail('Restoring unstaged changes');
