@@ -36,7 +36,9 @@ class HookExecutor {
     }
 
     if (allFiles.isEmpty) {
-      logger.info('No files to process');
+      logger.info(
+        darkGray.wrap('Skipping $hookName hook, no files to process'),
+      );
       return (<String>[], 0);
     }
 
