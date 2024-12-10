@@ -3,15 +3,15 @@ import 'dart:io';
 
 import 'package:file/local.dart';
 import 'package:hooksman/entrypoint/hook_execution/hook_executor.dart';
-import 'package:hooksman/hooks/debug_hook.dart';
 import 'package:hooksman/hooks/hook.dart';
+import 'package:hooksman/hooks/verbose_hook.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 Future<void> executeHook(String name, Hook hook) async {
   const fs = LocalFileSystem();
 
-  final debug = hook is DebugHook;
+  final debug = hook is VerboseHook;
 
   final level = switch (debug) {
     true => Level.verbose,

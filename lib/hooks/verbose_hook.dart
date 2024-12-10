@@ -1,7 +1,7 @@
 import 'package:hooksman/hooks/hook.dart';
 
-class DebugHook extends Hook {
-  DebugHook({
+class VerboseHook extends Hook {
+  VerboseHook({
     required super.tasks,
     super.diffArgs = const [],
     super.allowEmpty = false,
