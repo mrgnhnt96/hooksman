@@ -2,7 +2,7 @@
 
 [![Pub Version](https://img.shields.io/pub/v/hooksman)](https://pub.dev/packages/hooksman)
 
-![preview](./assets/preview.gif)
+![preview](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/.github/images/preview.gif)
 
 ## Overview
 

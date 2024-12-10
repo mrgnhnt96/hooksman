@@ -1,2 +1,5 @@
 scripts.yaml
 test
+hooks
+build.yaml
+bin/tester.dart
