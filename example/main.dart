@@ -1,3 +1,4 @@
+// pre_commit.dart
 import 'package:hooksman/hooksman.dart';
 
 Hook main() {
