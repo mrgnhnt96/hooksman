@@ -344,6 +344,10 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   }
 
   Future<void> applyModifications(List<String> existing) async {
+    if (!await hasAtLeastOneCommit()) {
+      return;
+    }
+
     logger.detail('Checking for modifications');
     final changed = await nonStagedFiles() ?? [];
     final allDeletedFiles = await getDeletedFiles();
