@@ -110,6 +110,6 @@ mixin PatchMixin {
     }
 
     logger.detail('deleting patch file');
-    // file.deleteSync();
+    file.deleteSync();
   }
 }
