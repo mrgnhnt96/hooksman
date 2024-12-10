@@ -5,7 +5,7 @@ part 'resolved_hook.g.dart';
 
 class ResolvedHook extends Equatable {
   ResolvedHook({
-    required this.files,
+    required this.filePaths,
     required this.tasks,
   }) {
     Iterable<ResolvedHookTask> subTasks(ResolvedHookTask task) sync* {
@@ -27,7 +27,7 @@ class ResolvedHook extends Equatable {
     };
   }
 
-  final List<String> files;
+  final List<String> filePaths;
   final List<ResolvedHookTask> tasks;
   late final Map<String, ResolvedHookTask> tasksById;
 

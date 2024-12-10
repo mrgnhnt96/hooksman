@@ -6,7 +6,7 @@ import 'package:hooksman/tasks/sequential_task.dart';
 import 'package:hooksman/utils/all_files.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-typedef ShellCommands = List<String> Function(Iterable<String> files);
+typedef ShellCommands = List<String> Function(Iterable<String>);
 
 class ShellTask extends SequentialTask {
   ShellTask({
@@ -25,8 +25,8 @@ class ShellTask extends SequentialTask {
   String get name => _name ?? patternName;
 
   @override
-  List<HookTask> getSubTasks(Iterable<String> files) => [
-        for (final (index, command) in _commands(files).indexed)
+  List<HookTask> getSubTasks(Iterable<String> filePaths) => [
+        for (final (index, command) in _commands(filePaths).indexed)
           _OneShellTask(
             command: command,
             index: index,

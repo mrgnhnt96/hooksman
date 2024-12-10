@@ -36,15 +36,15 @@ class Hook extends Equatable {
   /// there are no files after the tasks have run
   final bool allowEmpty;
 
-  ResolvedHook resolve(List<String> files) {
+  ResolvedHook resolve(List<String> filePaths) {
     final resolvedTasks = tasks.indexed.map((e) {
       final (index, task) = e;
 
-      return task.resolve(files, index + 1);
+      return task.resolve(filePaths, index + 1);
     }).toList();
 
     return ResolvedHook(
-      files: files,
+      filePaths: filePaths,
       tasks: resolvedTasks,
     );
   }

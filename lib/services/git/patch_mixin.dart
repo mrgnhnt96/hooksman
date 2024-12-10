@@ -17,7 +17,7 @@ mixin PatchMixin {
   }
 
   Future<void> patch(
-    List<String> files,
+    List<String> filePaths,
   ) async {
     final result = await Process.run(
       'git',
@@ -27,7 +27,7 @@ mixin PatchMixin {
         '--output',
         _patchPath,
         '--',
-        ...files,
+        ...filePaths,
       ],
     );
 
@@ -35,8 +35,8 @@ mixin PatchMixin {
       logger
         ..err('Failed to create patch files')
         ..detail('Error: ${result.stderr}')
-        ..detail('Files (${files.length})');
-      for (final file in files) {
+        ..detail('Files (${filePaths.length})');
+      for (final file in filePaths) {
         logger.detail('  - $file');
       }
       throw Exception('Failed to create path files');

@@ -23,7 +23,7 @@ void main() {
 
         final result = hook.resolve(['lib/main.dart', 'README.md']);
 
-        expect(result.files, ['lib/main.dart', 'README.md']);
+        expect(result.filePaths, ['lib/main.dart', 'README.md']);
         expect(result.tasks, hasLength(2));
 
         final resolved1 = result.tasks[0];
@@ -47,7 +47,7 @@ void main() {
 
         final result = hook.resolve(['README.md']);
 
-        expect(result.files, ['README.md']);
+        expect(result.filePaths, ['README.md']);
         expect(result.tasks, hasLength(1));
         final resolved = result.tasks.single;
         expect(resolved.files, isEmpty);
@@ -66,7 +66,7 @@ void main() {
 
         final result = hook.resolve(['lib/main.dart', 'lib/utils.dart']);
 
-        expect(result.files, ['lib/main.dart', 'lib/utils.dart']);
+        expect(result.filePaths, ['lib/main.dart', 'lib/utils.dart']);
         expect(result.tasks, hasLength(1));
 
         final resolved = result.tasks.single;
@@ -86,7 +86,7 @@ void main() {
 
         final result = hook.resolve(['lib/main.dart', 'README.md']);
 
-        expect(result.files, ['lib/main.dart', 'README.md']);
+        expect(result.filePaths, ['lib/main.dart', 'README.md']);
         expect(result.tasks, hasLength(1));
 
         final resolved = result.tasks.single;
@@ -107,7 +107,7 @@ void main() {
 
         final result = hook.resolve(['lib/main.dart', 'lib/main.g.dart']);
 
-        expect(result.files, ['lib/main.dart', 'lib/main.g.dart']);
+        expect(result.filePaths, ['lib/main.dart', 'lib/main.g.dart']);
         expect(result.tasks, hasLength(1));
 
         final resolved = result.tasks.single;
@@ -134,7 +134,7 @@ void main() {
         );
 
         expect(
-          result.files,
+          result.filePaths,
           ['lib/main.dart', 'lib/main.g.dart', 'lib/main.freezed.dart'],
         );
         expect(result.tasks, hasLength(1));

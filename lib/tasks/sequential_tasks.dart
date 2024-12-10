@@ -17,5 +17,5 @@ class SequentialTasks extends SequentialTask {
   final List<HookTask> _tasks;
 
   @override
-  List<HookTask> getSubTasks(Iterable<String> files) => _tasks;
+  List<HookTask> getSubTasks(Iterable<String> filePaths) => _tasks;
 }

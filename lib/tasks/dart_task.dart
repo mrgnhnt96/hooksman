@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:hooksman/tasks/hook_task.dart';
 
-typedef Run = FutureOr<int> Function(List<String> files);
+typedef Run = FutureOr<int> Function(List<String>);
 
 class DartTask extends HookTask {
   DartTask({
@@ -19,13 +19,13 @@ class DartTask extends HookTask {
 
   @override
   Future<int> run(
-    List<String> files, {
+    List<String> filePaths, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
   }) async {
     startTask(this);
-    final result = await _run(files);
+    final result = await _run(filePaths);
 
     completeTask(this, result);
 

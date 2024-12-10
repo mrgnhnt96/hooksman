@@ -141,13 +141,13 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   /// [includeRenameFrom] Whether or not to include the
   /// `from` renamed file, which is no longer on disk
   List<String> processRenames(
-    List<String> files, {
+    List<String> filePaths, {
     bool includeRenameFrom = true,
   }) {
     final flattened = <String>[];
     final renameRegExp = RegExp('/\x00/');
 
-    for (final file in files) {
+    for (final file in filePaths) {
       if (renameRegExp.hasMatch(file)) {
         final parts = file.split(renameRegExp);
         if (parts.length < 2) {
@@ -291,15 +291,15 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
         for (final file in partially) {
           logger.detail('  $file');
         }
-        final files = processRenames(partially);
+        final filePaths = processRenames(partially);
 
         logger.detail('Processed files (${partially.length})');
-        for (final file in files) {
+        for (final file in filePaths) {
           logger.detail('  $file');
         }
 
         logger.detail('Creating patch');
-        await patch(files);
+        await patch(filePaths);
       }
 
       if (!backup) {
@@ -324,8 +324,8 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     return context.toImmutable();
   }
 
-  Future<void> checkoutFiles(List<String> files) async {
-    final processed = processRenames(files, includeRenameFrom: false);
+  Future<void> checkoutFiles(List<String> filePaths) async {
+    final processed = processRenames(filePaths, includeRenameFrom: false);
 
     await Process.run('git', [
       'checkout',
@@ -335,11 +335,11 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     ]);
   }
 
-  Future<void> add(List<String> files) async {
+  Future<void> add(List<String> filePaths) async {
     await Process.run('git', [
       'add',
       '--',
-      ...files,
+      ...filePaths,
     ]);
   }
 

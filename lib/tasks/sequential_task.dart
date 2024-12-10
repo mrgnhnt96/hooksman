@@ -16,15 +16,15 @@ abstract class SequentialTask extends HookTask {
   @nonVirtual
   @override
   FutureOr<int> run(
-    List<String> files, {
+    List<String> filePaths, {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
   }) async {
-    for (final task in subTasks(files)) {
+    for (final task in subTasks(filePaths)) {
       startTask(task);
       final result = await task.run(
-        files,
+        filePaths,
         print: print,
         completeTask: completeTask,
         startTask: startTask,
