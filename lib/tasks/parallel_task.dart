@@ -3,6 +3,36 @@ import 'dart:async';
 import 'package:hooksman/hooksman.dart';
 import 'package:meta/meta.dart';
 
+/// A task that runs a series of sub-tasks in parallel on a set of files.
+///
+/// The [ParallelTasks] class extends [HookTask] and is used to execute a list
+/// of sub-tasks concurrently. Each sub-task is executed independently of the
+/// others, and the overall task completes successfully only if all sub-tasks
+/// complete successfully (i.e., return a zero exit code).
+///
+/// Example usage:
+/// ```dart
+/// ParallelTasks(
+///   tasks: [
+///     ShellTask(
+///       include: [Glob('**.dart')],
+///       commands: (filePaths) => [
+///         'dart format ${filePaths.join(' ')}',
+///       ],
+///     ),
+///     ShellTask(
+///       include: [Glob('**.dart')],
+///       commands: (filePaths) => [
+///         'sip test --concurrent --bail',
+///       ],
+///     ),
+///   ],
+/// );
+/// ```
+///
+/// The above example creates a [ParallelTasks] instance that runs two
+/// [ShellTask] instances concurrently. The first task formats Dart files,
+/// and the second task runs tests on the Dart files.
 class ParallelTasks extends HookTask {
   ParallelTasks({
     required super.include,

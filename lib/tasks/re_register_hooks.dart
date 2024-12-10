@@ -1,6 +1,30 @@
 import 'package:glob/glob.dart';
 import 'package:hooksman/tasks/shell_task.dart';
 
+/// The `ReRegisterHooks` task automates the process of re-registering Git hooks
+/// whenever any hook files are created, modified, or deleted. This ensures that
+/// changes to your hooks are applied, as Dart files are compiled into
+/// executables
+/// and copied to the `.git/hooks` directory.
+///
+/// Example usage:
+///
+/// ```dart
+/// Hook main() {
+///   return Hook(
+///     tasks: [
+///       ReRegisterHooks(),
+///     ],
+///   );
+/// }
+/// ```
+///
+/// If your `hooks` directory is not found in the root of your project, you can
+/// specify the path to the `hooks` directory:
+///
+/// ```dart
+/// ReRegisterHooks(pathToHooksDir: 'path/to/hooks'),
+/// ```
 final class ReRegisterHooks extends ShellTask {
   ReRegisterHooks({String? pathToHooksDir})
       : super(

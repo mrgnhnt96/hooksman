@@ -6,18 +6,73 @@ import 'package:hooksman/models/task_label.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 
+/// An abstract class representing a task to be executed as part of a Git hook.
+///
+/// Subclasses must implement the [run] method to define the task's behavior.
+///
+/// Tasks can include or exclude specific files based on patterns, and can have
+/// sub-tasks that are executed conditionally based
+/// on the files being processed.
+///
+/// ### Usage
+///
+/// To create a custom hook task, extend this class
+/// and implement the [run] method:
+///
+/// ```dart
+/// class MyCustomTask extends HookTask {
+///   MyCustomTask() : super(include: [Glob('**.dart')]);
+///
+///   @override
+///   FutureOr<int> run(
+///     List<String> filePaths, {
+///     required void Function(String? string) print,
+///     required void Function(HookTask, int) completeTask,
+///     required void Function(HookTask) startTask,
+///   }) async {
+///     // Task implementation here
+///     return 0; // Return 0 on success, non-zero on failure
+///   }
+/// }
+/// ```
+///
+/// To use the custom task in a hook:
+///
+/// ```dart
+/// Hook main() {
+///   return Hook(
+///     tasks: [MyCustomTask()],
+///   );
+/// }
+/// ```
 abstract class HookTask {
   HookTask({
     required this.include,
     this.exclude = const [],
   }) : id = const Uuid().v4();
 
+  /// The unique identifier for the task.
   final String id;
+
+  /// The list of patterns to include files.
   final List<Pattern> include;
+
+  /// The list of patterns to exclude files.
   final List<Pattern> exclude;
 
+  /// The name of the task.
   String? get name;
 
+  /// Runs the task with the given file paths.
+  ///
+  /// [filePaths] is the list of file paths to process.
+  /// [print] is a function to print messages.
+  /// [completeTask] is a function to mark the task as complete.
+  /// [startTask] is a function to mark the task as started.
+  ///
+  /// Returns a FutureOr<int> indicating the result of the task.
+  /// A return value of 0 indicates success, while a non-zero value indicates
+  /// failure.
   FutureOr<int> run(
     List<String> filePaths, {
     required void Function(String? string) print,
@@ -26,12 +81,27 @@ abstract class HookTask {
   });
 
   List<HookTask>? _subTasks;
+
+  /// Returns the list of sub-tasks for the given file paths.
+  ///
+  /// [filePaths] is the list of file paths to process post-filtering.
   @nonVirtual
   List<HookTask> subTasks(Iterable<String> filePaths) =>
       _subTasks ??= getSubTasks(filePaths);
 
+  /// Gets the list of sub-tasks for the given file paths.
+  ///
+  /// [filePaths] is the list of file paths to process post-filtering.
   List<HookTask> getSubTasks(Iterable<String> filePaths) => [];
 
+  /// Resolves the task with the given file paths and index.
+  ///
+  /// [filePaths] is the list of file paths to process.
+  /// [index] is the index of the task.
+  ///
+  /// The index is used during logging to create identifiable task labels
+  /// for each task. Failure to provide a unique index for each task
+  /// may result in duplicate task labels and incorrect logging.
   ResolvedHookTask resolve(List<String> filePaths, int index) {
     final filtered = filterFiles(filePaths);
 
@@ -53,6 +123,9 @@ abstract class HookTask {
     );
   }
 
+  /// Gets the pattern name for the task.
+  ///
+  /// Returns a string representing the pattern name.
   String get patternName => include.map((e) {
         return switch (e) {
           Glob() => e.pattern,
@@ -62,11 +135,19 @@ abstract class HookTask {
         };
       }).join(', ');
 
+  /// Gets the resolved name for the task.
+  ///
+  /// Returns a string representing the resolved name.
   String get resolvedName => switch (name) {
         final String name => name,
         _ => patternName,
       };
 
+  /// Creates a label for the task with the given file paths.
+  ///
+  /// [filePaths] is the list of file paths to process.
+  ///
+  /// Returns a TaskLabel.
   TaskLabel label(Iterable<String> filePaths) {
     // ensure files are filtered
     final filtered = filterFiles(filePaths);
@@ -78,6 +159,12 @@ abstract class HookTask {
     );
   }
 
+  /// Filters the given file paths based on the [include] and [exclude]
+  /// patterns.
+  ///
+  /// [filePaths] is the list of file paths to filter.
+  ///
+  /// Returns a list of filtered file paths.
   List<String> filterFiles(Iterable<String> filePaths) {
     Iterable<String> filesFor(Iterable<String> filePaths) sync* {
       for (final path in filePaths) {

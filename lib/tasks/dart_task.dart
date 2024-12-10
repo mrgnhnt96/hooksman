@@ -4,6 +4,26 @@ import 'package:hooksman/tasks/hook_task.dart';
 
 typedef Run = FutureOr<int> Function(List<String>);
 
+/// A task that runs Dart code on a set of files.
+///
+/// The [DartTask] class extends [HookTask] and is used to execute custom Dart
+/// code on the included files. The task is considered successful if the
+/// provided [run] function returns a zero exit code.
+///
+/// Example usage:
+/// ```dart
+/// DartTask(
+///   include: [Glob('**.dart')],
+///   run: (filePaths) async {
+///     print('Running custom task');
+///     // Perform custom operations on the file paths
+///     return 0; // Return 0 on success, non-zero on failure
+///   },
+/// );
+/// ```
+///
+/// The above example creates a [DartTask] instance that runs custom Dart code
+/// on all Dart files in the project.
 class DartTask extends HookTask {
   DartTask({
     required super.include,

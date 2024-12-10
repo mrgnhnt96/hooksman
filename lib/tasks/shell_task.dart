@@ -8,6 +8,29 @@ import 'package:mason_logger/mason_logger.dart';
 
 typedef ShellCommands = List<String> Function(Iterable<String>);
 
+/// A task that runs a series of shell commands sequentially on a set of files.
+///
+/// The [ShellTask] class extends [SequentialTask] and is used to execute a list
+/// of shell commands on a set of files. The commands are provided via a
+/// [ShellCommands] function, which takes an iterable of file paths and returns
+/// a list of shell commands to be executed.
+///
+/// Example usage:
+/// ```dart
+/// ShellTask(
+///   name: 'Lint & Format',
+///   include: [Glob('**.dart')],
+///   exclude: [Glob('**.g.dart')],
+///   commands: (filePaths) => [
+///     'dart analyze --fatal-infos ${filePaths.join(' ')}',
+///     'dart format ${filePaths.join(' ')}',
+///   ],
+/// );
+/// ```
+///
+/// This example creates a [ShellTask] named 'Lint & Format' that includes all
+/// Dart files except those ending with '.g.dart'. It runs the `dart analyze`
+/// and `dart format` commands on the included files.
 class ShellTask extends SequentialTask {
   ShellTask({
     required super.include,
