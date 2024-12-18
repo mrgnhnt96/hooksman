@@ -9,6 +9,7 @@ import 'package:file/file.dart';
 import 'package:glob/glob.dart';
 import 'package:hooksman/mixins/paths_mixin.dart';
 import 'package:hooksman/models/compiler.dart';
+import 'package:hooksman/models/defined_hook.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:path/path.dart' as p;
@@ -34,7 +35,7 @@ class RegisterCommand extends Command<int> with PathsMixin {
   @override
   String get name => 'register';
 
-  (List<String>, int?) definedHooks(String root) {
+  (List<DefinedHook>, int?) definedHooks(String root) {
     final definedHooksDir = fs.directory(fs.path.join(root, 'hooks'));
 
     if (!definedHooksDir.existsSync()) {
@@ -43,12 +44,18 @@ class RegisterCommand extends Command<int> with PathsMixin {
     }
 
     final dartGlob = Glob('*.dart');
+    final dartFound =
+        dartGlob.listFileSystemSync(fs, root: definedHooksDir.path);
 
-    final found = dartGlob.listFileSystemSync(fs, root: definedHooksDir.path);
+    final shellGlob = Glob('*.sh');
+    final shellFound =
+        shellGlob.listFileSystemSync(fs, root: definedHooksDir.path);
 
     final definedHooks = [
-      for (final entity in found)
-        if (entity is File) entity.path,
+      for (final entity in dartFound)
+        if (entity is File) DefinedHook(entity.path),
+      for (final entity in shellFound)
+        if (entity is File) DefinedHook(entity.path),
     ];
 
     if (definedHooks.isEmpty) {
@@ -59,7 +66,7 @@ class RegisterCommand extends Command<int> with PathsMixin {
     final s = definedHooks.length > 1 ? 's' : '';
     logger.info(green.wrap('Found ${definedHooks.length} hook$s'));
     for (final hook in definedHooks) {
-      logger.info(darkGray.wrap('  - ${p.basename(hook)}'));
+      logger.info(darkGray.wrap('  - ${p.basename(hook.name)}'));
     }
     logger.write('\n');
 
@@ -71,23 +78,20 @@ class RegisterCommand extends Command<int> with PathsMixin {
         String executablePath,
         Future<ProcessResult> process,
       })> prepareExecutables(
-    List<String> definedHooks, {
+    List<DefinedHook> definedHooks, {
     required Directory hooksDartToolDir,
     required Directory executablesDir,
   }) sync* {
     if (hooksDartToolDir.existsSync()) {
       hooksDartToolDir.deleteSync(recursive: true);
     }
-    if (!executablesDir.existsSync()) {
-      executablesDir.createSync(recursive: true);
-    }
+    executablesDir.createSync(recursive: true);
 
     logger.info(yellow.wrap('Preparing hooks'));
 
-    for (final hook in definedHooks) {
-      final relativePath = fs.path.relative(hook, from: hooksDartToolDir.path);
-
-      final hookName = fs.path.basenameWithoutExtension(hook).toParamCase();
+    for (final hook in definedHooks.where((e) => e.isDart)) {
+      final relativePath =
+          fs.path.relative(hook.path, from: hooksDartToolDir.path);
 
       final content = '''
 import 'package:hooksman/hooksman.dart';
@@ -95,21 +99,31 @@ import 'package:hooksman/hooksman.dart';
 import '$relativePath' as hook;
 
 void main() {
-  executeHook('$hookName', hook.main());
+  executeHook('${hook.name}', hook.main());
 }''';
 
-      final file =
-          fs.file(fs.path.join(hooksDartToolDir.path, p.basename(hook)))
-            ..createSync(recursive: true)
-            ..writeAsStringSync(content);
+      final file = fs
+          .file(fs.path.join(hooksDartToolDir.path, p.basename(hook.fileName)))
+        ..createSync(recursive: true)
+        ..writeAsStringSync(content);
 
-      logger.info(darkGray.wrap('  - $hookName'));
+      logger.info(darkGray.wrap('  - ${hook.name}'));
 
-      final outFile = executablesDir
-          .childFile(fs.path.basenameWithoutExtension(file.path).toParamCase());
+      final outFile = executablesDir.childFile(hook.name);
 
       final process = compiler.compile(
         file: file.path,
+        outFile: outFile.path,
+      );
+
+      yield (executablePath: outFile.path, process: process);
+    }
+
+    for (final hook in definedHooks.where((e) => e.isShell)) {
+      final outFile = executablesDir.childFile(hook.name);
+
+      final process = compiler.prepareShellExecutable(
+        file: hook.path,
         outFile: outFile.path,
       );
 
@@ -214,21 +228,23 @@ void main() {
     );
 
     final executables = await compile(executablesToCompile, progress.fail);
-
     if (executables == null) {
       return 1;
     }
 
-    progress.complete('Registered hooks');
-
-    // move executables to .git/hooks
     final hooksPath = gitHooksDir;
-
     if (hooksPath == null) {
       logger.err('Could not find .git/hooks directory');
       return 1;
     }
 
-    return copyExecutables(executables, gitHooksDir: hooksPath);
+    if (copyExecutables(executables, gitHooksDir: hooksPath) case final int code
+        when code != 0) {
+      return code;
+    }
+
+    progress.complete('Registered hooks');
+
+    return 0;
   }
 }

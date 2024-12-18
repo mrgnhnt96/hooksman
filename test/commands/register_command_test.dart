@@ -4,6 +4,7 @@ import 'package:file/file.dart';
 import 'package:file/memory.dart';
 import 'package:hooksman/commands/register_command.dart';
 import 'package:hooksman/models/compiler.dart';
+import 'package:hooksman/models/defined_hook.dart';
 import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:mocktail/mocktail.dart';
@@ -94,7 +95,7 @@ void main() {
       test('should return an empty iterable when no hooks are defined',
           () async {
         final command = cmd();
-        final definedHooks = <String>[];
+        final definedHooks = <DefinedHook>[];
         final hooksDartToolDir = fs.directory('hooks_dart_tool');
         final executablesDir = fs.directory('executables');
 
@@ -117,6 +118,15 @@ void main() {
           ).thenAnswer(
             (_) => Future.value(ProcessResult(0, 0, '', '')),
           );
+
+          when(
+            () => compiler.prepareShellExecutable(
+              file: any(named: 'file'),
+              outFile: any(named: 'outFile'),
+            ),
+          ).thenAnswer(
+            (_) => Future.value(ProcessResult(0, 0, '', '')),
+          );
         });
 
         test('should create dart tool dart hooks when hooks are defined',
@@ -124,8 +134,8 @@ void main() {
           final command = cmd();
 
           final definedHooks = [
-            'pre-commit.dart',
-            'post-commit.dart',
+            const DefinedHook('pre-commit.dart'),
+            const DefinedHook('post-commit.dart'),
           ];
 
           final hooksDartToolDir =
@@ -156,7 +166,9 @@ void main() {
               fs.directory(p.join('.dart_tool', 'hooksman'));
 
           command.prepareExecutables(
-            [p.join('hooks', 'pre_commit.dart')],
+            [
+              DefinedHook(p.join('hooks', 'pre_commit.dart')),
+            ],
             hooksDartToolDir: hooksDartToolDir,
             executablesDir: fs.directory('executables'),
           ).toList();
@@ -181,8 +193,8 @@ void main() {
           final command = cmd();
 
           final definedHooks = [
-            'dart_file1.dart',
-            'dart_file2.dart',
+            const DefinedHook('dart_file1.dart'),
+            const DefinedHook('dart_file2.dart'),
           ];
 
           final executables = command
@@ -209,8 +221,8 @@ void main() {
           final command = cmd();
 
           final definedHooks = [
-            'hook1',
-            'hook2',
+            const DefinedHook('hook1.dart'),
+            const DefinedHook('hook2.dart'),
           ];
 
           command
@@ -223,14 +235,14 @@ void main() {
 
           verify(
             () => compiler.compile(
-              file: p.join('hooks_dart_tool', 'hook1'),
+              file: p.join('hooks_dart_tool', 'hook1.dart'),
               outFile: p.join('executables', 'hook1'),
             ),
           ).called(1);
 
           verify(
             () => compiler.compile(
-              file: p.join('hooks_dart_tool', 'hook2'),
+              file: p.join('hooks_dart_tool', 'hook2.dart'),
               outFile: p.join('executables', 'hook2'),
             ),
           ).called(1);
@@ -264,6 +276,80 @@ void main() {
           ).toList();
 
           expect(executablesDir.existsSync(), isTrue);
+        });
+
+        test('should prepare shell hooks when hooks are defined', () async {
+          final command = cmd();
+
+          final definedHooks = [
+            const DefinedHook('pre-commit.sh'),
+            const DefinedHook('post-commit.sh'),
+          ];
+
+          final hooksDartToolDir =
+              fs.directory(p.join('.dart_tool', 'hooksman'));
+
+          final results = command
+              .prepareExecutables(
+                definedHooks,
+                hooksDartToolDir: hooksDartToolDir,
+                executablesDir: fs.directory('executables'),
+              )
+              .toList();
+
+          expect(results, hasLength(2));
+          expect(
+            results.map((e) => e.executablePath),
+            unorderedEquals([
+              p.join('executables', 'pre-commit'),
+              p.join('executables', 'post-commit'),
+            ]),
+          );
+
+          verify(
+            () => compiler.prepareShellExecutable(
+              file: 'pre-commit.sh',
+              outFile: p.joinAll(['executables', 'pre-commit']),
+            ),
+          ).called(1);
+
+          verify(
+            () => compiler.prepareShellExecutable(
+              file: 'post-commit.sh',
+              outFile: p.joinAll(['executables', 'post-commit']),
+            ),
+          ).called(1);
+        });
+
+        test('should copy shell hooks to executables directory', () async {
+          final command = cmd();
+
+          final definedHooks = [
+            const DefinedHook('pre-commit.sh'),
+            const DefinedHook('post-commit.sh'),
+          ];
+
+          final hooksDartToolDir =
+              fs.directory(p.join('.dart_tool', 'hooksman'));
+
+          final executables = command
+              .prepareExecutables(
+                definedHooks,
+                hooksDartToolDir: hooksDartToolDir,
+                executablesDir: fs.directory('executables'),
+              )
+              .toList();
+
+          expect(executables, hasLength(2));
+          final [first, second] = executables;
+          expect(
+            first.executablePath,
+            p.join('executables', 'pre-commit'),
+          );
+          expect(
+            second.executablePath,
+            p.join('executables', 'post-commit'),
+          );
         });
       });
     });
