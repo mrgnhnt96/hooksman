@@ -66,7 +66,7 @@ class RegisterCommand extends Command<int> with PathsMixin {
     final s = definedHooks.length > 1 ? 's' : '';
     logger.info(green.wrap('Found ${definedHooks.length} hook$s'));
     for (final hook in definedHooks) {
-      logger.info(darkGray.wrap('  - ${p.basename(hook.name)}'));
+      logger.info(darkGray.wrap('  - ${p.basename(hook.fileName)}'));
     }
     logger.write('\n');
 
@@ -120,6 +120,8 @@ void main() {
     }
 
     for (final hook in definedHooks.where((e) => e.isShell)) {
+      logger.info(darkGray.wrap('  - ${hook.name}'));
+
       final outFile = executablesDir.childFile(hook.name);
 
       final process = compiler.prepareShellExecutable(

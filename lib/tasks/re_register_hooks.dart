@@ -31,9 +31,9 @@ final class ReRegisterHooks extends ShellTask {
           name: 'Re-register hooks',
           include: [
             if (pathToHooksDir case final String path)
-              Glob('$path/**.dart')
+              Glob('$path/**.{dart,sh}')
             else
-              Glob('hooks/**.dart'),
+              Glob('hooks/**.{dart,sh}'),
           ],
           commands: (_) {
             final changeDir = switch (pathToHooksDir) {
