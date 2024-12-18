@@ -1,8 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file/file.dart';
+
 class Compiler {
-  const Compiler();
+  const Compiler({
+    required this.fs,
+  });
+
+  final FileSystem fs;
 
   static Future<ProcessResult> Function(
     String executable,
@@ -35,10 +41,19 @@ class Compiler {
     return process;
   }
 
-  Future<ProcessResult> prepareShellExecutable(String file) async {
+  Future<ProcessResult> prepareShellExecutable({
+    required String file,
+    required String outFile,
+  }) async {
+    if (fs.file(outFile) case final file when !file.existsSync()) {
+      file.createSync(recursive: true);
+    }
+
+    await fs.file(file).copy(outFile);
+
     final process = ctor(
       'chmod',
-      ['+x', file],
+      ['+x', outFile],
       includeParentEnvironment: true,
       runInShell: false,
     );

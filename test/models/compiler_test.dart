@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file/file.dart';
+import 'package:file/memory.dart';
 import 'package:hooksman/models/compiler.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
@@ -23,14 +25,16 @@ void main() {
     late Compiler compiler;
     late MockProcess mockProcess;
     final processResult = ProcessResult(0, 0, '', '');
+    late FileSystem fs;
 
     setUp(() {
-      compiler = const Compiler();
+      fs = MemoryFileSystem.test();
+      compiler = Compiler(fs: fs);
       mockProcess = MockProcess();
       Compiler.ctor = mockProcess.call;
     });
 
-    test('compile should call Process.run with correct arguments', () async {
+    void stub() {
       when(
         () => mockProcess.call(
           any(),
@@ -43,6 +47,10 @@ void main() {
           workingDirectory: any(named: 'workingDirectory'),
         ),
       ).thenAnswer((_) async => processResult);
+    }
+
+    test('compile should call Process.run with correct arguments', () async {
+      stub();
 
       final result = await compiler.compile(
         file: 'test.dart',
@@ -60,33 +68,52 @@ void main() {
       ).called(1);
     });
 
-    test(
-        'prepareShellExecutable should call Process.run with correct arguments',
-        () async {
-      when(
-        () => mockProcess.call(
-          any(),
-          any(),
-          environment: any(named: 'environment'),
-          includeParentEnvironment: any(named: 'includeParentEnvironment'),
-          runInShell: any(named: 'runInShell'),
-          stderrEncoding: any(named: 'stderrEncoding'),
-          stdoutEncoding: any(named: 'stdoutEncoding'),
-          workingDirectory: any(named: 'workingDirectory'),
-        ),
-      ).thenAnswer((_) async => processResult);
+    group('#prepareShellExecutable', () {
+      test('should call Process.run with correct arguments', () async {
+        fs.file('test.exe').createSync();
 
-      final result = await compiler.prepareShellExecutable('test.exe');
+        stub();
 
-      expect(result, processResult);
-      verify(
-        () => mockProcess.call(
-          'chmod',
-          ['+x', 'test.exe'],
-          includeParentEnvironment: true,
-          runInShell: false,
-        ),
-      ).called(1);
+        final result = await compiler.prepareShellExecutable(
+          file: 'test.exe',
+          outFile: 'test',
+        );
+
+        expect(result, processResult);
+        verify(
+          () => mockProcess.call(
+            'chmod',
+            ['+x', 'test'],
+            includeParentEnvironment: true,
+            runInShell: false,
+          ),
+        ).called(1);
+      });
+
+      test('should create out file when it does not exist', () async {
+        final file = fs.file('test');
+        stub();
+
+        expect(file.existsSync(), isFalse);
+
+        await compiler.prepareShellExecutable(file: 'test', outFile: 'test');
+
+        expect(file.existsSync(), isTrue);
+      });
+
+      test('should copy the contents to out file', () async {
+        final file = fs.file('test')..writeAsStringSync('test');
+        stub();
+
+        const outFile = 'test.out';
+        final out = fs.file(outFile);
+
+        expect(out.existsSync(), isFalse);
+
+        await compiler.prepareShellExecutable(file: 'test', outFile: outFile);
+
+        expect(out.readAsStringSync(), file.readAsStringSync());
+      });
     });
   });
 }
