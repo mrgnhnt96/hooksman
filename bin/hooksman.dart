@@ -26,7 +26,9 @@ Future<int> main(List<String> providedArgs) async {
       logger: logger,
       fs: fs,
     ),
-    compiler: const Compiler(),
+    compiler: const Compiler(
+      fs: fs,
+    ),
   );
 
   final exitCode = await gitHook.run(args);
