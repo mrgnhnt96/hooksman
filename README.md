@@ -35,7 +35,7 @@ This command will compile your hooks and copy the executables to the hooks direc
 > [!WARNING]
 > The `hooksman` package will overwrite **all** existing hooks in the `.git/hooks` directory with the new hooks. Make sure to back up any existing hooks before running the `hooksman` command.
 
-## Hooks
+## Dart Hooks
 
 ### Create Hooks Directory
 
@@ -83,6 +83,42 @@ The name of the hook is derived from the file name. For example, a file named `p
 > [!TIP]
 >
 > Look at the git hooks documentation for more information on the available hooks: [Git Hooks Documentation](https://git-scm.com/docs/githooks).
+
+## Shell Hooks
+
+You can create stand alone shell hooks by creating shell files within the hooks directory. These files will be copied to the `.git/hooks` directory and executed when the corresponding Git hook event occurs.
+
+### Create Shell Hook
+
+Create a shell file in the `hooks` directory. The file name should match the name of the Git hook you want to use.
+
+```bash
+touch hooks/post-commit.sh
+```
+
+> [!IMPORTANT]
+>
+> The file extension should be `.sh` to be recognized as a shell hook.
+
+### Shell Hook Content
+
+Add the shell commands you want to run in the shell file.
+
+```bash
+#!/bin/sh
+
+echo "Running post-commit hook"
+```
+
+> [!TIP]
+>
+> You can execute the dart hooks from the shell hooks by using the name of the executable file
+>
+> ```bash
+> #!/bin/sh
+>
+> ./pre-commit # Execute the pre-commit dart hook
+> ```
 
 ## Tasks
 
