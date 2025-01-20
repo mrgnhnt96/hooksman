@@ -36,10 +36,12 @@ class HookExecutor {
     }
 
     if (allFiles.isEmpty) {
-      logger.info(
-        darkGray.wrap('Skipping $hookName hook, no files to process'),
-      );
-      return (<String>[], 0);
+      if (!hook.shouldRunOnEmpty) {
+        logger.info(
+          darkGray.wrap('Skipping $hookName hook, no files to process'),
+        );
+        return (<String>[], 0);
+      }
     }
 
     return (allFiles, null);
@@ -80,11 +82,13 @@ class HookExecutor {
       logger: logger,
     );
 
-    if (pendingHook.topLevelTasks.every((e) => e.files.isEmpty)) {
-      logger.info(
-        darkGray.wrap('Skipping $hookName hook, no files match any tasks'),
-      );
-      return 0;
+    if (!pendingHook.topLevelTasks.any((e) => e.shouldAlwaysRun)) {
+      if (pendingHook.topLevelTasks.every((e) => e.files.isEmpty)) {
+        logger.info(
+          darkGray.wrap('Skipping $hookName hook, no files match any tasks'),
+        );
+        return 0;
+      }
     }
 
     logger
@@ -123,6 +127,9 @@ class HookExecutor {
         ..print();
 
       logger.detail('Hook was killed');
+      if (logger.level.index == Level.verbose.index) {
+        logger.flush();
+      }
     } else {
       await progress.closeNextFrame();
 
@@ -155,6 +162,8 @@ class HookExecutor {
         return 1;
       }
 
+      if (debug) await _wait(durations.short);
+
       logger.detail('Forcing hard reset to HEAD');
       await gitService.restoreStash();
 
@@ -182,14 +191,17 @@ class HookExecutor {
 
       if (failed) {
         logger
-          ..detail('Task failed, stopping')
+          ..detail('stopping hook tasks')
           ..flush();
         return await fail();
       }
     }
 
-    if (hook.diffArgs.isEmpty) {
+    if (hook.backupFiles) {
       logger.detail('Applying modifications');
+      for (final file in context.nonStagedFiles) {
+        logger.detail('  - $file');
+      }
       if (debug) await _wait(durations.short);
       await gitService.applyModifications(context.nonStagedFiles);
       if (debug) await _wait(durations.long);

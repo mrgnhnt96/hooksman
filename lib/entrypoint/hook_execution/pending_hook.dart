@@ -177,6 +177,15 @@ class PendingHook {
 
   void start() {
     for (final runner in runners) {
+      if (!runner.task.shouldAlwaysRun) {
+        // If all files are empty, then we don't
+        // need to run this command, therefore continue
+        if (topLevelTasks.every((e) => e.files.isEmpty)) {
+          logger.detail('Skipping task ${runner.task.id}, no files to process');
+          continue;
+        }
+      }
+
       final future = runner.run();
 
       future.then((code) {

@@ -38,6 +38,9 @@ abstract class SequentialTask extends HookTask {
     super.exclude,
     this.name,
   });
+  SequentialTask.always({
+    this.name,
+  }) : super.always();
 
   @override
   final String? name;

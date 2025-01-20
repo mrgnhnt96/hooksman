@@ -119,4 +119,6 @@ class Hook extends Equatable {
 
   @override
   List<Object?> get props => _$props;
+
+  bool get shouldRunOnEmpty => tasks.any((e) => e.shouldAlwaysRun);
 }

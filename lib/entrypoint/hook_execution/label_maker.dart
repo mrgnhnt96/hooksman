@@ -83,7 +83,8 @@ class LabelMaker {
         :isHalted,
         :isRunning,
         :hasStarted,
-        :hasCompleted
+        :hasCompleted,
+        :wasSkipped,
       ) = task;
 
       if (debug) {
@@ -95,7 +96,7 @@ class LabelMaker {
           _ when isError => 'Error',
           _ when hasStarted => 'Started',
           _ when hasCompleted => 'Completed',
-          _ when task.files.isEmpty => 'Skipped',
+          _ when wasSkipped => 'Skipped',
           _ when !isRunning => 'Pending',
           _ => '???',
         };
@@ -122,6 +123,7 @@ class LabelMaker {
       _ when task.isHalted => 'H',
       _ when task.isError => 'E',
       _ when task.hasCompleted => 'C',
+      _ when task.wasSkipped => 'S',
       _ when !task.hasStarted => 'P',
       _ => '?',
     };
@@ -142,7 +144,7 @@ class LabelMaker {
       _ when pending.isError => red.wrap(x),
       _ when pending.hasCompleted => green.wrap(checkMark),
       _ when pending.isHalted => blue.wrap(dot),
-      _ when pending.files.isEmpty => yellow.wrap(down),
+      _ when pending.wasSkipped => yellow.wrap(down),
       _ when pending.subTasks.isNotEmpty => yellow.wrap(right),
       _ when !pending.hasStarted => yellow.wrap(waiting),
       _ when pending.isRunning => yellow.wrap(loading),
@@ -166,7 +168,7 @@ class LabelMaker {
       '$indexString$status$spacing$iconString ${task.name} $fileCountString',
     );
 
-    if (pending.files.isEmpty) {
+    if (pending.files.isEmpty && !pending.shouldAlwaysRun) {
       return;
     }
 

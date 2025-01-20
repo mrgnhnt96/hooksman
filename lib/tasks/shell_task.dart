@@ -39,9 +39,20 @@ class ShellTask extends SequentialTask {
     String? name,
   })  : _commands = commands,
         _name = name,
+        _always = false,
         super();
 
+  ShellTask.always({
+    required ShellCommands commands,
+    String? name,
+  })  : _commands = commands,
+        _name = name,
+        _always = true,
+        super.always();
+
   final ShellCommands _commands;
+
+  final bool _always;
 
   final String? _name;
   @override
@@ -50,7 +61,10 @@ class ShellTask extends SequentialTask {
   @override
   List<HookTask> getSubTasks(Iterable<String> filePaths) => [
         for (final (index, command) in _commands(filePaths).indexed)
-          _OneShellTask(
+          switch (_always) {
+            true => _OneShellTask.always,
+            false => _OneShellTask.new,
+          }(
             command: command,
             index: index,
           ),
@@ -62,6 +76,11 @@ class _OneShellTask extends HookTask {
     required this.command,
     required this.index,
   }) : super(include: [AllFiles()]);
+
+  _OneShellTask.always({
+    required this.command,
+    required this.index,
+  }) : super.always();
 
   final String command;
   final int index;

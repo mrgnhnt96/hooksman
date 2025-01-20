@@ -8,12 +8,14 @@ class ResolvedHookTask {
     required this.index,
     required this.label,
     required this.subTasks,
+    required this.always,
   });
 
   final List<String> files;
   final HookTask original;
   final int index;
   final TaskLabel label;
+  final bool always;
   final List<ResolvedHookTask> subTasks;
 
   bool get hasChildren => subTasks.isNotEmpty;

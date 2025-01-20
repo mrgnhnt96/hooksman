@@ -5,12 +5,19 @@ import 'package:hooksman/tasks/hook_task.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class TaskRunner {
-  const TaskRunner({
+  TaskRunner({
     required this.logger,
     required this.task,
     required this.completeTask,
     required this.startTask,
-  });
+  }) {
+    if (!task.wasSkipped) return;
+
+    // task has no files and is not set to always run
+    // so we need to start and complete it manually
+    startTask(task.resolvedTask.original);
+    completeTask(task.resolvedTask.original, 0);
+  }
 
   final Logger logger;
   final PendingTask task;
@@ -20,7 +27,7 @@ class TaskRunner {
   Future<int> run() async {
     final task = this.task;
 
-    if (task.files.isEmpty) {
+    if (task.wasSkipped) {
       return 0;
     }
 

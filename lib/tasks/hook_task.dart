@@ -49,7 +49,16 @@ abstract class HookTask {
   HookTask({
     required this.include,
     this.exclude = const [],
-  }) : id = const Uuid().v4();
+  })  : _always = false,
+        id = const Uuid().v4();
+
+  /// Creates a task that always runs, even if no files are being
+  /// processed or if the files do not match the task's patterns.
+  HookTask.always()
+      : include = [],
+        exclude = [],
+        _always = true,
+        id = const Uuid().v4();
 
   /// The unique identifier for the task.
   final String id;
@@ -59,6 +68,10 @@ abstract class HookTask {
 
   /// The list of patterns to exclude files.
   final List<Pattern> exclude;
+
+  /// Whether the task should always run,
+  /// regardless of the files being processed.
+  final bool _always;
 
   /// The name of the task.
   String? get name;
@@ -110,6 +123,7 @@ abstract class HookTask {
     return ResolvedHookTask(
       files: filtered,
       original: this,
+      always: _always,
       index: index,
       label: label(filtered),
       subTasks: subTasks.indexed.map((e) {
@@ -126,14 +140,17 @@ abstract class HookTask {
   /// Gets the pattern name for the task.
   ///
   /// Returns a string representing the pattern name.
-  String get patternName => include.map((e) {
-        return switch (e) {
-          Glob() => e.pattern,
-          RegExp() => e.pattern,
-          String() => e,
-          _ => '$e',
-        };
-      }).join(', ');
+  String get patternName => switch (_always) {
+        true => 'always',
+        false => include.map((e) {
+            return switch (e) {
+              Glob() => e.pattern,
+              RegExp() => e.pattern,
+              String() => e,
+              _ => '$e',
+            };
+          }).join(', '),
+      };
 
   /// Gets the resolved name for the task.
   ///
@@ -142,6 +159,14 @@ abstract class HookTask {
         final String name => name,
         _ => patternName,
       };
+
+  bool get shouldAlwaysRun {
+    if (_always) return true;
+
+    final subTasks = getSubTasks([]);
+
+    return subTasks.any((e) => e.shouldAlwaysRun);
+  }
 
   /// Creates a label for the task with the given file paths.
   ///

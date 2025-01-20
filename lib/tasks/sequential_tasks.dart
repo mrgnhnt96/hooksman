@@ -42,6 +42,12 @@ class SequentialTasks extends SequentialTask {
   })  : _tasks = tasks,
         super(include: include ?? [AllFiles()]);
 
+  SequentialTasks.always({
+    required List<HookTask> tasks,
+    this.name,
+  })  : _tasks = tasks,
+        super.always();
+
   @override
   final String? name;
 

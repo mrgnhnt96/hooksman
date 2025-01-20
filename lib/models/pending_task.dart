@@ -98,6 +98,15 @@ class PendingTask {
 
   int? _code;
   int? get code => _code;
+
+  bool get shouldAlwaysRun => resolvedTask.original.shouldAlwaysRun;
+
+  bool get wasSkipped {
+    if (shouldAlwaysRun) return false;
+
+    return files.isEmpty;
+  }
+
   set code(int? code) {
     if (code == null) return;
     if (_code != null) return;

@@ -40,6 +40,11 @@ class ParallelTasks extends HookTask {
     super.exclude,
     this.name,
   }) : _tasks = tasks;
+  ParallelTasks.always({
+    required List<HookTask> tasks,
+    this.name,
+  })  : _tasks = tasks,
+        super.always();
 
   @override
   final String? name;
