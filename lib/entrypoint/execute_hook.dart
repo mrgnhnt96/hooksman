@@ -20,6 +20,7 @@ Future<void> executeHook(String name, Hook hook) async {
 
   final logger = Logger()..level = level;
   final gitService = GitService(
+    debug: debug,
     logger: logger,
     fs: fs,
   );

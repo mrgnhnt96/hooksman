@@ -13,12 +13,15 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   const GitService({
     required this.logger,
     required this.fs,
+    required this.debug,
   });
 
   @override
   final Logger logger;
   @override
   final FileSystem fs;
+
+  final bool debug;
 
   @override
   List<String> get gitDiffArgs => [
@@ -410,6 +413,8 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       'HEAD',
     ]);
 
+    if (debug) await Future<void>.delayed(const Duration(seconds: 5));
+
     if (reset.exitCode != 0) {
       logger
         ..err('Failed to reset')
@@ -424,7 +429,53 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       await dropLatestStash();
       return true;
     } else {
-      await popLatestStash();
+      if (!await popLatestStash()) {
+        logger
+          ..alert('IMPORTANT')
+          ..write('''
+${red.wrap('Manual intervention required')}
+
+This message indicates that an error occurred while attempting to restore changes to your files before the git hook was executed. While precautions have been taken to ensure no changes are lost, Hooksman was unable to restore them automatically.
+To manually restore the changes, follow these steps:
+
+1. View the stash list
+
+    Run the following command to see the list of stashes:
+
+    ${yellow.wrap('git stash list')}
+
+    Look for a stash with the message "${cyan.wrap(StashMixin.failsafeStashMessage)}". Copy the hash of the stash that you want to apply.
+
+2. Apply the stash
+
+    Use the following command to apply the stash:
+
+    ${yellow.wrap('git stash apply <stash_hash>')}
+
+3. Drop the stash (Optional)
+
+    Once the changes have been applied, you can safely remove the stash with this command:
+
+    ${yellow.wrap('git stash drop <stash_hash>')}
+
+------------------------------------------------
+${red.wrap('Partially Staged Files')}
+
+  If any files had both staged and unstaged changes, you may need to restore them manually. Hooksman creates a patch file in the .git directory for this purpose.
+  If this file doesn't exist, no partially staged files were detected.
+
+  ${cyan.wrap(patchPath)}
+
+  ${red.wrap('This patch file is replaced each time the git hook runs. Be sure to apply the patch before re-running the hook.')}
+  To apply the patch, run:
+
+  ${yellow.wrap('git apply $patchPath')}
+
+  After applying the patch, you can safely delete the patch file.
+''');
+
+        return false;
+      }
 
       if (await patchAvailable()) {
         await applyPatch();

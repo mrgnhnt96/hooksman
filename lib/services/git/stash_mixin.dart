@@ -5,6 +5,9 @@ import 'package:mason_logger/mason_logger.dart';
 mixin StashMixin {
   static const _stashMessage = '__stash__hooksman__';
 
+  static const backupStashMessage = '[HOOKSMAN]: backup';
+  static const failsafeStashMessage = '[HOOKSMAN]: failsafe';
+
   Logger get logger;
 
   // Save stash of all staged files.
@@ -28,7 +31,7 @@ mixin StashMixin {
     final result = await Process.run('git', [
       'stash',
       'create',
-      '[HOOKSMAN]: backup',
+      backupStashMessage,
     ]);
 
     final hash = switch (result.stdout) {
@@ -142,7 +145,7 @@ mixin StashMixin {
       '--all',
       '--keep-index',
       '--message',
-      '[HOOKSMAN]: failsafe',
+      failsafeStashMessage,
     ]);
 
     if (newStash.exitCode != 0) {
@@ -164,7 +167,7 @@ mixin StashMixin {
 
     if (pop.exitCode != 0) {
       logger
-        ..err('Failed to pop stash')
+        ..err('Failed to pop backup stash')
         ..detail('Error: ${pop.stderr}');
       return false;
     }

@@ -23,6 +23,7 @@ Future<int> main(List<String> providedArgs) async {
     fs: fs,
     logger: logger,
     git: GitService(
+      debug: logger.level == Level.verbose,
       logger: logger,
       fs: fs,
     ),

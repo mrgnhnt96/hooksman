@@ -139,9 +139,13 @@ class HookExecutor {
         ..write('\n');
     }
 
-    Future<void> finish() async {
-      logger.detail('deleting patch');
-      await gitService.deletePatch();
+    Future<void> finish({
+      required bool cleanUp,
+    }) async {
+      if (cleanUp) {
+        logger.detail('deleting patch');
+        await gitService.deletePatch();
+      }
 
       logger.detail('restoring merge statuses');
       gitService.restoreMergeStatuses(
@@ -165,7 +169,7 @@ class HookExecutor {
       if (debug) await _wait(durations.short);
 
       logger.detail('Forcing hard reset to HEAD');
-      await gitService.restoreStash();
+      final restoredStash = await gitService.restoreStash();
 
       if (debug) await _wait(durations.long);
 
@@ -175,7 +179,9 @@ class HookExecutor {
       if (debug) await _wait(durations.short);
       await gitService.ensureDeletedFiles(context.deletedFiles);
 
-      await finish();
+      await finish(
+        cleanUp: restoredStash,
+      );
 
       return 1;
     }
@@ -219,7 +225,9 @@ class HookExecutor {
       }
     }
 
-    await finish();
+    await finish(
+      cleanUp: true,
+    );
 
     if (hook.allowEmpty) {
       logger.detail('--FINISHED--');

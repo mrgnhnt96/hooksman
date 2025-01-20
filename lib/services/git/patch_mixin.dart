@@ -12,7 +12,7 @@ mixin PatchMixin {
   Logger get logger;
   FileSystem get fs;
 
-  String get _patchPath {
+  String get patchPath {
     return p.join(gitDir, _patch);
   }
 
@@ -25,7 +25,7 @@ mixin PatchMixin {
         'diff',
         ...gitDiffArgs,
         '--output',
-        _patchPath,
+        patchPath,
         '--',
         ...filePaths,
       ],
@@ -45,7 +45,7 @@ mixin PatchMixin {
     logger.detail('Create patch output: ${result.stdout}');
 
     // ensure file exists
-    if (!fs.file(_patchPath).existsSync()) {
+    if (!fs.file(patchPath).existsSync()) {
       logger
         ..err('Failed to create patch')
         ..detail('Output: ${result.stdout}');
@@ -54,7 +54,7 @@ mixin PatchMixin {
   }
 
   Future<bool> applyPatch() async {
-    final patch = _patchPath;
+    final patch = patchPath;
     logger.detail('Applying patch from $patch');
     final firstTry = await Process.run(
       'git',
@@ -100,7 +100,7 @@ mixin PatchMixin {
   }
 
   Future<void> deletePatch() async {
-    final path = _patchPath;
+    final path = patchPath;
 
     final file = fs.file(path);
 
@@ -114,7 +114,7 @@ mixin PatchMixin {
   }
 
   Future<bool> patchAvailable() async {
-    final path = _patchPath;
+    final path = patchPath;
 
     final file = fs.file(path);
 
