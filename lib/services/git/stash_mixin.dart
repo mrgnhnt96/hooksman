@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:mason_logger/mason_logger.dart';
 
 mixin StashMixin {
-  static const _stashMessage = '__stash__git-hooks__';
+  static const _stashMessage = '__stash__hooksman__';
 
   Logger get logger;
 
@@ -11,8 +11,25 @@ mixin StashMixin {
   // The `stash create` command creates a dangling
   // commit without removing any files,
   // and `stash store` saves it as an actual stash.
-  Future<String> createStash() async {
-    final result = await Process.run('git', ['stash', 'create']);
+  Future<String?> createBackupStash() async {
+    // ensure there are staged files
+    final staged =
+        await Process.run('git', ['diff', '--cached', '--name-only']);
+
+    final hasFiles = switch (staged.stdout) {
+      final String files => files.trim().isNotEmpty,
+      _ => false,
+    };
+
+    if (!hasFiles) {
+      return null;
+    }
+
+    final result = await Process.run('git', [
+      'stash',
+      'create',
+      '[HOOKSMAN]: backup',
+    ]);
 
     final hash = switch (result.stdout) {
       final String hash => hash.trim(),
@@ -26,7 +43,7 @@ mixin StashMixin {
       throw Exception('Failed to create stash');
     }
 
-    // dart is running to fast for git to cache the stash,
+    // dart is running too fast for git to cache the stash,
     // resulting in a error throwing race condition
     await Future<void>.delayed(const Duration(milliseconds: 100));
 
@@ -51,7 +68,7 @@ mixin StashMixin {
     return hash;
   }
 
-  Future<int?> stash() async {
+  Future<int?> getBackupStashHash() async {
     final stashes = await Process.run('git', ['stash', 'list']);
 
     final out = switch (stashes.stdout) {
@@ -75,8 +92,41 @@ mixin StashMixin {
     return null;
   }
 
+  Future<bool> applyBackupStash([String? hash]) async {
+    logger.detail('applying backup stash');
+
+    final stashHash = hash ?? await getBackupStashHash();
+
+    if (stashHash == null) {
+      logger
+        ..err('No backup stash found')
+        ..detail('Skipping stash apply');
+      return false;
+    }
+
+    // apply stash
+    final apply = await Process.run('git', [
+      'stash',
+      'apply',
+      '--quiet',
+      '--index',
+      '$stashHash',
+    ]);
+
+    if (apply.exitCode != 0) {
+      logger
+        ..err('Failed to apply stash')
+        ..detail('Error: ${apply.stderr}')
+        ..detail('Restoring stash before reset');
+
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> dropBackupStash() async {
-    final index = await stash();
+    final index = await getBackupStashHash();
     if (index == null) return;
 
     await Process.run('git', [
@@ -84,5 +134,56 @@ mixin StashMixin {
       'drop',
       '$index',
     ]);
+  }
+
+  Future<bool> stashCurrentChanges() async {
+    final newStash = await Process.run('git', [
+      'stash',
+      '--all',
+      '--keep-index',
+      '--message',
+      '[HOOKSMAN]: failsafe',
+    ]);
+
+    if (newStash.exitCode != 0) {
+      logger
+        ..err('Failed to stash current changes')
+        ..detail('Error: ${newStash.stderr}');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<bool> popLatestStash() async {
+    final pop = await Process.run('git', [
+      'stash',
+      'pop',
+      '--index',
+    ]);
+
+    if (pop.exitCode != 0) {
+      logger
+        ..err('Failed to pop stash')
+        ..detail('Error: ${pop.stderr}');
+      return false;
+    }
+
+    logger.detail('Popped latest stash');
+
+    return true;
+  }
+
+  Future<bool> dropLatestStash() async {
+    final drop = await Process.run('git', ['stash', 'drop']);
+
+    if (drop.exitCode != 0) {
+      logger
+        ..err('Failed to drop stash')
+        ..detail('Error: ${drop.stderr}');
+      return false;
+    }
+
+    return true;
   }
 }

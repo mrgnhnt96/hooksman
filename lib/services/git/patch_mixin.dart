@@ -112,4 +112,12 @@ mixin PatchMixin {
     logger.detail('deleting patch file');
     file.deleteSync();
   }
+
+  Future<bool> patchAvailable() async {
+    final path = _patchPath;
+
+    final file = fs.file(path);
+
+    return file.exists();
+  }
 }

@@ -178,13 +178,11 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     };
 
     final diff = switch (diffArgs) {
-      _ when diffArgs.isNotEmpty => diffArgs,
-      _ => ['--staged'],
+      _ when diffArgs.isNotEmpty => {...diffArgs, '--name-only'},
+      _ => ['--staged', 'HEAD', '--name-only'],
     };
     final result = await Process.run('git', [
       'diff',
-      'HEAD',
-      '--name-only',
       ...diff,
       '--diff-filter=$filters',
     ]);
@@ -311,7 +309,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
         ..mergeMode = mergeMode
         ..mergeMsg = mergeMsg
         ..deletedFiles = await getDeletedFiles()
-        ..stashHash = await createStash()
+        ..stashHash = await createBackupStash()
         ..nonStagedFiles = await nonStagedFiles() ?? []
         ..hidePartiallyStaged = backup;
     } catch (e) {
@@ -394,9 +392,14 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   }
 
   Future<bool> restoreStash() async {
-    final stashIndex = await stash();
+    final stashHash = await getBackupStashHash();
 
-    if (stashIndex == null) {
+    if (stashHash == null) {
+      logger.detail('No stash to restore');
+      return false;
+    }
+
+    if (!await stashCurrentChanges()) {
       return false;
     }
 
@@ -410,27 +413,27 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     if (reset.exitCode != 0) {
       logger
         ..err('Failed to reset')
-        ..detail('Error: ${reset.stderr}');
+        ..detail('Error: ${reset.stderr}')
+        ..detail('Restoring stash before reset');
+
+      await popLatestStash();
       return false;
     }
 
-    // apply stash
-    final apply = await Process.run('git', [
-      'stash',
-      'apply',
-      '--quiet',
-      '--index',
-      '$stashIndex',
-    ]);
+    if (await applyBackupStash()) {
+      await dropLatestStash();
+      return true;
+    } else {
+      await popLatestStash();
 
-    if (apply.exitCode != 0) {
-      logger
-        ..err('Failed to apply stash')
-        ..detail('Error: ${apply.stderr}');
+      if (await patchAvailable()) {
+        await applyPatch();
+      } else {
+        logger.detail('No patch to apply');
+      }
+
       return false;
     }
-
-    return true;
   }
 
   Future<void> ensureDeletedFiles(List<String> deletedFiles) async {
