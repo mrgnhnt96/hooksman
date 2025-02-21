@@ -402,11 +402,14 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       return false;
     }
 
-    if (!await stashCurrentChanges()) {
+    if (!await createFailSafeStash()) {
       return false;
     }
 
+    if (debug) await Future<void>.delayed(const Duration(seconds: 3));
+
     // hard reset
+    logger.detail('Resetting to HEAD');
     final reset = await Process.run('git', [
       'reset',
       '--hard',

@@ -168,7 +168,7 @@ class HookExecutor {
 
       if (debug) await _wait(durations.short);
 
-      logger.detail('Forcing hard reset to HEAD');
+      logger.detail('Restoring stash');
       final restoredStash = await gitService.restoreStash();
 
       if (debug) await _wait(durations.long);

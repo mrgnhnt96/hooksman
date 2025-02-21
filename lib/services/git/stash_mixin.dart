@@ -139,11 +139,11 @@ mixin StashMixin {
     ]);
   }
 
-  Future<bool> stashCurrentChanges() async {
+  Future<bool> createFailSafeStash() async {
+    logger.detail('Creating fail safe stash');
     final newStash = await Process.run('git', [
       'stash',
       '--all',
-      '--keep-index',
       '--message',
       failsafeStashMessage,
     ]);
@@ -152,6 +152,21 @@ mixin StashMixin {
       logger
         ..err('Failed to stash current changes')
         ..detail('Error: ${newStash.stderr}');
+      return false;
+    }
+
+    logger.detail('Applying fail safe stash');
+    final apply = await Process.run('git', [
+      'stash',
+      'apply',
+      '--quiet',
+      '--index',
+    ]);
+
+    if (apply.exitCode != 0) {
+      logger
+        ..err('Failed to create backup stash')
+        ..detail('Error: ${apply.stderr}');
       return false;
     }
 
