@@ -1,5 +1,12 @@
 <!--  -->
 
+# 1.3.0 | 2.21.25
+
+## Enhancements
+
+- Apply failsafe stash before attempting to restore
+  - This helps prevent the loss of non-version controlled files (such as the .dart_tool directory)
+
 # 1.2.0 | 1.20.25
 
 ## Features
