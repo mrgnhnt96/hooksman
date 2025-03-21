@@ -1,5 +1,11 @@
 <!--  -->
 
+# 1.3.1 | 3.21.25
+
+## Fixes
+
+- Fix issue where `always` did not provide any files
+
 # 1.3.0 | 2.21.25
 
 ## Enhancements

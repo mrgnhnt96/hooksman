@@ -1,6 +1,6 @@
 name: hooksman
 description: Create git hooks and tasks using Dart scripts and Shell commands
-version: 1.3.0
+version: 1.3.1
 repository: https://github.com/mrgnhnt96/hooksman
 issue_tracker: https://github.com/mrgnhnt96/hooksman/issues
 funding:
