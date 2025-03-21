@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:glob/glob.dart';
 import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:hooksman/models/task_label.dart';
+import 'package:hooksman/utils/all_files.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 
@@ -55,7 +56,7 @@ abstract class HookTask {
   /// Creates a task that always runs, even if no files are being
   /// processed or if the files do not match the task's patterns.
   HookTask.always()
-      : include = [],
+      : include = [AllFiles()],
         exclude = [],
         _always = true,
         id = const Uuid().v4();
