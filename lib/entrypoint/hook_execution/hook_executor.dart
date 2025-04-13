@@ -91,19 +91,7 @@ class HookExecutor {
       }
     }
 
-    logger
-      ..info(darkGray.wrap('Running $hookName hook'))
-      ..detail('Preparing files');
-    final context = await gitService.prepareFiles(backup: hook.backupFiles);
-    if (debug) await _wait(durations.short);
-
-    if (context.hidePartiallyStaged) {
-      logger.detail(
-        'Hiding partially staged files '
-        '(${context.partiallyStagedFiles.length})',
-      );
-      await gitService.checkoutFiles(context.partiallyStagedFiles);
-    }
+    final context = await gitService.prepareFiles();
 
     final labelMaker = LabelMaker(
       stdout: stdout,
@@ -139,53 +127,6 @@ class HookExecutor {
         ..write('\n');
     }
 
-    Future<void> finish({
-      required bool cleanUp,
-    }) async {
-      if (cleanUp) {
-        logger.detail('deleting patch');
-        await gitService.deletePatch();
-      }
-
-      logger.detail('restoring merge statuses');
-      gitService.restoreMergeStatuses(
-        msg: context.mergeMsg,
-        mode: context.mergeMode,
-        head: context.mergeHead,
-      );
-
-      if (debug) await _wait(durations.short);
-
-      logger.detail('dropping stash');
-      await gitService.dropBackupStash();
-    }
-
-    Future<int> fail() async {
-      final stash = context.stashHash;
-      if (stash == null) {
-        return 1;
-      }
-
-      if (debug) await _wait(durations.short);
-
-      logger.detail('Restoring stash');
-      final restoredStash = await gitService.restoreStash();
-
-      if (debug) await _wait(durations.long);
-
-      logger.detail('making sure all deleted files stay deleted '
-          '(${context.deletedFiles.length})');
-
-      if (debug) await _wait(durations.short);
-      await gitService.ensureDeletedFiles(context.deletedFiles);
-
-      await finish(
-        cleanUp: restoredStash,
-      );
-
-      return 1;
-    }
-
     var failed = false;
     for (final task in pendingHook.topLevelTasks) {
       if (task.code case final int code when code != 0) {
@@ -199,11 +140,11 @@ class HookExecutor {
         logger
           ..detail('stopping hook tasks')
           ..flush();
-        return await fail();
+        return 1;
       }
     }
 
-    if (hook.backupFiles) {
+    if (hook is PreCommitHook) {
       logger.detail('Applying modifications');
       for (final file in context.nonStagedFiles) {
         logger.detail('  - $file');
@@ -212,24 +153,10 @@ class HookExecutor {
       await gitService.applyModifications(context.nonStagedFiles);
       if (debug) await _wait(durations.long);
     } else {
-      logger.detail('Skipping modifications due to diffArgs being set');
+      logger.detail('Skipped applying modifications for $hookName');
     }
 
-    if (context.hidePartiallyStaged) {
-      logger.detail('Restoring unstaged changes');
-      if (!await gitService.applyPatch()) {
-        logger.err('Failed to restore unstaged changes due to merge conflicts');
-        if (debug) await _wait(durations.long);
-
-        await fail();
-      }
-    }
-
-    await finish(
-      cleanUp: true,
-    );
-
-    if (hook.allowEmpty) {
+    if (hook case PreCommitHook(allowEmpty: true)) {
       logger.detail('--FINISHED--');
       return 0;
     }

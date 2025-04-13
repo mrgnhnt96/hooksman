@@ -6,7 +6,6 @@ export 'package:glob/glob.dart';
 
 export 'entrypoint/execute_hook.dart';
 export 'hooks/hook.dart';
-export 'hooks/verbose_hook.dart';
 export 'tasks/dart_task.dart';
 export 'tasks/hook_task.dart';
 export 'tasks/parallel_task.dart';

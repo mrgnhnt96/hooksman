@@ -172,22 +172,15 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
   }
 
   Future<List<String>?> diffFiles({
-    List<String> diffArgs = const [],
-    String? diffFilters,
+    required List<String> diffArgs,
+    required String diffFilters,
   }) async {
-    final filters = switch (diffFilters) {
-      final String filters => filters,
-      _ => 'ACMR',
-    };
+    final diff = {...diffArgs, '--name-only'};
 
-    final diff = switch (diffArgs) {
-      _ when diffArgs.isNotEmpty => {...diffArgs, '--name-only'},
-      _ => ['--staged', 'HEAD', '--name-only'],
-    };
     final result = await Process.run('git', [
       'diff',
       ...diff,
-      '--diff-filter=$filters',
+      if (diffFilters.isNotEmpty) '--diff-filter=$diffFilters',
     ]);
 
     final out = switch (result.stdout) {
@@ -274,12 +267,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     return files;
   }
 
-  /// Prepare files for the task.
-  /// If [backup] is true, stash the current state of the repository.
-  /// Returns a [GitContext] object with the current state of the repository.
-  Future<GitContext> prepareFiles({
-    bool backup = true,
-  }) async {
+  Future<GitContext> prepareFiles() async {
     final context = GitContextSetter();
 
     try {
@@ -303,18 +291,13 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
         await patch(filePaths);
       }
 
-      if (!backup) {
-        return context.toImmutable();
-      }
-
       context
         ..mergeHead = mergeHead
         ..mergeMode = mergeMode
         ..mergeMsg = mergeMsg
         ..deletedFiles = await getDeletedFiles()
         ..stashHash = await createBackupStash()
-        ..nonStagedFiles = await nonStagedFiles() ?? []
-        ..hidePartiallyStaged = backup;
+        ..nonStagedFiles = await nonStagedFiles() ?? [];
     } catch (e) {
       logger
         ..err('Failed to prepare files')
@@ -322,7 +305,7 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
       throw Exception('Failed to prepare files');
     }
 
-    return context.toImmutable();
+    return context;
   }
 
   Future<void> checkoutFiles(List<String> filePaths) async {

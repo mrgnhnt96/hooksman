@@ -1,4 +1,4 @@
-import 'package:hooksman/hooks/hook.dart';
+part of '../hook.dart';
 
 /// The `VerboseHook` class extends the `Hook` class to provide verbose output
 /// during the execution of tasks. This class is useful for
@@ -49,11 +49,9 @@ import 'package:hooksman/hooks/hook.dart';
 /// tasks being executed. Note that this will slow down the execution of the
 /// tasks and is not intended for use in production environments.
 class VerboseHook extends Hook {
-  VerboseHook({
+  const VerboseHook({
     required super.tasks,
     super.diffArgs = const [],
-    super.allowEmpty = false,
-    super.diffFilters,
-    super.backupFiles,
+    super.diffFilters = '',
   });
 }

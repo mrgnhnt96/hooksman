@@ -115,6 +115,7 @@ class _OneShellTask extends HookTask {
       final scriptString = yellow.wrap(resolvedName);
       print('${red.wrap('Task failed:')} $scriptString');
       print(darkGray.wrap('-- script --'));
+      // wrap the command by max column width
       print(command);
 
       if (result.stdout case final String out) {

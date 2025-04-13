@@ -2,6 +2,7 @@ exclude:
   - "**.g.dart"
   - "**/gen.dart"
   - "**/__*.dart"
+  - "**/parts/**"
 
 defaults:
   comments: |

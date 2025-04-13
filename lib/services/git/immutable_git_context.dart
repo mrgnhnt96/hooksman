@@ -8,10 +8,8 @@ class ImmutableGitContext implements GitContext {
     required this.mergeMode,
     required this.mergeMsg,
     required this.stashHash,
-    required bool hidePartiallyStaged,
     required this.nonStagedFiles,
-  }) : hidePartiallyStaged =
-            hidePartiallyStaged && partiallyStagedFiles.isNotEmpty;
+  });
 
   @override
   final List<String> partiallyStagedFiles;
@@ -27,8 +25,6 @@ class ImmutableGitContext implements GitContext {
   final String? mergeMsg;
   @override
   final String? stashHash;
-  @override
-  final bool hidePartiallyStaged;
 
   bool get hasPartiallyStagedFiles => partiallyStagedFiles.isNotEmpty;
 }

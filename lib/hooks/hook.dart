@@ -3,7 +3,12 @@ import 'package:hooksman/models/resolved_hook.dart';
 import 'package:hooksman/tasks/hook_task.dart';
 
 part 'hook.g.dart';
+part 'parts/any_hook.dart';
+part 'parts/pre_commit_hook.dart';
+part 'parts/pre_push_hook.dart';
+part 'parts/verbose_hook.dart';
 
+/// {@template hook}
 /// The `Hook` class represents a Git hook configuration
 /// that defines a set of tasks to be executed
 /// during specific Git hook events. This class allows you
@@ -66,20 +71,22 @@ part 'hook.g.dart';
 /// to specify the statuses of files to
 /// include or exclude, such as `added`, `modified`, or `deleted`.
 ///
-/// The `allowEmpty` parameter determines whether the hook
-/// should allow empty commits.
-///
 /// The `backupFiles` parameter specifies whether the original
 /// files should be backed up before running
 /// the hook.
-class Hook extends Equatable {
-  Hook({
+/// {@endtemplate}
+sealed class Hook extends Equatable {
+  const Hook({
     required this.tasks,
-    this.diffArgs = const [],
-    this.allowEmpty = false,
-    this.diffFilters,
-    bool? backupFiles,
-  }) : backupFiles = backupFiles ?? diffArgs.isEmpty;
+    required this.diffFilters,
+    required this.diffArgs,
+  }) : verbose = false;
+
+  const Hook.verbose({
+    required this.tasks,
+    required this.diffFilters,
+    required this.diffArgs,
+  }) : verbose = true;
 
   /// Defaults to ['--staged']
   final List<String> diffArgs;
@@ -92,17 +99,10 @@ class Hook extends Equatable {
   /// - R = Renamed
   ///
   /// Check out the git [docs](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-filterACDMRTUXB82308203) to view more options
-  final String? diffFilters;
-  late final List<HookTask> tasks;
+  final String diffFilters;
+  final List<HookTask> tasks;
 
-  /// If true, the original files will be backed up before running the hook
-  ///
-  /// Defaults to true if [diffArgs] is empty
-  final bool backupFiles;
-
-  /// If true, the hook will exit successfully even if
-  /// there are no files after the tasks have run
-  final bool allowEmpty;
+  final bool verbose;
 
   ResolvedHook resolve(List<String> filePaths) {
     final resolvedTasks = tasks.indexed.map((e) {

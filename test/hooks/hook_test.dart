@@ -8,7 +8,7 @@ void main() {
   group(Hook, () {
     group('#resolve', () {
       test('resolves multiple commands', () {
-        final hook = Hook(
+        final hook = AnyHook(
           tasks: [
             _TestTask(
               name: 'command1',
@@ -36,7 +36,7 @@ void main() {
       });
 
       test('resolves commands when no files match', () {
-        final hook = Hook(
+        final hook = AnyHook(
           tasks: [
             _TestTask(
               name: 'command1',
@@ -55,7 +55,7 @@ void main() {
       });
 
       test('resolves commands with multiple matching files', () {
-        final hook = Hook(
+        final hook = AnyHook(
           tasks: [
             _TestTask(
               name: 'command1',
@@ -75,7 +75,7 @@ void main() {
       });
 
       test('resolves commands with multiple patterns', () {
-        final hook = Hook(
+        final hook = AnyHook(
           tasks: [
             _TestTask(
               name: 'command1',
@@ -95,7 +95,7 @@ void main() {
       });
 
       test('excludes files matching exclude patterns', () {
-        final hook = Hook(
+        final hook = AnyHook(
           tasks: [
             _TestTask(
               name: 'command1',
@@ -116,7 +116,7 @@ void main() {
       });
 
       test('excludes files matching multiple exclude patterns', () {
-        final hook = Hook(
+        final hook = AnyHook(
           tasks: [
             _TestTask(
               name: 'command1',
