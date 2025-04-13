@@ -6,7 +6,6 @@ part 'hook.g.dart';
 part 'parts/any_hook.dart';
 part 'parts/pre_commit_hook.dart';
 part 'parts/pre_push_hook.dart';
-part 'parts/verbose_hook.dart';
 
 /// {@template hook}
 /// The `Hook` class represents a Git hook configuration

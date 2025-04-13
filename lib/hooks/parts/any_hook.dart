@@ -6,4 +6,9 @@ class AnyHook extends Hook {
     super.diffArgs = const [],
     super.diffFilters = '',
   });
+  const AnyHook.verbose({
+    required super.tasks,
+    super.diffArgs = const [],
+    super.diffFilters = '',
+  }) : super.verbose();
 }

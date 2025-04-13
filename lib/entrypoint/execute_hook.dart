@@ -10,7 +10,7 @@ import 'package:mason_logger/mason_logger.dart';
 Future<void> executeHook(String name, Hook hook) async {
   const fs = LocalFileSystem();
 
-  final debug = hook is VerboseHook;
+  final debug = hook.verbose;
 
   final level = switch (debug) {
     true => Level.verbose,
