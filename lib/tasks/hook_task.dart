@@ -55,9 +55,9 @@ abstract class HookTask {
 
   /// Creates a task that always runs, even if no files are being
   /// processed or if the files do not match the task's patterns.
-  HookTask.always()
-      : include = [AllFiles()],
-        exclude = [],
+  HookTask.always({
+    this.exclude = const [],
+  })  : include = [AllFiles()],
         _always = true,
         id = const Uuid().v4();
 

@@ -44,6 +44,7 @@ class ShellTask extends SequentialTask {
 
   ShellTask.always({
     required ShellCommands commands,
+    super.exclude,
     String? name,
   })  : _commands = commands,
         _name = name,
@@ -80,6 +81,7 @@ class _OneShellTask extends HookTask {
   _OneShellTask.always({
     required this.command,
     required this.index,
+    super.exclude,
   }) : super.always();
 
   final String command;

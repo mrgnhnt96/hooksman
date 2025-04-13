@@ -43,6 +43,7 @@ class ParallelTasks extends HookTask {
   ParallelTasks.always({
     required List<HookTask> tasks,
     this.name,
+    super.exclude,
   })  : _tasks = tasks,
         super.always();
 
