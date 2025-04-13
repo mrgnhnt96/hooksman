@@ -1,5 +1,28 @@
 <!--  -->
 
+# 2.0.0 | 4.12.25
+
+## Features
+
+- Create `PreCommitHook` specifically for the `pre-commit` hook
+  - This hook will get the files that are being committed to run the tasks against
+  - _This was the previous default behavior of the `Hook` class_
+- Create `PrePushHook` specifically for the `pre-push` hook
+  - This hook will get the files that are being pushed to run the tasks against
+- Create `AnyHook`
+  - A general purpose hooks that can be used to create custom hooks
+- Add `verbose` constructor to all hooks
+  - This will enable verbose output, providing detailed information about the tasks being executed
+
+## Breaking Changes
+
+- `Hook` is now an abstract class
+- Remove `VerboseHook`, prefer to use the `verbose` constructor on any of the `Hook` classes
+- Remove functionality for running tasks against "partially staged" files
+  - Tasks will run against the staged files **as they are**
+  - The previous behavior was buggy and slow. The benefit that it provided was not worth the complexity it added to the code
+    - (If you feel differently, please let me know and I will reconsider this)
+
 # 1.3.1 | 3.21.25
 
 ## Fixes

@@ -20,7 +20,7 @@ lint:
 publish:
   (bail):
   (command):
-    # - sip test --bail --recursive --concurrent
+    - sip test --bail --recursive --concurrent
     - "{$lint}"
     - |
       # Sync changelog and pubspec versions
