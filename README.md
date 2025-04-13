@@ -2,6 +2,8 @@
 
 [![Pub Version](https://img.shields.io/pub/v/hooksman)](https://pub.dev/packages/hooksman)
 
+[![GitHub stars](https://img.shields.io/github/stars/mrgnhnt96/hooksman?style=social)](https://github.com/mrgnhnt96/hooksman)
+
 ![preview](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/.github/images/preview.gif)
 
 ## Overview
@@ -11,6 +13,10 @@ The `hooksman` package allows you to manage and execute Git hooks using Dart. Yo
 With `hooksman` you can run shell commands, Dart code, or a combination of both in your hooks to enforce coding standards, run tests, or perform other tasks.
 
 Tasks are used to safeguard your codebase, if a task fails, `hooksman` exits with a non-zero status code, preventing the hook from completing (like a pre-commit hook).
+
+> [!TIP]
+>
+> Check out [`sip_cli`](https://pub.dev/packages/sip_cli) for a Dart-based CLI tool to manage mono-repos, maintain project scripts, and run `dart|flutter pub get` across multiple packages.
 
 ## Installation
 
@@ -51,17 +57,25 @@ Create a `hooks` directory in the root of your project to store your hooks.
 
 ### Create Hook
 
-Create your hooks as Dart files in the `hooks` directory. Each file should contain a `main` function that returns a `Hook` object, imported from the `hooksman` package.
+Create your hooks as Dart files in the `hooks` directory. Each file should contain a `main` function that returns the `Hook` type, imported from the `hooksman` package.
 
 ```dart
+// hooks/pre_commit.dart
+
 import 'package:hooksman/hooksman.dart';
 
 Hook main() {
-    return Hook(
+    return PreCommitHook(
         ... // Tasks
     );
 }
 ```
+
+The pre-defined hooks are:
+
+- `PreCommitHook`: Runs before a commit is made
+- `PrePushHook`: Runs before a push is made
+- `AnyHook`: A general purpose hook that can be used to create custom hooks
 
 > [!NOTE]
 >
@@ -210,10 +224,6 @@ SequentialTasks(
 ),
 ```
 
-> [!TIP]
->
-> Check out [`sip_cli`](https://pub.dev/packages/sip_cli) for a Dart-based CLI tool to manage mono-repos, maintain project scripts, and run `dart|flutter pub get` across multiple packages.
-
 ### Parallel Tasks
 
 You can group tasks together using the `ParallelTasks` class, which runs the tasks in parallel.
@@ -236,10 +246,6 @@ ParallelTasks(
     ],
 ),
 ```
-
-> [!TIP]
->
-> Check out [`sip_cli`](https://pub.dev/packages/sip_cli) for a Dart-based CLI tool to manage mono-repos, maintain project scripts, and run `dart|flutter pub get` across multiple packages.
 
 ## Predefined Tasks
 
@@ -271,29 +277,21 @@ Hook main() {
 
 The hooks will be executed automatically by Git when the corresponding events occur (e.g., pre-commit, post-commit, etc.).
 
-### Amending to the Commit
+### Amending to the Commit (PreCommitHook)
 
-`hooksman`, similar to `lint-staged`, will add any created/deleted/modified files to the commit after running the tasks. Ensuring that the changes are included in the commit.
+After `hooksman` executes the tasks, a check will be made to see if any files were created/deleted/modified. If so, the files will be added to the commit.
 
 An example of this behavior is when you have a `ShellTask` that formats the code using `dart format`. If the code is not formatted correctly, `hooksman` will format the code and add the changes to the commit.
-
-### Partially Staged Files
-
-A partially staged file is when you have `some_file.dart` staged in the index, along with some changes to the same `some_file.dart` file in the working directory.
-
-When the tasks are executed, `hooksman` will stash any non-staged changes to partially staged files, run the tasks, then pop the stash with the changes. The is beneficial because it ensures that the tasks are run on the version of the file that is staged in the index, rather than the working directory.
 
 ### Error Handling
 
 If an error occurs during the execution of a task, `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code. This will prevent the commit from being made, allowing you to fix the issue before committing again.
 
-### Signal Interruption
+### `Ctrl+C` (Signal Interruption)
 
-If the user interrupts the hook execution (e.g., by pressing `Ctrl+C`), `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code. Extra precautions are taken to ensure that the repository is left in a clean state.
+If the user interrupts the hook execution (e.g., by pressing `Ctrl+C`), `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code.
 
 ## Configuration
-
-Hooks are initially setup to run for the `pre-commit` hook, but you can configure the hooks to run for other events by specifying the `diff` and `diffFilters` parameters in the `Hook` object.
 
 ### Diff Filters
 
@@ -302,7 +300,7 @@ The `diffFilters` parameter allows you to specify the statuses of files to inclu
 ```dart
 
 Hook main() {
-  return Hook(
+  return PreCommitHook(
     diffFilters: 'AM', // Include added and modified files
     tasks: [
       ...
@@ -313,14 +311,15 @@ Hook main() {
 
 ### Diff
 
-The `diff` parameter allows you to specify how files are compared with the working directory, index, or commit.
+The `diff` parameter allows you to specify how files are compared with the working directory, index (staged), or commit.
 
 The example below demonstrates how to compare files with the remote branch (e.g., `origin/main`). This could be useful for a `pre-push` hook.
 
 ```dart
 Hook main() {
-  return Hook(
-    diffArgs: ['@{u}', 'HEAD'], // Compare files with the remote branch
+  return PrePushHook(
+    // Compare files with the remote branch
+    diffArgs: ['@{u}', 'HEAD'], // default args
     tasks: [
       ...
     ],
@@ -330,17 +329,17 @@ Hook main() {
 
 ## Verbose Output
 
-You can enable verbose output by using the `VerboseHook` class. This will _slow_ down the execution of the tasks and output detailed information about the tasks being executed. This can be useful to understand the order of execution and the files being processed. This is not intended to be used in non-developing environments.
+You can enable verbose output by using the `verbose` constructor on any of the `Hook` classes. This will _slow_ down the execution of the tasks and output detailed information about the tasks being executed. This can be useful to understand the order of execution and the files being processed. This is not intended to be used in non-developing environments.
 
 ## Example
 
 ```dart
-// hooks/pre_commit.dart
+// hooks/pre_push.dart
 
 import 'package:hooksman/hooksman.dart';
 
 Hook main() {
-  return Hook(
+  return PrePushHook.verbose(
     tasks: [
       ReRegisterHooks(),
       ShellTask(
