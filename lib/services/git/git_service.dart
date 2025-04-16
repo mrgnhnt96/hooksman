@@ -4,12 +4,9 @@ import 'package:file/file.dart';
 import 'package:hooksman/services/git/git_checks_mixin.dart';
 import 'package:hooksman/services/git/git_context.dart';
 import 'package:hooksman/services/git/git_context_setter.dart';
-import 'package:hooksman/services/git/merge_mixin.dart';
-import 'package:hooksman/services/git/patch_mixin.dart';
-import 'package:hooksman/services/git/stash_mixin.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
+class GitService with GitChecksMixin {
   const GitService({
     required this.logger,
     required this.fs,
@@ -18,12 +15,10 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
 
   @override
   final Logger logger;
-  @override
   final FileSystem fs;
 
   final bool debug;
 
-  @override
   List<String> get gitDiffArgs => [
         // support binary files
         '--binary',
@@ -43,7 +38,6 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
         '--submodule=short',
       ];
 
-  @override
   String get gitDir {
     final gitDir = Process.runSync(
       'git',
@@ -286,17 +280,10 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
         for (final file in filePaths) {
           logger.detail('  $file');
         }
-
-        logger.detail('Creating patch');
-        await patch(filePaths);
       }
 
       context
-        ..mergeHead = mergeHead
-        ..mergeMode = mergeMode
-        ..mergeMsg = mergeMsg
         ..deletedFiles = await getDeletedFiles()
-        ..stashHash = await createBackupStash()
         ..nonStagedFiles = await nonStagedFiles() ?? [];
     } catch (e) {
       logger
@@ -306,17 +293,6 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     }
 
     return context;
-  }
-
-  Future<void> checkoutFiles(List<String> filePaths) async {
-    final processed = processRenames(filePaths, includeRenameFrom: false);
-
-    await Process.run('git', [
-      'checkout',
-      '--force',
-      '--',
-      ...processed,
-    ]);
   }
 
   Future<void> add(List<String> filePaths) async {
@@ -375,113 +351,5 @@ class GitService with MergeMixin, GitChecksMixin, StashMixin, PatchMixin {
     }
 
     await add(filesToAdd.toList());
-  }
-
-  Future<bool> restoreStash() async {
-    final stashHash = await getBackupStashHash();
-
-    if (stashHash == null) {
-      logger.detail('No stash to restore');
-      return false;
-    }
-
-    if (!await createFailSafeStash()) {
-      return false;
-    }
-
-    if (debug) await Future<void>.delayed(const Duration(seconds: 3));
-
-    // hard reset
-    logger.detail('Resetting to HEAD');
-    final reset = await Process.run('git', [
-      'reset',
-      '--hard',
-      'HEAD',
-    ]);
-
-    if (debug) await Future<void>.delayed(const Duration(seconds: 5));
-
-    if (reset.exitCode != 0) {
-      logger
-        ..err('Failed to reset')
-        ..detail('Error: ${reset.stderr}')
-        ..detail('Restoring stash before reset');
-
-      await popLatestStash();
-      return false;
-    }
-
-    if (await applyBackupStash()) {
-      await dropLatestStash();
-      return true;
-    } else {
-      if (!await popLatestStash()) {
-        logger
-          ..alert('IMPORTANT')
-          ..write('''
-${red.wrap('Manual intervention required')}
-
-This message indicates that an error occurred while attempting to restore changes to your files before the git hook was executed. While precautions have been taken to ensure no changes are lost, Hooksman was unable to restore them automatically.
-To manually restore the changes, follow these steps:
-
-1. View the stash list
-
-    Run the following command to see the list of stashes:
-
-    ${yellow.wrap('git stash list')}
-
-    Look for a stash with the message "${cyan.wrap(StashMixin.failsafeStashMessage)}". Copy the hash of the stash that you want to apply.
-
-2. Apply the stash
-
-    Use the following command to apply the stash:
-
-    ${yellow.wrap('git stash apply <stash_hash>')}
-
-3. Drop the stash (Optional)
-
-    Once the changes have been applied, you can safely remove the stash with this command:
-
-    ${yellow.wrap('git stash drop <stash_hash>')}
-
-------------------------------------------------
-${red.wrap('Partially Staged Files')}
-
-  If any files had both staged and unstaged changes, you may need to restore them manually. Hooksman creates a patch file in the .git directory for this purpose.
-  If this file doesn't exist, no partially staged files were detected.
-
-  ${cyan.wrap(patchPath)}
-
-  ${red.wrap('This patch file is replaced each time the git hook runs. Be sure to apply the patch before re-running the hook.')}
-  To apply the patch, run:
-
-  ${yellow.wrap('git apply $patchPath')}
-
-  After applying the patch, you can safely delete the patch file.
-''');
-
-        return false;
-      }
-
-      if (await patchAvailable()) {
-        await applyPatch();
-      } else {
-        logger.detail('No patch to apply');
-      }
-
-      return false;
-    }
-  }
-
-  Future<void> ensureDeletedFiles(List<String> deletedFiles) async {
-    for (final path in deletedFiles) {
-      final file = fs.file(path);
-      final exists = file.existsSync();
-      logger.detail('  - $file (exists: $exists)');
-
-      if (!exists) continue;
-
-      file.deleteSync();
-    }
   }
 }
