@@ -1,5 +1,15 @@
 <!--  -->
 
+# 2.0.1 | 4.16.25
+
+## Fixes
+
+- Issue where backup stash was being created unnecessarily
+
+## Chores
+
+- Clean up old files
+
 # 2.0.0 | 4.12.25
 
 ## Features
