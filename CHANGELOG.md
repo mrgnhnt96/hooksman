@@ -1,5 +1,11 @@
 <!--  -->
 
+# 2.0.2 | 6.5.25
+
+## Fixes
+
+- Issue where deleted files were being added to commit when they were not modified
+
 # 2.0.1 | 4.16.25
 
 ## Fixes
