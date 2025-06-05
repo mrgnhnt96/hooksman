@@ -30,11 +30,6 @@ class HookExecutor {
       diffFilters: hook.diffFilters,
     );
 
-    if (allFiles == null) {
-      logger.err('Could not get changed files');
-      return (<String>[], 1);
-    }
-
     if (allFiles.isEmpty) {
       if (!hook.shouldRunOnEmpty) {
         logger.info(
@@ -150,7 +145,9 @@ class HookExecutor {
         logger.detail('  - $file');
       }
       if (debug) await _wait(durations.short);
-      await gitService.applyModifications(context.nonStagedFiles);
+      await gitService.applyModifications(
+        [...context.nonStagedFiles, ...context.deletedFiles],
+      );
       if (debug) await _wait(durations.long);
     } else {
       logger.detail('Skipped applying modifications for $hookName');
@@ -166,7 +163,7 @@ class HookExecutor {
       diffFilters: hook.diffFilters,
     );
 
-    if (files != null && files.isEmpty) {
+    if (files.isEmpty) {
       logger
         ..info('No changes to commit')
         ..detail('--FINISHED--');
