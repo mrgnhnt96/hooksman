@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:file/file.dart';
 import 'package:hooksman/services/git/git_checks_mixin.dart';
 import 'package:hooksman/services/git/git_context.dart';
 import 'package:hooksman/services/git/git_context_setter.dart';
+import 'package:hooksman/utils/process/process.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class GitService with GitChecksMixin {
@@ -11,11 +10,14 @@ class GitService with GitChecksMixin {
     required this.logger,
     required this.fs,
     required this.debug,
+    required this.process,
   });
 
   @override
   final Logger logger;
   final FileSystem fs;
+  @override
+  final Process process;
 
   final bool debug;
 
@@ -39,7 +41,7 @@ class GitService with GitChecksMixin {
       ];
 
   String get gitDir {
-    final gitDir = Process.runSync(
+    final gitDir = process.sync(
       'git',
       [
         'rev-parse',
@@ -47,10 +49,7 @@ class GitService with GitChecksMixin {
       ],
     );
 
-    return switch (gitDir.stdout) {
-      final String dir => dir.trim(),
-      _ => throw Exception('Failed to get git directory'),
-    };
+    return gitDir.stdout.trim();
   }
 
   Future<bool> setHooksDir() async {
@@ -62,7 +61,7 @@ class GitService with GitChecksMixin {
       hooksDir.createSync(recursive: true);
     }
 
-    final result = await Process.run('git', [
+    final result = await process.run('git', [
       'config',
       '--local',
       'core.hooksPath',
@@ -80,56 +79,36 @@ class GitService with GitChecksMixin {
     return true;
   }
 
-  Future<List<String>?> stagedFiles() async {
-    final result = await Process.run('git', [
-      'diff',
-      'HEAD',
-      '--staged',
-      '--diff-filter=ACMR',
-    ]);
-
-    final out = switch (result.stdout) {
-      final String files => files.trim(),
-      _ => null,
-    };
-
-    if (out == null) {
-      logger
-        ..err('Failed to get changed files')
-        ..detail('Error: ${result.stderr}');
-      return null;
-    }
-
-    final files =
-        out.split('\n').where((element) => element.isNotEmpty).toList();
-
-    return files;
+  Future<List<String>> stagedFiles() async {
+    return await diffFiles(diffArgs: ['HEAD', '--staged'], diffFilters: 'ACMR');
   }
 
-  Future<List<String>?> nonStagedFiles() async {
-    final result = await Process.run('git', [
+  Future<List<String>> nonStagedFiles() async {
+    return await diffFiles(diffArgs: [], diffFilters: 'ACMR');
+  }
+
+  Future<List<String>> deletedFiles() async {
+    return await diffFiles(diffArgs: ['HEAD'], diffFilters: 'D');
+  }
+
+  Future<List<String>> diffFiles({
+    required List<String> diffArgs,
+    required String diffFilters,
+  }) async {
+    final result = await process.run('git', [
       'diff',
+      ...diffArgs,
+      if (diffFilters.isNotEmpty) '--diff-filter=$diffFilters',
       '--name-only',
       '-z',
-      '--diff-filter=ACMR',
     ]);
 
-    final out = switch (result.stdout) {
-      final String files => files.trim(),
-      _ => null,
-    };
+    final out = result.stdout.trim();
 
-    if (out == null) {
-      logger
-        ..err('Failed to get non-staged files')
-        ..detail('Error: ${result.stderr}');
-      return null;
-    }
-
-    final allFiles =
+    final files =
         out.split('\x00').where((element) => element.isNotEmpty).toList();
 
-    return allFiles;
+    return files;
   }
 
   /// From list of files, split renames and flatten into
@@ -165,40 +144,10 @@ class GitService with GitChecksMixin {
     return flattened;
   }
 
-  Future<List<String>?> diffFiles({
-    required List<String> diffArgs,
-    required String diffFilters,
-  }) async {
-    final diff = {...diffArgs, '--name-only'};
-
-    final result = await Process.run('git', [
-      'diff',
-      ...diff,
-      if (diffFilters.isNotEmpty) '--diff-filter=$diffFilters',
-    ]);
-
-    final out = switch (result.stdout) {
-      final String files => files.trim(),
-      _ => null,
-    };
-
-    if (out == null) {
-      logger
-        ..err('Failed to get changed files')
-        ..detail('Error: ${result.stderr}');
-      return null;
-    }
-
-    final files =
-        out.split('\n').where((element) => element.isNotEmpty).toList();
-
-    return files;
-  }
-
   // Get a list of files with both staged and unstaged changes.
   // Unstaged changes to these files should be hidden before the tasks run.
   Future<List<String>> partiallyStagedFiles() async {
-    final status = await Process.run('git', ['status', '-z']);
+    final status = await process.run('git', ['status', '-z']);
     // See https://git-scm.com/docs/git-status#_short_format
     // Entries returned in machine format are separated by a NUL character.
     // The first letter of each entry represents current index status,
@@ -215,23 +164,17 @@ class GitService with GitChecksMixin {
     }
 
     final out = status.stdout;
-    if (out is! String) {
-      logger
-        ..err('Failed to get git status')
-        ..detail('Error: ${status.stderr}');
-      return [];
-    }
 
     final partiallyStaged = out
         .split(RegExp('\x00(?=[ AMDRCU?!])'))
         .where((line) {
           if (line.length < 2) return false;
 
-          final [index, workingTree, ...] = line.split('');
+          final [staged, workingTree, ...] = line.split('');
 
-          return index != ' ' &&
+          return staged != ' ' &&
               workingTree != ' ' &&
-              index != '?' &&
+              staged != '?' &&
               workingTree != '?';
         })
         .map((line) => line.substring(3))
@@ -239,26 +182,6 @@ class GitService with GitChecksMixin {
         .toList();
 
     return partiallyStaged;
-  }
-
-  Future<List<String>> getDeletedFiles() async {
-    final result = await Process.run('git', [
-      'diff',
-      'HEAD',
-      '--name-only',
-      '--diff-filter=D',
-      ...gitDiffArgs,
-    ]);
-
-    final out = switch (result.stdout) {
-      final String files => files.trim(),
-      _ => '',
-    };
-
-    final files =
-        out.split('\n').where((element) => element.isNotEmpty).toList();
-
-    return files;
   }
 
   Future<GitContext> prepareFiles() async {
@@ -283,8 +206,8 @@ class GitService with GitChecksMixin {
       }
 
       context
-        ..deletedFiles = await getDeletedFiles()
-        ..nonStagedFiles = await nonStagedFiles() ?? [];
+        ..deletedFiles = await deletedFiles()
+        ..nonStagedFiles = await nonStagedFiles();
     } catch (e) {
       logger
         ..err('Failed to prepare files')
@@ -296,7 +219,7 @@ class GitService with GitChecksMixin {
   }
 
   Future<void> add(List<String> filePaths) async {
-    await Process.run('git', [
+    await process.run('git', [
       'add',
       '--',
       ...filePaths,
@@ -304,13 +227,9 @@ class GitService with GitChecksMixin {
   }
 
   Future<void> applyModifications(List<String> existing) async {
-    if (!await hasAtLeastOneCommit()) {
-      return;
-    }
-
     logger.detail('Checking for modifications');
-    final changed = await nonStagedFiles() ?? [];
-    final allDeletedFiles = await getDeletedFiles();
+    final changed = await nonStagedFiles();
+    final allDeletedFiles = await deletedFiles();
 
     if (changed.isEmpty && allDeletedFiles.isEmpty) {
       logger.detail('No post file modifications were found');
@@ -338,13 +257,13 @@ class GitService with GitChecksMixin {
       logger.detail('  - $file');
     }
 
-    final deletedFiles = allDeletedFiles.toSet().difference(existing.toSet());
-    logger.detail('Found ${deletedFiles.length} deleted files to add');
-    for (final file in deletedFiles) {
+    final deleted = allDeletedFiles.toSet().difference(existing.toSet());
+    logger.detail('Found ${deleted.length} deleted files to add');
+    for (final file in deleted) {
       logger.detail('  - $file');
     }
 
-    final filesToAdd = modifiedFiles.followedBy(deletedFiles);
+    final filesToAdd = modifiedFiles.followedBy(deleted);
     if (filesToAdd.isEmpty) {
       logger.detail('Nothing to add to commit');
       return;

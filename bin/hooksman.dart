@@ -2,6 +2,7 @@ import 'package:file/local.dart';
 import 'package:hooksman/commands/git_hook_runner.dart';
 import 'package:hooksman/models/compiler.dart';
 import 'package:hooksman/services/git/git_service.dart';
+import 'package:hooksman/utils/process/process.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 Future<int> main(List<String> providedArgs) async {
@@ -23,6 +24,7 @@ Future<int> main(List<String> providedArgs) async {
     fs: fs,
     logger: logger,
     git: GitService(
+      process: const Process(),
       debug: logger.level == Level.verbose,
       logger: logger,
       fs: fs,
