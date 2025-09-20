@@ -1,5 +1,11 @@
 <!--  -->
 
+# 2.1.0 | 9.19.25
+
+## Features
+
+- Support branches that do not have an upstream set
+
 # 2.0.2 | 6.5.25
 
 ## Fixes
