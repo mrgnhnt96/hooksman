@@ -28,6 +28,8 @@ Future<int> main(List<String> providedArgs) async {
       debug: logger.level == Level.verbose,
       logger: logger,
       fs: fs,
+      remoteName: null,
+      remoteUrl: null,
     ),
     compiler: const Compiler(
       fs: fs,

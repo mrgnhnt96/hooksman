@@ -98,8 +98,8 @@ import 'package:hooksman/hooksman.dart';
 
 import '$relativePath' as hook;
 
-void main() {
-  executeHook('${hook.name}', hook.main());
+void main(List<String> args) {
+  executeHook('${hook.name}', hook.main(), args);
 }''';
 
       final file = fs

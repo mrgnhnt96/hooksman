@@ -182,8 +182,8 @@ void main() {
             '',
             "import '../../hooks/pre_commit.dart' as hook;",
             '',
-            'void main() {',
-            "  executeHook('pre-commit', hook.main());",
+            'void main(List<String> args) {',
+            "  executeHook('pre-commit', hook.main(), args);",
             '}',
           ]);
         });

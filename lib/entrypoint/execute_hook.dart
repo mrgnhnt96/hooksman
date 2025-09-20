@@ -8,7 +8,14 @@ import 'package:hooksman/services/git/git_service.dart';
 import 'package:hooksman/utils/process/process.dart';
 import 'package:mason_logger/mason_logger.dart';
 
-Future<void> executeHook(String name, Hook hook) async {
+Future<void> executeHook(String name, Hook hook, List<String> args) async {
+  String? remoteName;
+  String? remoteUrl;
+  if (args case [final String remote, final String url]) {
+    remoteName = remote;
+    remoteUrl = url;
+  }
+
   const fs = LocalFileSystem();
 
   final debug = hook.verbose;
@@ -24,6 +31,8 @@ Future<void> executeHook(String name, Hook hook) async {
     logger: logger,
     fs: fs,
     process: const Process(),
+    remoteName: remoteName,
+    remoteUrl: remoteUrl,
   );
 
   try {

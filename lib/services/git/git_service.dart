@@ -11,6 +11,8 @@ class GitService with GitChecksMixin {
     required this.fs,
     required this.debug,
     required this.process,
+    required this.remoteName,
+    required this.remoteUrl,
   });
 
   @override
@@ -18,6 +20,8 @@ class GitService with GitChecksMixin {
   final FileSystem fs;
   @override
   final Process process;
+  final String? remoteName;
+  final String? remoteUrl;
 
   final bool debug;
 
@@ -108,7 +112,34 @@ class GitService with GitChecksMixin {
     final files =
         out.split('\x00').where((element) => element.isNotEmpty).toList();
 
+    if (remoteName case final String remoteName
+        when files.isEmpty && diffArgs.contains('@{u}')) {
+      final currentBranch = await getCurrentBranch();
+
+      final upstream = '$remoteName/$currentBranch';
+
+      return diffFiles(
+        diffArgs: [
+          for (final arg in diffArgs)
+            if (arg == '@{u}') upstream else arg,
+        ],
+        diffFilters: diffFilters,
+      );
+    }
+
     return files;
+  }
+
+  Future<String> getCurrentBranch() async {
+    final result = await process.run('git', [
+      'rev-parse',
+      '--abbrev-ref',
+      'HEAD',
+    ]);
+
+    final branch = result.stdout.trim();
+
+    return branch;
   }
 
   /// From list of files, split renames and flatten into

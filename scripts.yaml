@@ -49,3 +49,7 @@ publish:
     echo "Pushing to origin"
     git push
     git push --tags
+
+install:
+  - rm -rf .dart_tool
+  - dart pub global activate . --source path --overwrite
