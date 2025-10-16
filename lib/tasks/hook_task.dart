@@ -96,17 +96,32 @@ abstract class HookTask {
 
   List<HookTask>? _subTasks;
 
-  /// Returns the list of sub-tasks for the given file paths.
+  /// Resolves the list of sub-tasks for the given file paths.
   ///
   /// [filePaths] is the list of file paths to process post-filtering.
   @nonVirtual
-  List<HookTask> subTasks(Iterable<String> filePaths) =>
-      _subTasks ??= getSubTasks(filePaths);
+  List<HookTask> resolveSubTasks(Iterable<String> filePaths) {
+    if (_subTasks case final tasks?) return tasks;
+
+    final tasks = subTasks(filePaths);
+
+    Iterable<HookTask> filterTasks() sync* {
+      for (final task in tasks) {
+        final filtered = task.filterFiles(filePaths);
+
+        if (filtered.isNotEmpty) {
+          yield task;
+        }
+      }
+    }
+
+    return _subTasks ??= filterTasks().toList();
+  }
 
   /// Gets the list of sub-tasks for the given file paths.
   ///
-  /// [filePaths] is the list of file paths to process post-filtering.
-  List<HookTask> getSubTasks(Iterable<String> filePaths) => [];
+  /// [filePaths] is the list of file paths to process.
+  List<HookTask> subTasks(Iterable<String> filePaths) => [];
 
   /// Resolves the task with the given file paths and index.
   ///
@@ -119,7 +134,7 @@ abstract class HookTask {
   ResolvedHookTask resolve(List<String> filePaths, int index) {
     final filtered = filterFiles(filePaths);
 
-    final subTasks = this.subTasks(filtered);
+    final subTasks = resolveSubTasks(filtered);
 
     return ResolvedHookTask(
       files: filtered,
@@ -164,7 +179,7 @@ abstract class HookTask {
   bool get shouldAlwaysRun {
     if (_always) return true;
 
-    final subTasks = getSubTasks([]);
+    final subTasks = this.subTasks([]);
 
     return subTasks.any((e) => e.shouldAlwaysRun);
   }

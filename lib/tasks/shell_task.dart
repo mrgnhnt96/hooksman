@@ -54,13 +54,13 @@ class ShellTask extends SequentialTask {
   final ShellCommands _commands;
 
   final bool _always;
-
   final String? _name;
+
   @override
   String get name => _name ?? patternName;
 
   @override
-  List<HookTask> getSubTasks(Iterable<String> filePaths) => [
+  List<HookTask> subTasks(Iterable<String> filePaths) => [
         for (final (index, command) in _commands(filePaths).indexed)
           switch (_always) {
             true => _OneShellTask.always,

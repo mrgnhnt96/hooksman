@@ -35,15 +35,9 @@ import 'package:meta/meta.dart';
 /// and the second task runs tests on the Dart files.
 class ParallelTasks extends HookTask {
   ParallelTasks({
-    required super.include,
     required List<HookTask> tasks,
     super.exclude,
     this.name,
-  }) : _tasks = tasks;
-  ParallelTasks.always({
-    required List<HookTask> tasks,
-    this.name,
-    super.exclude,
   })  : _tasks = tasks,
         super.always();
 
@@ -53,7 +47,7 @@ class ParallelTasks extends HookTask {
   final List<HookTask> _tasks;
 
   @override
-  List<HookTask> getSubTasks(Iterable<String> filePaths) => _tasks;
+  List<HookTask> subTasks(Iterable<String> filePaths) => _tasks;
 
   @nonVirtual
   @override
@@ -65,7 +59,7 @@ class ParallelTasks extends HookTask {
   }) async {
     final futures = <Future<int>>[];
 
-    for (final task in subTasks(filePaths)) {
+    for (final task in resolveSubTasks(filePaths)) {
       startTask(task);
       Future<int> value() async {
         return await task.run(

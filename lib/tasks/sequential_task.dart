@@ -38,6 +38,7 @@ abstract class SequentialTask extends HookTask {
     super.exclude,
     this.name,
   });
+
   SequentialTask.always({
     this.name,
     super.exclude,
@@ -54,7 +55,7 @@ abstract class SequentialTask extends HookTask {
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
   }) async {
-    for (final task in subTasks(filePaths)) {
+    for (final task in resolveSubTasks(filePaths)) {
       startTask(task);
       final result = await task.run(
         filePaths,
