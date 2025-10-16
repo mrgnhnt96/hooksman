@@ -1,5 +1,16 @@
 <!--  -->
 
+# 3.0.0 | 10.15.25
+
+## Breaking Changes
+
+- Remove `always` constructor from `SequentialTask` and `ParallelTask`
+- Remove `include` parameter from `SequentialTask` and `ParallelTask`
+
+## Enhancements
+
+- Improve task filtering in "always" sub tasks
+
 # 2.1.0 | 9.19.25
 
 ## Features

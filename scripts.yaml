@@ -13,6 +13,8 @@ build_runner:
 
 barrel: barreler build
 
+test: dart test
+
 lint:
   - (+) dart format . --set-exit-if-changed
   - (+) dart analyze --fatal-infos --fatal-warnings
