@@ -50,6 +50,7 @@ abstract class HookTask {
   HookTask({
     required this.include,
     this.exclude = const [],
+    this.workingDirectory,
   })  : _always = false,
         id = const Uuid().v4();
 
@@ -57,6 +58,7 @@ abstract class HookTask {
   /// processed or if the files do not match the task's patterns.
   HookTask.always({
     this.exclude = const [],
+    this.workingDirectory,
   })  : include = [AllFiles()],
         _always = true,
         id = const Uuid().v4();
@@ -69,6 +71,8 @@ abstract class HookTask {
 
   /// The list of patterns to exclude files.
   final List<Pattern> exclude;
+
+  final String? workingDirectory;
 
   /// Whether the task should always run,
   /// regardless of the files being processed.
@@ -92,6 +96,7 @@ abstract class HookTask {
     required void Function(String? string) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
+    required String? workingDirectory,
   });
 
   List<HookTask>? _subTasks;
@@ -137,6 +142,7 @@ abstract class HookTask {
     final subTasks = resolveSubTasks(filtered);
 
     return ResolvedHookTask(
+      workingDirectory: workingDirectory,
       files: filtered,
       original: this,
       always: _always,

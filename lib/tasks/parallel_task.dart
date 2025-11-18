@@ -56,6 +56,7 @@ class ParallelTasks extends HookTask {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
+    required String? workingDirectory,
   }) async {
     final futures = <Future<int>>[];
 
@@ -67,6 +68,7 @@ class ParallelTasks extends HookTask {
           print: print,
           completeTask: completeTask,
           startTask: startTask,
+          workingDirectory: workingDirectory,
         );
       }
 

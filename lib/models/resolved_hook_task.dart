@@ -4,6 +4,7 @@ import 'package:hooksman/tasks/hook_task.dart';
 class ResolvedHookTask {
   const ResolvedHookTask({
     required this.files,
+    required this.workingDirectory,
     required this.original,
     required this.index,
     required this.label,
@@ -17,6 +18,7 @@ class ResolvedHookTask {
   final TaskLabel label;
   final bool always;
   final List<ResolvedHookTask> subTasks;
+  final String? workingDirectory;
 
   bool get hasChildren => subTasks.isNotEmpty;
   bool get hasFiles => files.isNotEmpty;

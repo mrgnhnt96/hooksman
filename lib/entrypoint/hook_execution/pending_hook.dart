@@ -24,6 +24,7 @@ class PendingHook {
           completedTasks: completedTasks,
           startedTasks: startedTasks,
           isHalted: () => killCompleter.isCompleted,
+          workingDirectory: task.workingDirectory,
         );
 
         final runner = TaskRunner(

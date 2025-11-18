@@ -37,11 +37,13 @@ abstract class SequentialTask extends HookTask {
     required super.include,
     super.exclude,
     this.name,
+    super.workingDirectory,
   });
 
   SequentialTask.always({
     this.name,
     super.exclude,
+    super.workingDirectory,
   }) : super.always();
 
   @override
@@ -54,6 +56,7 @@ abstract class SequentialTask extends HookTask {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
+    required String? workingDirectory,
   }) async {
     for (final task in resolveSubTasks(filePaths)) {
       startTask(task);
@@ -62,6 +65,7 @@ abstract class SequentialTask extends HookTask {
         print: print,
         completeTask: completeTask,
         startTask: startTask,
+        workingDirectory: workingDirectory,
       );
 
       completeTask(task, result);

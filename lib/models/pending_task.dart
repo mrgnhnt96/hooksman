@@ -10,6 +10,7 @@ class PendingTask {
     required bool Function() isHalted,
     required Iterable<int> completedTasks,
     required Iterable<int> startedTasks,
+    required this.workingDirectory,
   })  : _completedTasks = completedTasks,
         _startedTasks = startedTasks,
         _isHalted = isHalted {
@@ -20,6 +21,7 @@ class PendingTask {
         isHalted: isHalted,
         completedTasks: completedTasks,
         startedTasks: startedTasks,
+        workingDirectory: workingDirectory,
       );
 
       return subTask;
@@ -42,6 +44,7 @@ class PendingTask {
   final ResolvedHookTask resolvedTask;
   late final List<PendingTask> subTasks;
   late final Map<String, PendingTask> taskMap;
+  final String? workingDirectory;
 
   final bool Function() _isHalted;
   bool get isHalted => _isHalted();
@@ -66,6 +69,7 @@ class PendingTask {
         print: print,
         completeTask: completeTask,
         startTask: startTask,
+        workingDirectory: workingDirectory,
       );
 
   bool get hasCompleted {

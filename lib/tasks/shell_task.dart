@@ -5,6 +5,7 @@ import 'package:hooksman/tasks/hook_task.dart';
 import 'package:hooksman/tasks/sequential_task.dart';
 import 'package:hooksman/utils/all_files.dart';
 import 'package:mason_logger/mason_logger.dart';
+import 'package:path/path.dart';
 
 typedef ShellCommands = List<String> Function(Iterable<String>);
 
@@ -36,6 +37,7 @@ class ShellTask extends SequentialTask {
     required super.include,
     required ShellCommands commands,
     super.exclude,
+    super.workingDirectory,
     String? name,
   })  : _commands = commands,
         _name = name,
@@ -45,6 +47,7 @@ class ShellTask extends SequentialTask {
   ShellTask.always({
     required ShellCommands commands,
     super.exclude,
+    super.workingDirectory,
     String? name,
   })  : _commands = commands,
         _name = name,
@@ -96,6 +99,7 @@ class _OneShellTask extends HookTask {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
+    required String? workingDirectory,
   }) async {
     startTask(this);
     final coreCommand = switch (Platform.operatingSystem) {
@@ -103,11 +107,20 @@ class _OneShellTask extends HookTask {
       _ => 'bash',
     };
 
+    final cwd = switch (workingDirectory) {
+      final String dir when isAbsolute(dir) => dir,
+      final String dir => join('..', dir),
+      null => null,
+    };
+
     final result = await Process.run(
       coreCommand,
       [
         '-c',
-        command,
+        [
+          if (cwd case final dir?) 'cd $dir && ',
+          command,
+        ].join(),
       ],
     );
 

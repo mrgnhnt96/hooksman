@@ -43,6 +43,7 @@ class DartTask extends HookTask {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
+    required String? workingDirectory,
   }) async {
     startTask(this);
     final result = await _run(filePaths);

@@ -119,6 +119,7 @@ class _TestHookTask extends HookTask {
     required void Function(String? string) print,
     required void Function(HookTask p1, int p2) completeTask,
     required void Function(HookTask p1) startTask,
+    required String? workingDirectory,
   }) {
     throw UnimplementedError();
   }
