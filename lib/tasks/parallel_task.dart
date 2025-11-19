@@ -34,12 +34,9 @@ import 'package:meta/meta.dart';
 /// [ShellTask] instances concurrently. The first task formats Dart files,
 /// and the second task runs tests on the Dart files.
 class ParallelTasks extends HookTask {
-  ParallelTasks({
-    required List<HookTask> tasks,
-    super.exclude,
-    this.name,
-  })  : _tasks = tasks,
-        super.always();
+  ParallelTasks({required List<HookTask> tasks, super.exclude, this.name})
+    : _tasks = tasks,
+      super.always();
 
   @override
   final String? name;

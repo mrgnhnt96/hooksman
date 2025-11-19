@@ -17,15 +17,10 @@ class ResolvedHook extends Equatable {
     }
 
     final allTasks = [
-      for (final task in tasks) ...[
-        task,
-        ...subTasks(task),
-      ],
+      for (final task in tasks) ...[task, ...subTasks(task)],
     ];
 
-    tasksById = {
-      for (final task in allTasks) task.original.id: task,
-    };
+    tasksById = {for (final task in allTasks) task.original.id: task};
   }
 
   final List<String> filePaths;

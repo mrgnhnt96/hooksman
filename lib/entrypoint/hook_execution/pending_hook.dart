@@ -8,10 +8,7 @@ import 'package:hooksman/models/resolved_hook.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class PendingHook {
-  factory PendingHook(
-    ResolvedHook hook, {
-    required Logger logger,
-  }) {
+  factory PendingHook(ResolvedHook hook, {required Logger logger}) {
     final killCompleter = Completer<void>();
     final completedTasks = <int>{};
     final startedTasks = <int>{};
@@ -96,10 +93,10 @@ class PendingHook {
     required Set<int> completedTasks,
     required Set<int> startedTasks,
     required bool runInParallel,
-  })  : _killCompleter = killCompleter,
-        _runInParallel = runInParallel,
-        _completedTasks = completedTasks,
-        _startedTasks = startedTasks {
+  }) : _killCompleter = killCompleter,
+       _runInParallel = runInParallel,
+       _completedTasks = completedTasks,
+       _startedTasks = startedTasks {
     _listenToKillSignal();
   }
 
@@ -125,12 +122,10 @@ class PendingHook {
 
     final stream = Platform.isWindows
         ? ProcessSignal.sigint.watch()
-        : StreamGroup.merge(
-            [
-              ProcessSignal.sigterm.watch(),
-              ProcessSignal.sigint.watch(),
-            ],
-          );
+        : StreamGroup.merge([
+            ProcessSignal.sigterm.watch(),
+            ProcessSignal.sigint.watch(),
+          ]);
 
     _killSubscription = stream.listen((signal) async {
       logger.detail('SIGINT detected!');
@@ -152,12 +147,12 @@ class PendingHook {
   }
 
   List<PendingTask> get topLevelTasks => List<PendingTask>.unmodifiable(
-        _tasks.values.map<PendingTask>((e) => e.task),
-      );
+    _tasks.values.map<PendingTask>((e) => e.task),
+  );
 
   List<TaskRunner> get runners => List<TaskRunner>.unmodifiable(
-        _tasks.values.map<TaskRunner>((e) => e.runner),
-      );
+    _tasks.values.map<TaskRunner>((e) => e.runner),
+  );
 
   void complete(String taskId, int code) {
     final pending = _tasks[taskId];

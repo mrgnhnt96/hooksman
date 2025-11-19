@@ -11,9 +11,9 @@ class PendingTask {
     required Iterable<int> completedTasks,
     required Iterable<int> startedTasks,
     required this.workingDirectory,
-  })  : _completedTasks = completedTasks,
-        _startedTasks = startedTasks,
-        _isHalted = isHalted {
+  }) : _completedTasks = completedTasks,
+       _startedTasks = startedTasks,
+       _isHalted = isHalted {
     subTasks = resolvedTask.subTasks.map((task) {
       final subTask = PendingTask(
         files: files,
@@ -34,9 +34,7 @@ class PendingTask {
       }
     }
 
-    taskMap = {
-      for (final task in allTasks(this)) task.id: task,
-    };
+    taskMap = {for (final task in allTasks(this)) task.id: task};
   }
 
   String get id => resolvedTask.original.id;
@@ -63,14 +61,13 @@ class PendingTask {
     required void Function(String?) print,
     required void Function(HookTask, int) completeTask,
     required void Function(HookTask) startTask,
-  }) =>
-      resolvedTask.original.run(
-        files,
-        print: print,
-        completeTask: completeTask,
-        startTask: startTask,
-        workingDirectory: workingDirectory,
-      );
+  }) => resolvedTask.original.run(
+    files,
+    print: print,
+    completeTask: completeTask,
+    startTask: startTask,
+    workingDirectory: workingDirectory,
+  );
 
   bool get hasCompleted {
     var isComplete = true;

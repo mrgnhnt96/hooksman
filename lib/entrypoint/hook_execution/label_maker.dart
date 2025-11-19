@@ -52,18 +52,12 @@ class LabelMaker {
     return label(loading).join('\n');
   }
 
-  Iterable<String?> label(
-    String? loading,
-  ) sync* {
+  Iterable<String?> label(String? loading) sync* {
     yield 'Running tasks for $nameOfHook';
 
     if (debug) {
-      final PendingHook(
-        :isDead,
-        :wasKilled,
-        :completedTasks,
-        :startedTasks,
-      ) = pendingHook;
+      final PendingHook(:isDead, :wasKilled, :completedTasks, :startedTasks) =
+          pendingHook;
       yield darkGray.wrap('');
       yield darkGray.wrap('Started Tasks: ${startedTasks.join(', ')}');
       yield darkGray.wrap('Completed Tasks: ${completedTasks.join(', ')}');
@@ -73,9 +67,7 @@ class LabelMaker {
 
     for (final task in pendingHook.topLevelTasks) {
       final PendingTask(
-        resolvedTask: ResolvedHookTask(
-          label: TaskLabel(:depth),
-        ),
+        resolvedTask: ResolvedHookTask(label: TaskLabel(:depth)),
         :isError,
         :isHalted,
         :isRunning,
@@ -99,11 +91,7 @@ class LabelMaker {
         };
         yield darkGray.wrap('Status: $status');
       }
-      yield* retrieveLabels(
-        task,
-        loading: loading,
-        spacing: spacer,
-      );
+      yield* retrieveLabels(task, loading: loading, spacing: spacer);
     }
 
     yield '\n';
@@ -129,14 +117,11 @@ class LabelMaker {
   }
 
   String? getIndexString(int index) => switch (debug) {
-        true => darkGray.wrap('($index) '),
-        _ => '',
-      };
+    true => darkGray.wrap('($index) '),
+    _ => '',
+  };
 
-  String? icon(
-    PendingTask pending, {
-    required String? loading,
-  }) {
+  String? icon(PendingTask pending, {required String? loading}) {
     return switch (null) {
       _ when pending.isError => red.wrap(x),
       _ when pending.hasCompleted => green.wrap(checkMark),

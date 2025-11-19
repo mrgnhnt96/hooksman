@@ -3,34 +3,16 @@ import 'dart:io' as io;
 import 'dart:io';
 
 class MultiLineProgress {
-  MultiLineProgress({
-    required String Function(String) createLabel,
-  }) : this._(
-          stdout,
-          createLabel: createLabel,
-        );
+  MultiLineProgress({required String Function(String) createLabel})
+    : this._(stdout, createLabel: createLabel);
 
-  MultiLineProgress._(
-    this._stdout, {
-    required this.createLabel,
-  });
+  MultiLineProgress._(this._stdout, {required this.createLabel});
 
   final io.Stdout _stdout;
   final String Function(String) createLabel;
   Timer? _timer;
 
-  static const _frames = [
-    '⠋',
-    '⠙',
-    '⠹',
-    '⠸',
-    '⠼',
-    '⠴',
-    '⠦',
-    '⠧',
-    '⠇',
-    '⠏',
-  ];
+  static const _frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
   int _index = 0;
   void _onTick(Timer? _) {

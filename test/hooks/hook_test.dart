@@ -10,14 +10,8 @@ void main() {
       test('resolves multiple commands', () {
         final hook = AnyHook(
           tasks: [
-            _TestTask(
-              name: 'command1',
-              include: [RegExp(r'.*\.dart')],
-            ),
-            _TestTask(
-              name: 'command2',
-              include: [RegExp(r'.*\.md')],
-            ),
+            _TestTask(name: 'command1', include: [RegExp(r'.*\.dart')]),
+            _TestTask(name: 'command2', include: [RegExp(r'.*\.md')]),
           ],
         );
 
@@ -38,10 +32,7 @@ void main() {
       test('resolves commands when no files match', () {
         final hook = AnyHook(
           tasks: [
-            _TestTask(
-              name: 'command1',
-              include: [RegExp(r'.*\.dart')],
-            ),
+            _TestTask(name: 'command1', include: [RegExp(r'.*\.dart')]),
           ],
         );
 
@@ -57,10 +48,7 @@ void main() {
       test('resolves commands with multiple matching files', () {
         final hook = AnyHook(
           tasks: [
-            _TestTask(
-              name: 'command1',
-              include: [RegExp(r'.*\.dart')],
-            ),
+            _TestTask(name: 'command1', include: [RegExp(r'.*\.dart')]),
           ],
         );
 
@@ -121,22 +109,22 @@ void main() {
             _TestTask(
               name: 'command1',
               include: [RegExp(r'.*\.dart')],
-              exclude: [
-                RegExp(r'.*\.g\.dart'),
-                RegExp(r'.*\.freezed\.dart'),
-              ],
+              exclude: [RegExp(r'.*\.g\.dart'), RegExp(r'.*\.freezed\.dart')],
             ),
           ],
         );
 
-        final result = hook.resolve(
-          ['lib/main.dart', 'lib/main.g.dart', 'lib/main.freezed.dart'],
-        );
+        final result = hook.resolve([
+          'lib/main.dart',
+          'lib/main.g.dart',
+          'lib/main.freezed.dart',
+        ]);
 
-        expect(
-          result.filePaths,
-          ['lib/main.dart', 'lib/main.g.dart', 'lib/main.freezed.dart'],
-        );
+        expect(result.filePaths, [
+          'lib/main.dart',
+          'lib/main.g.dart',
+          'lib/main.freezed.dart',
+        ]);
         expect(result.tasks, hasLength(1));
 
         final resolved = result.tasks.single;

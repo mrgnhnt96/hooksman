@@ -26,12 +26,8 @@ typedef Run = FutureOr<int> Function(List<String>);
 /// The above example creates a [DartTask] instance that runs custom Dart code
 /// on all Dart files in the project.
 class DartTask extends HookTask {
-  DartTask({
-    required super.include,
-    required Run run,
-    super.exclude,
-    this.name,
-  }) : _run = run;
+  DartTask({required super.include, required Run run, super.exclude, this.name})
+    : _run = run;
 
   final Run _run;
 
@@ -49,12 +45,12 @@ class DartTask extends HookTask {
     startTask(this);
     final paths = switch (workingDirectory) {
       final String cwd => [
-          for (final path in filePaths)
-            if (fs.path.isWithin(cwd, path))
-              fs.path.relative(path, from: cwd)
-            else
-              path,
-        ],
+        for (final path in filePaths)
+          if (fs.path.isWithin(cwd, path))
+            fs.path.relative(path, from: cwd)
+          else
+            path,
+      ],
       null => filePaths.toList(),
     };
 

@@ -8,10 +8,7 @@ import 'package:hooksman/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class HookExecutor {
-  const HookExecutor(
-    this.hook, {
-    required this.hookName,
-  });
+  const HookExecutor(this.hook, {required this.hookName});
 
   final Hook hook;
   final String hookName;
@@ -36,15 +33,11 @@ class HookExecutor {
     return (allFiles, null);
   }
 
-  ({
-    Duration short,
-    Duration medium,
-    Duration long,
-  }) get durations => (
-        short: const Duration(milliseconds: 1000),
-        medium: const Duration(milliseconds: 2000),
-        long: const Duration(milliseconds: 3000),
-      );
+  ({Duration short, Duration medium, Duration long}) get durations => (
+    short: const Duration(milliseconds: 1000),
+    medium: const Duration(milliseconds: 2000),
+    long: const Duration(milliseconds: 3000),
+  );
 
   Future<void> _wait(Duration duration) async {
     if (!debug) return;
@@ -68,10 +61,7 @@ class HookExecutor {
 
     logger.detail('Resolving files');
 
-    final pendingHook = PendingHook(
-      hook.resolve(allFiles),
-      logger: logger,
-    );
+    final pendingHook = PendingHook(hook.resolve(allFiles), logger: logger);
 
     if (!pendingHook.topLevelTasks.any((e) => e.shouldAlwaysRun)) {
       if (pendingHook.topLevelTasks.every((e) => e.files.isEmpty)) {
@@ -140,9 +130,10 @@ class HookExecutor {
         logger.detail('  - $file');
       }
       await _wait(durations.short);
-      await git.applyModifications(
-        [...context.nonStagedFiles, ...context.deletedFiles],
-      );
+      await git.applyModifications([
+        ...context.nonStagedFiles,
+        ...context.deletedFiles,
+      ]);
       await _wait(durations.long);
     } else {
       logger.detail('Skipped applying modifications for $hookName');

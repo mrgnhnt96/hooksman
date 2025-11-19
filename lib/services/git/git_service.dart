@@ -7,10 +7,7 @@ import 'package:hooksman/services/git/git_context.dart';
 import 'package:hooksman/services/git/git_context_setter.dart';
 
 class GitService with GitChecksMixin {
-  const GitService({
-    this.remoteName,
-    this.remoteUrl,
-  });
+  const GitService({this.remoteName, this.remoteUrl});
 
   final String? remoteName;
   final String? remoteUrl;
@@ -18,32 +15,26 @@ class GitService with GitChecksMixin {
   bool get debug => args['loud'] == true;
 
   List<String> get gitDiffArgs => [
-        // support binary files
-        '--binary',
-        // do not add lines around diff for consistent behavior
-        '--unified=0',
-        // disable colors for consistent behavior
-        '--no-color',
-        // disable external diff tools for consistent behavior
-        '--no-ext-diff',
-        // force prefix for consistent behavior
-        '--src-prefix=a/',
-        // force prefix for consistent behavior
-        '--dst-prefix=b/',
-        // output a patch that can be applied
-        '--patch',
-        // always use the default short format for submodules
-        '--submodule=short',
-      ];
+    // support binary files
+    '--binary',
+    // do not add lines around diff for consistent behavior
+    '--unified=0',
+    // disable colors for consistent behavior
+    '--no-color',
+    // disable external diff tools for consistent behavior
+    '--no-ext-diff',
+    // force prefix for consistent behavior
+    '--src-prefix=a/',
+    // force prefix for consistent behavior
+    '--dst-prefix=b/',
+    // output a patch that can be applied
+    '--patch',
+    // always use the default short format for submodules
+    '--submodule=short',
+  ];
 
   String get gitDir {
-    final gitDir = process.sync(
-      'git',
-      [
-        'rev-parse',
-        '--git-dir',
-      ],
-    );
+    final gitDir = process.sync('git', ['rev-parse', '--git-dir']);
 
     return switch (gitDir.stdout) {
       final String out => out.trim(),
@@ -107,8 +98,10 @@ class GitService with GitChecksMixin {
       final Future<String> out => (await out).trim(),
     };
 
-    final files =
-        out.split('\x00').where((element) => element.isNotEmpty).toList();
+    final files = out
+        .split('\x00')
+        .where((element) => element.isNotEmpty)
+        .toList();
 
     if (remoteName case final String remoteName
         when files.isEmpty && diffArgs.contains('@{u}')) {
@@ -227,8 +220,9 @@ class GitService with GitChecksMixin {
 
       if (context.partiallyStagedFiles case final partially
           when partially.isNotEmpty) {
-        logger
-            .detail('Preparing partial files for patch (${partially.length})');
+        logger.detail(
+          'Preparing partial files for patch (${partially.length})',
+        );
         for (final file in partially) {
           logger.detail('  $file');
         }
@@ -254,11 +248,7 @@ class GitService with GitChecksMixin {
   }
 
   Future<void> add(List<String> filePaths) async {
-    await process.run('git', [
-      'add',
-      '--',
-      ...filePaths,
-    ]);
+    await process.run('git', ['add', '--', ...filePaths]);
   }
 
   Future<void> applyModifications(List<String> existing) async {

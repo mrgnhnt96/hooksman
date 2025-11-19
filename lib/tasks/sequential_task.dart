@@ -40,11 +40,8 @@ abstract class SequentialTask extends HookTask {
     super.workingDirectory,
   });
 
-  SequentialTask.always({
-    this.name,
-    super.exclude,
-    super.workingDirectory,
-  }) : super.always();
+  SequentialTask.always({this.name, super.exclude, super.workingDirectory})
+    : super.always();
 
   @override
   final String? name;

@@ -51,17 +51,15 @@ abstract class HookTask {
     required this.include,
     this.exclude = const [],
     this.workingDirectory,
-  })  : _always = false,
-        id = const Uuid().v4();
+  }) : _always = false,
+       id = const Uuid().v4();
 
   /// Creates a task that always runs, even if no files are being
   /// processed or if the files do not match the task's patterns.
-  HookTask.always({
-    this.exclude = const [],
-    this.workingDirectory,
-  })  : include = [AllFiles()],
-        _always = true,
-        id = const Uuid().v4();
+  HookTask.always({this.exclude = const [], this.workingDirectory})
+    : include = [AllFiles()],
+      _always = true,
+      id = const Uuid().v4();
 
   /// The unique identifier for the task.
   final String id;
@@ -163,24 +161,27 @@ abstract class HookTask {
   ///
   /// Returns a string representing the pattern name.
   String get patternName => switch (_always) {
-        true => 'always',
-        false => include.map((e) {
+    true => 'always',
+    false =>
+      include
+          .map((e) {
             return switch (e) {
               Glob() => e.pattern,
               RegExp() => e.pattern,
               String() => e,
               _ => '$e',
             };
-          }).join(', '),
-      };
+          })
+          .join(', '),
+  };
 
   /// Gets the resolved name for the task.
   ///
   /// Returns a string representing the resolved name.
   String get resolvedName => switch (name) {
-        final String name => name,
-        _ => patternName,
-      };
+    final String name => name,
+    _ => patternName,
+  };
 
   bool get shouldAlwaysRun {
     if (_always) return true;
@@ -199,11 +200,7 @@ abstract class HookTask {
     // ensure files are filtered
     final filtered = filterFiles(filePaths);
 
-    return TaskLabel(
-      resolvedName,
-      taskId: id,
-      fileCount: filtered.length,
-    );
+    return TaskLabel(resolvedName, taskId: id, fileCount: filtered.length);
   }
 
   /// Filters the given file paths based on the [include] and [exclude]

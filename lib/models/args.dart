@@ -4,12 +4,12 @@ class Args {
     List<String>? rest,
     List<String>? path,
     Map<String, dynamic>? abbr,
-  })  : _values = args ?? const {},
-        _rest = rest ?? const [],
-        _path = path ?? const [],
-        _abbrs = abbr ?? const {},
-        _original = const [],
-        _rawArgs = const [];
+  }) : _values = args ?? const {},
+       _rest = rest ?? const [],
+       _path = path ?? const [],
+       _abbrs = abbr ?? const {},
+       _original = const [],
+       _rawArgs = const [];
 
   const Args._({
     required Map<String, dynamic> args,
@@ -18,12 +18,12 @@ class Args {
     required Map<String, dynamic> abbr,
     required List<String> original,
     required List<String> rawArgs,
-  })  : _values = args,
-        _rest = rest,
-        _path = path,
-        _abbrs = abbr,
-        _original = original,
-        _rawArgs = rawArgs;
+  }) : _values = args,
+       _rest = rest,
+       _path = path,
+       _abbrs = abbr,
+       _original = original,
+       _rawArgs = rawArgs;
 
   factory Args.parse(List<String> args) {
     // --no-<key> should be false under <key>

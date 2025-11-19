@@ -31,12 +31,16 @@ class RegisterCommand with PathsMixin {
     }
 
     final dartGlob = Glob('*.dart');
-    final dartFound =
-        dartGlob.listFileSystemSync(fs, root: definedHooksDir.path);
+    final dartFound = dartGlob.listFileSystemSync(
+      fs,
+      root: definedHooksDir.path,
+    );
 
     final shellGlob = Glob('*.sh');
-    final shellFound =
-        shellGlob.listFileSystemSync(fs, root: definedHooksDir.path);
+    final shellFound = shellGlob.listFileSystemSync(
+      fs,
+      root: definedHooksDir.path,
+    );
 
     final definedHooks = [
       for (final entity in dartFound)
@@ -60,11 +64,8 @@ class RegisterCommand with PathsMixin {
     return (definedHooks, null);
   }
 
-  Iterable<
-      ({
-        String executablePath,
-        Future<ProcessResult> process,
-      })> prepareExecutables(
+  Iterable<({String executablePath, Future<ProcessResult> process})>
+  prepareExecutables(
     List<DefinedHook> definedHooks, {
     required Directory hooksDartToolDir,
     required Directory executablesDir,
@@ -77,10 +78,13 @@ class RegisterCommand with PathsMixin {
     logger.info(yellow.wrap('Preparing hooks'));
 
     for (final hook in definedHooks.where((e) => e.isDart)) {
-      final relativePath =
-          fs.path.relative(hook.path, from: hooksDartToolDir.path);
+      final relativePath = fs.path.relative(
+        hook.path,
+        from: hooksDartToolDir.path,
+      );
 
-      final content = '''
+      final content =
+          '''
 import 'package:hooksman/hooksman.dart';
 
 import '$relativePath' as hook;
@@ -89,20 +93,21 @@ void main(List<String> args) {
   executeHook('${hook.name}', hook.main(), args);
 }''';
 
-      final file = fs.file(
-        fs.path.join(hooksDartToolDir.path, fs.path.basename(hook.fileName)),
-      )
-        ..createSync(recursive: true)
-        ..writeAsStringSync(content);
+      final file =
+          fs.file(
+              fs.path.join(
+                hooksDartToolDir.path,
+                fs.path.basename(hook.fileName),
+              ),
+            )
+            ..createSync(recursive: true)
+            ..writeAsStringSync(content);
 
       logger.info(darkGray.wrap('  - ${hook.name}'));
 
       final outFile = executablesDir.childFile(hook.name);
 
-      final process = compiler.compile(
-        file: file.path,
-        outFile: outFile.path,
-      );
+      final process = compiler.compile(file: file.path, outFile: outFile.path);
 
       yield (executablePath: outFile.path, process: process);
     }
@@ -123,10 +128,7 @@ void main(List<String> args) {
     logger.write('\n');
   }
 
-  int copyExecutables(
-    List<String> executables, {
-    required String gitHooksDir,
-  }) {
+  int copyExecutables(List<String> executables, {required String gitHooksDir}) {
     final hooksDir = fs.directory(gitHooksDir);
 
     if (hooksDir.existsSync()) {
@@ -146,16 +148,18 @@ void main(List<String> args) {
 
   Future<List<String>?> compile(
     Iterable<({String executablePath, Future<ProcessResult> process})>
-        executablesToCompile,
+    executablesToCompile,
     void Function(String) fail,
   ) async {
     final (paths: executables, processes: toCompile) = executablesToCompile
-        .fold((paths: <String>[], processes: <Future<ProcessResult>>[]),
-            (acc, e) {
-      return acc
-        ..paths.add(e.executablePath)
-        ..processes.add(e.process);
-    });
+        .fold((paths: <String>[], processes: <Future<ProcessResult>>[]), (
+          acc,
+          e,
+        ) {
+          return acc
+            ..paths.add(e.executablePath)
+            ..processes.add(e.process);
+        });
 
     final results = await Future.wait(toCompile);
 

@@ -8,9 +8,7 @@ Hook main() {
       ShellTask(
         name: 'Lint & Format',
         include: [Glob('**.dart')],
-        exclude: [
-          Glob('**.g.dart'),
-        ],
+        exclude: [Glob('**.g.dart')],
         commands: (filePaths) => [
           'dart analyze --fatal-infos ${filePaths.join(' ')}',
           'dart format ${filePaths.join(' ')}',
@@ -20,17 +18,13 @@ Hook main() {
         name: 'Build Runner',
         include: [Glob('lib/models/**.dart')],
         exclude: [Glob('**.g.dart')],
-        commands: (filePaths) => [
-          'sip run build_runner build',
-        ],
+        commands: (filePaths) => ['sip run build_runner build'],
       ),
       ShellTask(
         name: 'Tests',
         include: [Glob('**.dart')],
         exclude: [Glob('hooks/**')],
-        commands: (filePaths) => [
-          'sip test --concurrent --bail',
-        ],
+        commands: (filePaths) => ['sip test --concurrent --bail'],
       ),
     ],
   );

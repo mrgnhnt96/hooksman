@@ -93,20 +93,22 @@ void main() {
     });
 
     group('#prepareExecutables', () {
-      test('should return an empty iterable when no hooks are defined',
-          () async {
-        final definedHooks = <DefinedHook>[];
-        final hooksDartToolDir = fs.directory('hooks_dart_tool');
-        final executablesDir = fs.directory('executables');
+      test(
+        'should return an empty iterable when no hooks are defined',
+        () async {
+          final definedHooks = <DefinedHook>[];
+          final hooksDartToolDir = fs.directory('hooks_dart_tool');
+          final executablesDir = fs.directory('executables');
 
-        final executables = cmd.prepareExecutables(
-          definedHooks,
-          hooksDartToolDir: hooksDartToolDir,
-          executablesDir: executablesDir,
-        );
+          final executables = cmd.prepareExecutables(
+            definedHooks,
+            hooksDartToolDir: hooksDartToolDir,
+            executablesDir: executablesDir,
+          );
 
-        expect(executables, isEmpty);
-      });
+          expect(executables, isEmpty);
+        },
+      );
 
       group('runs gracefully', () {
         setUp(() {
@@ -115,59 +117,59 @@ void main() {
               file: any(named: 'file'),
               outFile: any(named: 'outFile'),
             ),
-          ).thenAnswer(
-            (_) => Future.value(ProcessResult(0, 0, '', '')),
-          );
+          ).thenAnswer((_) => Future.value(ProcessResult(0, 0, '', '')));
 
           when(
             () => compiler.prepareShellExecutable(
               file: any(named: 'file'),
               outFile: any(named: 'outFile'),
             ),
-          ).thenAnswer(
-            (_) => Future.value(ProcessResult(0, 0, '', '')),
-          );
+          ).thenAnswer((_) => Future.value(ProcessResult(0, 0, '', '')));
         });
 
-        test('should create dart tool dart hooks when hooks are defined',
-            () async {
-          final definedHooks = [
-            const DefinedHook('pre-commit.dart'),
-            const DefinedHook('post-commit.dart'),
-          ];
+        test(
+          'should create dart tool dart hooks when hooks are defined',
+          () async {
+            final definedHooks = [
+              const DefinedHook('pre-commit.dart'),
+              const DefinedHook('post-commit.dart'),
+            ];
 
-          final hooksDartToolDir =
-              fs.directory(fs.path.join('.dart_tool', 'hooksman'));
+            final hooksDartToolDir = fs.directory(
+              fs.path.join('.dart_tool', 'hooksman'),
+            );
+
+            cmd
+                .prepareExecutables(
+                  definedHooks,
+                  hooksDartToolDir: hooksDartToolDir,
+                  executablesDir: fs.directory('executables'),
+                )
+                .toList();
+
+            expect(hooksDartToolDir.existsSync(), isTrue);
+            expect(
+              hooksDartToolDir.listSync().map((e) => e.path),
+              unorderedEquals([
+                fs.path.join('.dart_tool', 'hooksman', 'pre-commit.dart'),
+                fs.path.join('.dart_tool', 'hooksman', 'post-commit.dart'),
+              ]),
+            );
+          },
+        );
+
+        test('content should import dart hook and execute hook', () async {
+          final hooksDartToolDir = fs.directory(
+            fs.path.join('.dart_tool', 'hooksman'),
+          );
 
           cmd
               .prepareExecutables(
-                definedHooks,
+                [DefinedHook(fs.path.join('hooks', 'pre_commit.dart'))],
                 hooksDartToolDir: hooksDartToolDir,
                 executablesDir: fs.directory('executables'),
               )
               .toList();
-
-          expect(hooksDartToolDir.existsSync(), isTrue);
-          expect(
-            hooksDartToolDir.listSync().map((e) => e.path),
-            unorderedEquals([
-              fs.path.join('.dart_tool', 'hooksman', 'pre-commit.dart'),
-              fs.path.join('.dart_tool', 'hooksman', 'post-commit.dart'),
-            ]),
-          );
-        });
-
-        test('content should import dart hook and execute hook', () async {
-          final hooksDartToolDir =
-              fs.directory(fs.path.join('.dart_tool', 'hooksman'));
-
-          cmd.prepareExecutables(
-            [
-              DefinedHook(fs.path.join('hooks', 'pre_commit.dart')),
-            ],
-            hooksDartToolDir: hooksDartToolDir,
-            executablesDir: fs.directory('executables'),
-          ).toList();
 
           final content = await fs
               .file(fs.path.join('.dart_tool', 'hooksman', 'pre_commit.dart'))
@@ -184,32 +186,34 @@ void main() {
           ]);
         });
 
-        test('should path to dart hook and executable process result',
-            () async {
-          final definedHooks = [
-            const DefinedHook('dart_file1.dart'),
-            const DefinedHook('dart_file2.dart'),
-          ];
+        test(
+          'should path to dart hook and executable process result',
+          () async {
+            final definedHooks = [
+              const DefinedHook('dart_file1.dart'),
+              const DefinedHook('dart_file2.dart'),
+            ];
 
-          final executables = cmd
-              .prepareExecutables(
-                definedHooks,
-                hooksDartToolDir: fs.directory('hooks_dart_tool'),
-                executablesDir: fs.directory('executables'),
-              )
-              .toList();
+            final executables = cmd
+                .prepareExecutables(
+                  definedHooks,
+                  hooksDartToolDir: fs.directory('hooks_dart_tool'),
+                  executablesDir: fs.directory('executables'),
+                )
+                .toList();
 
-          expect(executables, hasLength(2));
-          final [first, second] = executables;
-          expect(
-            first.executablePath,
-            fs.path.join('executables', 'dart-file1'),
-          );
-          expect(
-            second.executablePath,
-            fs.path.join('executables', 'dart-file2'),
-          );
-        });
+            expect(executables, hasLength(2));
+            final [first, second] = executables;
+            expect(
+              first.executablePath,
+              fs.path.join('executables', 'dart-file1'),
+            );
+            expect(
+              second.executablePath,
+              fs.path.join('executables', 'dart-file2'),
+            );
+          },
+        );
 
         test('should use compiler to compile dart hooks', () async {
           final definedHooks = [
@@ -245,11 +249,13 @@ void main() {
             ..createSync(recursive: true)
             ..childFile('a-file-to-delete').createSync();
 
-          cmd.prepareExecutables(
-            [],
-            hooksDartToolDir: hooksDartToolDir,
-            executablesDir: fs.directory('executables'),
-          ).toList();
+          cmd
+              .prepareExecutables(
+                [],
+                hooksDartToolDir: hooksDartToolDir,
+                executablesDir: fs.directory('executables'),
+              )
+              .toList();
 
           expect(hooksDartToolDir.existsSync(), isFalse);
         });
@@ -257,11 +263,13 @@ void main() {
         test('should create executables directory', () async {
           final executablesDir = fs.directory('executables');
 
-          cmd.prepareExecutables(
-            [],
-            hooksDartToolDir: fs.directory('hooks_dart_tool'),
-            executablesDir: executablesDir,
-          ).toList();
+          cmd
+              .prepareExecutables(
+                [],
+                hooksDartToolDir: fs.directory('hooks_dart_tool'),
+                executablesDir: executablesDir,
+              )
+              .toList();
 
           expect(executablesDir.existsSync(), isTrue);
         });
@@ -272,8 +280,9 @@ void main() {
             const DefinedHook('post-commit.sh'),
           ];
 
-          final hooksDartToolDir =
-              fs.directory(fs.path.join('.dart_tool', 'hooksman'));
+          final hooksDartToolDir = fs.directory(
+            fs.path.join('.dart_tool', 'hooksman'),
+          );
 
           final results = cmd
               .prepareExecutables(
@@ -313,8 +322,9 @@ void main() {
             const DefinedHook('post-commit.sh'),
           ];
 
-          final hooksDartToolDir =
-              fs.directory(fs.path.join('.dart_tool', 'hooksman'));
+          final hooksDartToolDir = fs.directory(
+            fs.path.join('.dart_tool', 'hooksman'),
+          );
 
           final executables = cmd
               .prepareExecutables(
@@ -339,19 +349,21 @@ void main() {
     });
 
     group('#copyExecutables', () {
-      test('should create the hooks directory when it does not exist',
-          () async {
-        final code = cmd.copyExecutables(
-          [],
-          gitHooksDir: fs.path.join('.git', 'hooks'),
-        );
+      test(
+        'should create the hooks directory when it does not exist',
+        () async {
+          final code = cmd.copyExecutables(
+            [],
+            gitHooksDir: fs.path.join('.git', 'hooks'),
+          );
 
-        expect(code, 0);
-        expect(
-          fs.directory(fs.path.join('.git', 'hooks')).existsSync(),
-          isTrue,
-        );
-      });
+          expect(code, 0);
+          expect(
+            fs.directory(fs.path.join('.git', 'hooks')).existsSync(),
+            isTrue,
+          );
+        },
+      );
 
       test('should copy executables from dart tool to git hooks', () async {
         fs.directory('executables').createSync(recursive: true);
@@ -394,10 +406,7 @@ void main() {
       });
 
       test('should create hooks dir when it does not exist', () async {
-        cmd.copyExecutables(
-          [],
-          gitHooksDir: fs.path.join('.git', 'hooks'),
-        );
+        cmd.copyExecutables([], gitHooksDir: fs.path.join('.git', 'hooks'));
 
         expect(
           fs.directory(fs.path.join('.git', 'hooks')).existsSync(),
@@ -410,10 +419,7 @@ void main() {
           ..createSync(recursive: true)
           ..childFile('a-file-to-delete').createSync();
 
-        cmd.copyExecutables(
-          [],
-          gitHooksDir: hooks.path,
-        );
+        cmd.copyExecutables([], gitHooksDir: hooks.path);
 
         expect(hooks.existsSync(), isTrue);
         expect(hooks.childFile('a-file-to-delete').existsSync(), isFalse);
@@ -431,15 +437,12 @@ void main() {
 
     group('#compile', () {
       test('should run gracefully', () async {
-        final result = await cmd.compile(
-          [
-            (
-              executablePath: 'some/path',
-              process: Future.value(ProcessResult(0, 0, '', ''))
-            ),
-          ],
-          (_) {},
-        );
+        final result = await cmd.compile([
+          (
+            executablePath: 'some/path',
+            process: Future.value(ProcessResult(0, 0, '', '')),
+          ),
+        ], (_) {});
 
         expect(result, isNotNull);
         expect(result, hasLength(1));
@@ -449,14 +452,17 @@ void main() {
       test('should fail when process is non-zero', () async {
         var failed = false;
 
-        final result = await cmd.compile([
-          (
-            executablePath: 'some/path',
-            process: Future.value(ProcessResult(0, 1, '', ''))
-          ),
-        ], (_) {
-          failed = true;
-        });
+        final result = await cmd.compile(
+          [
+            (
+              executablePath: 'some/path',
+              process: Future.value(ProcessResult(0, 1, '', '')),
+            ),
+          ],
+          (_) {
+            failed = true;
+          },
+        );
 
         expect(result, isNull);
         expect(failed, isTrue);

@@ -25,21 +25,12 @@ Future<void> executeHook(String name, Hook hook, List<String> args) async {
     () => _run(name, hook),
     values: {
       argsProvider.overrideWith(
-        () => Args(
-          args: {
-            'loud': hook.verbose,
-            'quiet': !hook.verbose,
-          },
-        ),
+        () => Args(args: {'loud': hook.verbose, 'quiet': !hook.verbose}),
       ),
       loggerProvider..overrideWith(() => logger),
-      gitProvider
-        ..overrideWith(
-          () => GitService(
-            remoteName: remoteName,
-            remoteUrl: remoteUrl,
-          ),
-        ),
+      gitProvider..overrideWith(
+        () => GitService(remoteName: remoteName, remoteUrl: remoteUrl),
+      ),
       fsProvider,
       processProvider,
       compilerProvider,
@@ -49,10 +40,7 @@ Future<void> executeHook(String name, Hook hook, List<String> args) async {
 
 Future<int> _run(String name, Hook hook) async {
   try {
-    final executor = HookExecutor(
-      hook,
-      hookName: name,
-    );
+    final executor = HookExecutor(hook, hookName: name);
 
     final canRun = await executor.runChecks();
 

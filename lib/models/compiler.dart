@@ -15,7 +15,8 @@ class Compiler {
     Encoding? stderrEncoding,
     Encoding? stdoutEncoding,
     String? workingDirectory,
-  }) ctor = Process.run;
+  })
+  ctor = Process.run;
 
   Future<ProcessResult> compile({
     required String file,
@@ -23,13 +24,7 @@ class Compiler {
   }) async {
     final process = ctor(
       'dart',
-      [
-        'compile',
-        'exe',
-        file,
-        '-o',
-        outFile,
-      ],
+      ['compile', 'exe', file, '-o', outFile],
       includeParentEnvironment: true,
       runInShell: false,
     );

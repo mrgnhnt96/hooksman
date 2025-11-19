@@ -24,12 +24,7 @@ void main() {
     });
 
     void test(String description, FutureOr<void> Function() fn) {
-      testScoped(
-        description,
-        fn,
-        fileSystem: () => fs,
-        logger: () => logger,
-      );
+      testScoped(description, fn, fileSystem: () => fs, logger: () => logger);
     }
 
     group('#root', () {
@@ -45,8 +40,7 @@ void main() {
         expect(mixin.root, equals('/project'));
       });
 
-      test(
-          'returns the root directory when pubspec.yaml '
+      test('returns the root directory when pubspec.yaml '
           'is found in a parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
@@ -57,14 +51,15 @@ void main() {
       });
 
       test(
-          'returns null when pubspec.yaml is not found in any parent directory',
-          () {
-        final rootDir = fs.directory('/project')..createSync();
-        final subDir = rootDir.childDirectory('subdir')..createSync();
-        fs.currentDirectory = subDir;
+        'returns null when pubspec.yaml is not found in any parent directory',
+        () {
+          final rootDir = fs.directory('/project')..createSync();
+          final subDir = rootDir.childDirectory('subdir')..createSync();
+          fs.currentDirectory = subDir;
 
-        expect(mixin.root, isNull);
-      });
+          expect(mixin.root, isNull);
+        },
+      );
     });
 
     group('#gitDir', () {
@@ -99,8 +94,7 @@ void main() {
         expect(mixin.gitDir, equals('/project/.git'));
       });
 
-      test(
-          'returns null when .git directory is not '
+      test('returns null when .git directory is not '
           'found in any parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
@@ -125,8 +119,7 @@ void main() {
         expect(mixin.gitHooksDir, equals('/project/.git/hooks'));
       });
 
-      test(
-          'returns the hooks directory when .git directory is '
+      test('returns the hooks directory when .git directory is '
           'found in a parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
@@ -137,8 +130,7 @@ void main() {
         expect(mixin.gitHooksDir, equals('/project/.git/hooks'));
       });
 
-      test(
-          'returns null when .git directory is not '
+      test('returns null when .git directory is not '
           'found in any parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();

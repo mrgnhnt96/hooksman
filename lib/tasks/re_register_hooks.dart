@@ -27,24 +27,24 @@ import 'package:hooksman/tasks/shell_task.dart';
 /// ```
 final class ReRegisterHooks extends ShellTask {
   ReRegisterHooks({String? pathToHooksDir})
-      : super(
-          name: 'Re-register hooks',
-          include: [
-            if (pathToHooksDir case final String path)
-              Glob('$path/**.{dart,sh}')
-            else
-              Glob('hooks/**.{dart,sh}'),
-          ],
-          commands: (_) {
-            final changeDir = switch (pathToHooksDir) {
-              String() => 'cd $pathToHooksDir || exit 1;',
-              _ => '',
-            };
+    : super(
+        name: 'Re-register hooks',
+        include: [
+          if (pathToHooksDir case final String path)
+            Glob('$path/**.{dart,sh}')
+          else
+            Glob('hooks/**.{dart,sh}'),
+        ],
+        commands: (_) {
+          final changeDir = switch (pathToHooksDir) {
+            String() => 'cd $pathToHooksDir || exit 1;',
+            _ => '',
+          };
 
-            const package = 'hooksman';
+          const package = 'hooksman';
 
-            return [
-              '''
+          return [
+            '''
 # Running hooksman register
 $changeDir
 if dart pub deps | grep -q "$package "; then
@@ -56,7 +56,7 @@ else
   exit 1
 fi
 ''',
-            ];
-          },
-        );
+          ];
+        },
+      );
 }

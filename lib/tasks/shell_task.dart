@@ -39,20 +39,20 @@ class ShellTask extends SequentialTask {
     super.exclude,
     super.workingDirectory,
     String? name,
-  })  : _commands = commands,
-        _name = name,
-        _always = false,
-        super();
+  }) : _commands = commands,
+       _name = name,
+       _always = false,
+       super();
 
   ShellTask.always({
     required ShellCommands commands,
     super.exclude,
     super.workingDirectory,
     String? name,
-  })  : _commands = commands,
-        _name = name,
-        _always = true,
-        super.always();
+  }) : _commands = commands,
+       _name = name,
+       _always = true,
+       super.always();
 
   final ShellCommands _commands;
 
@@ -66,12 +66,12 @@ class ShellTask extends SequentialTask {
   List<HookTask> subTasks(Iterable<String> filePaths) {
     final paths = switch (workingDirectory) {
       final String cwd => [
-          for (final path in filePaths)
-            if (fs.path.isWithin(cwd, path))
-              fs.path.relative(path, from: cwd)
-            else
-              path,
-        ],
+        for (final path in filePaths)
+          if (fs.path.isWithin(cwd, path))
+            fs.path.relative(path, from: cwd)
+          else
+            path,
+      ],
       null => filePaths.toList(),
     };
 
@@ -80,19 +80,14 @@ class ShellTask extends SequentialTask {
         switch (_always) {
           true => _OneShellTask.always,
           false => _OneShellTask.new,
-        }(
-          command: command,
-          index: index,
-        ),
+        }(command: command, index: index),
     ];
   }
 }
 
 class _OneShellTask extends HookTask {
-  _OneShellTask({
-    required this.command,
-    required this.index,
-  }) : super(include: [AllFiles()]);
+  _OneShellTask({required this.command, required this.index})
+    : super(include: [AllFiles()]);
 
   _OneShellTask.always({
     required this.command,
@@ -126,16 +121,10 @@ class _OneShellTask extends HookTask {
       null => null,
     };
 
-    final result = await Process.run(
-      coreCommand,
-      [
-        '-c',
-        [
-          if (cwd case final dir?) 'cd $dir && ',
-          command,
-        ].join(),
-      ],
-    );
+    final result = await Process.run(coreCommand, [
+      '-c',
+      [if (cwd case final dir?) 'cd $dir && ', command].join(),
+    ]);
 
     completeTask(this, result.exitCode);
 

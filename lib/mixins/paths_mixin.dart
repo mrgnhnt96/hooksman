@@ -59,7 +59,8 @@ mixin PathsMixin {
   }
 
   Directory executablesDir(String root) {
-    return fs
-        .directory(fs.path.join(dartToolGitHooksDir(root).path, 'executables'));
+    return fs.directory(
+      fs.path.join(dartToolGitHooksDir(root).path, 'executables'),
+    );
   }
 }

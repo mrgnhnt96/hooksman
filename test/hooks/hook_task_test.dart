@@ -72,21 +72,25 @@ void main() {
         expect(result.last.id, 'md');
       });
 
-      test('should return task when some files match and some do not',
-          () async {
-        final task = _TestHookTask(
-          tasks: [
-            _TestHookTask(id: 'dart', include: [Glob('**.dart')]),
-            _TestHookTask(id: 'md', include: [Glob('**.md')]),
-          ],
-        );
+      test(
+        'should return task when some files match and some do not',
+        () async {
+          final task = _TestHookTask(
+            tasks: [
+              _TestHookTask(id: 'dart', include: [Glob('**.dart')]),
+              _TestHookTask(id: 'md', include: [Glob('**.md')]),
+            ],
+          );
 
-        final result =
-            task.resolveSubTasks(['lib/main.dart', 'lib/utils.dart']);
+          final result = task.resolveSubTasks([
+            'lib/main.dart',
+            'lib/utils.dart',
+          ]);
 
-        expect(result, hasLength(1));
-        expect(result.first.id, 'dart');
-      });
+          expect(result, hasLength(1));
+          expect(result.first.id, 'dart');
+        },
+      );
     });
   });
 }
@@ -98,9 +102,9 @@ class _TestHookTask extends HookTask {
     this.id = '',
   });
   _TestHookTask.always()
-      : tasks = const [],
-        id = const Uuid().v4(),
-        super.always();
+    : tasks = const [],
+      id = const Uuid().v4(),
+      super.always();
 
   final List<HookTask> tasks;
 

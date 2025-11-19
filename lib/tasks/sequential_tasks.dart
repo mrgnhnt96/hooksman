@@ -33,12 +33,9 @@ import 'package:hooksman/tasks/shell_task.dart';
 /// [ShellTask] instances sequentially. The first task formats Dart files,
 /// and the second task runs tests on the Dart files.
 class SequentialTasks extends SequentialTask {
-  SequentialTasks({
-    required List<HookTask> tasks,
-    this.name,
-    super.exclude,
-  })  : _tasks = tasks,
-        super.always();
+  SequentialTasks({required List<HookTask> tasks, this.name, super.exclude})
+    : _tasks = tasks,
+      super.always();
 
   @override
   final String? name;
