@@ -1,5 +1,17 @@
 <!--  -->
 
+# 3.1.0 | 11.19.25
+
+## Features
+
+- Add `runInParallel` parameter to `Hook`, which allows you to specify whether the top level tasks should be run in parallel
+  - Defaults to `true`
+
+## Deps
+
+- Remove `args` dependency, use pattern matching instead
+- Add `scoped_deps` dependency
+
 # 3.0.0 | 10.15.25
 
 ## Breaking Changes

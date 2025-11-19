@@ -2,3 +2,8 @@ scripts.yaml
 test
 build.yaml
 bin/tester.dart
+todo.md
+build
+barreler.yaml
+analysis_optoins.yaml
+hooks
