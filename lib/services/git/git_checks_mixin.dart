@@ -1,14 +1,12 @@
-import 'package:hooksman/utils/process/process.dart';
-import 'package:mason_logger/mason_logger.dart';
+import 'package:hooksman/deps/logger.dart';
+import 'package:hooksman/deps/process.dart';
 
 mixin GitChecksMixin {
-  Logger get logger;
-  Process get process;
-
   Future<bool> isGitInstalled() async {
-    final result = await process.run('git', ['--version']);
+    final result = await process('git', ['--version']);
+    final exitCode = await result.exitCode;
 
-    if (result.exitCode != 0) {
+    if (exitCode != 0) {
       logger
         ..err('Git is not installed')
         ..detail('Error: ${result.stderr}');
@@ -19,10 +17,10 @@ mixin GitChecksMixin {
   }
 
   Future<bool> isGitRepository() async {
-    final result =
-        await process.run('git', ['rev-parse', '--is-inside-work-tree']);
+    final result = await process('git', ['rev-parse', '--is-inside-work-tree']);
+    final exitCode = await result.exitCode;
 
-    if (result.exitCode != 0) {
+    if (exitCode != 0) {
       logger
         ..err('Not a git repository')
         ..detail('Error: ${result.stderr}');
@@ -33,16 +31,22 @@ mixin GitChecksMixin {
   }
 
   Future<bool> hasAtLeastOneCommit() async {
-    final result = await process.run('git', ['rev-list', '--count', 'HEAD']);
+    final result = await process('git', ['rev-list', '--count', 'HEAD']);
+    final exitCode = await result.exitCode;
 
-    if (result.exitCode != 0) {
+    if (exitCode != 0) {
       logger
         ..err('Failed to get commit count')
         ..detail('Error: ${result.stderr}');
       return false;
     }
 
-    final count = int.tryParse(result.stdout);
+    final out = switch (result.stdout) {
+      final String out => out.trim(),
+      final Future<String> out => (await out).trim(),
+    };
+
+    final count = int.tryParse(out);
 
     return count != null && count > 0;
   }

@@ -1,5 +1,4 @@
-import 'dart:io' as io;
-
+import 'package:hooksman/deps/stdout.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
 import 'package:hooksman/models/pending_task.dart';
 import 'package:hooksman/models/resolved_hook_task.dart';
@@ -8,13 +7,11 @@ import 'package:mason_logger/mason_logger.dart';
 
 class LabelMaker {
   const LabelMaker({
-    required io.Stdout stdout,
     required this.pendingHook,
     required this.nameOfHook,
     this.debug = false,
-  }) : _stdout = stdout;
+  });
 
-  final io.Stdout _stdout;
   final PendingHook pendingHook;
   final String nameOfHook;
   final bool debug;
@@ -27,7 +24,7 @@ class LabelMaker {
   static const warning = '⚠️';
   static const waiting = '-';
 
-  int get maxWidth => _stdout.terminalColumns;
+  int get maxWidth => stdout.terminalColumns;
 
   String? fileCount(int count) {
     final string = switch (count) {

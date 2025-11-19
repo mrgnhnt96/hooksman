@@ -1,15 +1,12 @@
 import 'package:file/file.dart';
-import 'package:mason_logger/mason_logger.dart';
-import 'package:path/path.dart' as p;
+import 'package:hooksman/deps/fs.dart';
+import 'package:hooksman/deps/logger.dart';
 
 mixin PathsMixin {
-  FileSystem get fs;
-  Logger get logger;
-
   String? get root {
     var directory = fs.currentDirectory.absolute;
 
-    while (directory.path != p.separator) {
+    while (directory.path != fs.path.separator) {
       final file = directory.childFile('pubspec.yaml');
 
       if (file.existsSync()) {
@@ -30,7 +27,7 @@ mixin PathsMixin {
       return null;
     }
 
-    var gitDir = fs.directory(p.join(root, '.git'));
+    var gitDir = fs.directory(fs.path.join(root, '.git'));
 
     while (!gitDir.childDirectory('.git').existsSync()) {
       final parent = gitDir.parent;
@@ -54,14 +51,15 @@ mixin PathsMixin {
       return null;
     }
 
-    return fs.directory(p.join(gitDir, 'hooks')).path;
+    return fs.directory(fs.path.join(gitDir, 'hooks')).path;
   }
 
   Directory dartToolGitHooksDir(String root) {
-    return fs.directory(p.join(root, '.dart_tool', 'hooksman'));
+    return fs.directory(fs.path.join(root, '.dart_tool', 'hooksman'));
   }
 
   Directory executablesDir(String root) {
-    return fs.directory(p.join(dartToolGitHooksDir(root).path, 'executables'));
+    return fs
+        .directory(fs.path.join(dartToolGitHooksDir(root).path, 'executables'));
   }
 }

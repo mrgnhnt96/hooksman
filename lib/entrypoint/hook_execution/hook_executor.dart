@@ -1,31 +1,25 @@
-import 'dart:io' as io;
-
+import 'package:hooksman/deps/args.dart';
+import 'package:hooksman/deps/git.dart';
+import 'package:hooksman/deps/logger.dart';
 import 'package:hooksman/entrypoint/hook_execution/label_maker.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
 import 'package:hooksman/hooks/hook.dart';
-import 'package:hooksman/services/git/git_service.dart';
 import 'package:hooksman/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 class HookExecutor {
   const HookExecutor(
     this.hook, {
-    required this.stdout,
     required this.hookName,
-    required this.logger,
-    required this.gitService,
-    required this.debug,
   });
 
   final Hook hook;
-  final io.Stdout stdout;
   final String hookName;
-  final Logger logger;
-  final GitService gitService;
-  final bool debug;
+
+  bool get debug => args['loud'] == true;
 
   Future<(List<String>, int?)> get allFiles async {
-    final allFiles = await gitService.diffFiles(
+    final allFiles = await git.diffFiles(
       diffArgs: hook.diffArgs,
       diffFilters: hook.diffFilters,
     );
@@ -53,6 +47,8 @@ class HookExecutor {
       );
 
   Future<void> _wait(Duration duration) async {
+    if (!debug) return;
+
     logger.detail('Waiting for $duration');
     await Future<void>.delayed(duration);
   }
@@ -68,7 +64,7 @@ class HookExecutor {
       logger.detail('  - $file');
     }
 
-    if (debug) await _wait(durations.short);
+    await _wait(durations.short);
 
     logger.detail('Resolving files');
 
@@ -86,17 +82,16 @@ class HookExecutor {
       }
     }
 
-    final context = await gitService.prepareFiles();
+    final context = await git.prepareFiles();
 
     final labelMaker = LabelMaker(
-      stdout: stdout,
       pendingHook: pendingHook,
       nameOfHook: hookName,
       debug: debug,
     );
 
     logger.detail('Starting tasks');
-    if (debug) await _wait(durations.short);
+    await _wait(durations.short);
 
     final progress = MultiLineProgress(createLabel: labelMaker.create)..start();
 
@@ -144,11 +139,11 @@ class HookExecutor {
       for (final file in context.nonStagedFiles) {
         logger.detail('  - $file');
       }
-      if (debug) await _wait(durations.short);
-      await gitService.applyModifications(
+      await _wait(durations.short);
+      await git.applyModifications(
         [...context.nonStagedFiles, ...context.deletedFiles],
       );
-      if (debug) await _wait(durations.long);
+      await _wait(durations.long);
     } else {
       logger.detail('Skipped applying modifications for $hookName');
     }
@@ -158,7 +153,7 @@ class HookExecutor {
       return 0;
     }
 
-    final files = await gitService.diffFiles(
+    final files = await git.diffFiles(
       diffArgs: hook.diffArgs,
       diffFilters: hook.diffFilters,
     );
@@ -175,11 +170,11 @@ class HookExecutor {
   }
 
   Future<bool> runChecks() async {
-    if (!await gitService.isGitInstalled()) {
+    if (!await git.isGitInstalled()) {
       return false;
     }
 
-    if (!await gitService.isGitRepository()) {
+    if (!await git.isGitRepository()) {
       return false;
     }
 

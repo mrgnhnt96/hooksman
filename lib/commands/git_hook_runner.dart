@@ -1,41 +1,27 @@
-import 'package:args/command_runner.dart';
-// ignore: implementation_imports
-import 'package:args/src/arg_results.dart';
-import 'package:file/file.dart';
 import 'package:hooksman/commands/register_command.dart';
-import 'package:hooksman/models/compiler.dart';
-import 'package:hooksman/services/git/git_service.dart';
-import 'package:mason_logger/mason_logger.dart';
+import 'package:hooksman/deps/args.dart';
+import 'package:hooksman/deps/logger.dart';
 
-class GitHookRunner extends CommandRunner<int> {
-  GitHookRunner({
-    required this.fs,
-    required this.logger,
-    required GitService git,
-    required Compiler compiler,
-  }) : super('hooksman', 'Run git hooks') {
-    addCommand(
-      RegisterCommand(
-        fs: fs,
-        logger: logger,
-        git: git,
-        compiler: compiler,
-      ),
-    );
-  }
+const _usage = '''
+Usage: hooksman <command>
 
-  final FileSystem fs;
-  final Logger logger;
+Generate git hooks and tasks using Dart scripts and Shell commands.
 
-  @override
-  Future<int?> runCommand(ArgResults topLevelResults) {
-    var results = topLevelResults;
-    final args = [...results.arguments];
+Commands:
+  [register]  Register git hooks
+''';
 
-    if (args.isEmpty) {
-      results = argParser.parse(['register']);
+class GitHookRunner {
+  const GitHookRunner();
+
+  Future<int> run() async {
+    switch (args.path) {
+      case [] || ['register']:
+        return const RegisterCommand().run();
     }
 
-    return super.runCommand(results);
+    logger.write(_usage);
+
+    return 1;
   }
 }

@@ -7,5 +7,5 @@ part of 'resolved_hook.dart';
 // **************************************************************************
 
 extension _$ResolvedHookAutoequal on ResolvedHook {
-  List<Object?> get _$props => [filePaths, tasks, tasksById];
+  List<Object?> get _$props => [filePaths, tasks, runInParallel, tasksById];
 }

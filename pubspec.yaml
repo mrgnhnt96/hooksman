@@ -16,7 +16,6 @@ environment:
   sdk: ">=3.5.0 <4.0.0"
 
 dependencies:
-  args: ^2.6.0
   async: ^2.12.0
   change_case: ^2.1.0
   collection: ^1.19.1
@@ -25,7 +24,7 @@ dependencies:
   glob: ^2.1.2
   mason_logger: ^0.3.1
   meta: ^1.16.0
-  path: ^1.9.1
+  scoped_deps: ^0.1.0+2
   uuid: ^4.5.1
 
 dev_dependencies:

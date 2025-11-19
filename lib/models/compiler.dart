@@ -1,14 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file/file.dart';
+import 'package:hooksman/deps/fs.dart';
 
 class Compiler {
-  const Compiler({
-    required this.fs,
-  });
-
-  final FileSystem fs;
+  const Compiler();
 
   static Future<ProcessResult> Function(
     String executable,

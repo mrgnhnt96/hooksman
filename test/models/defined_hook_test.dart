@@ -1,8 +1,16 @@
+import 'dart:async';
+
 import 'package:hooksman/models/defined_hook.dart';
 import 'package:test/test.dart';
 
+import '../utils/test_scoped.dart';
+
 void main() {
   group(DefinedHook, () {
+    void test(String description, FutureOr<void> Function() fn) {
+      testScoped(description, fn);
+    }
+
     group('#isDart', () {
       test('returns true for Dart files', () {
         const hook = DefinedHook('/path/to/file.dart');

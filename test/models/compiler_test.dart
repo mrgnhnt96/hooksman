@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,6 +7,8 @@ import 'package:file/memory.dart';
 import 'package:hooksman/models/compiler.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/test.dart';
+
+import '../utils/test_scoped.dart';
 
 class MockProcess extends Mock implements Process {
   Future<ProcessResult> call(
@@ -29,7 +32,7 @@ void main() {
 
     setUp(() {
       fs = MemoryFileSystem.test();
-      compiler = Compiler(fs: fs);
+      compiler = const Compiler();
       mockProcess = MockProcess();
       Compiler.ctor = mockProcess.call;
     });
@@ -49,6 +52,10 @@ void main() {
       ).thenAnswer((_) async => processResult);
     }
 
+    void test(String description, FutureOr<void> Function() fn) {
+      testScoped(description, fn, fileSystem: () => fs);
+    }
+
     test('compile should call Process.run with correct arguments', () async {
       stub();
 
@@ -66,6 +73,7 @@ void main() {
           runInShell: false,
         ),
       ).called(1);
+      return;
     });
 
     group('#prepareShellExecutable', () {
@@ -88,6 +96,7 @@ void main() {
             runInShell: false,
           ),
         ).called(1);
+        return;
       });
 
       test('should create out file when it does not exist', () async {
@@ -99,6 +108,7 @@ void main() {
         await compiler.prepareShellExecutable(file: 'test', outFile: 'test');
 
         expect(file.existsSync(), isTrue);
+        return;
       });
 
       test('should copy the contents to out file', () async {
@@ -113,6 +123,7 @@ void main() {
         await compiler.prepareShellExecutable(file: 'test', outFile: outFile);
 
         expect(out.readAsStringSync(), file.readAsStringSync());
+        return;
       });
     });
   });

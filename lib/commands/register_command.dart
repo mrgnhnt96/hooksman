@@ -1,39 +1,26 @@
 import 'dart:async';
 import 'dart:io';
 
-//
-
-import 'package:args/command_runner.dart';
 import 'package:change_case/change_case.dart';
 import 'package:file/file.dart';
 import 'package:glob/glob.dart';
+import 'package:hooksman/deps/args.dart';
+import 'package:hooksman/deps/compiler.dart';
+import 'package:hooksman/deps/fs.dart';
+import 'package:hooksman/deps/git.dart';
+import 'package:hooksman/deps/logger.dart';
 import 'package:hooksman/mixins/paths_mixin.dart';
-import 'package:hooksman/models/compiler.dart';
 import 'package:hooksman/models/defined_hook.dart';
-import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
-import 'package:path/path.dart' as p;
 
-class RegisterCommand extends Command<int> with PathsMixin {
-  RegisterCommand({
-    required this.fs,
-    required this.logger,
-    required this.git,
-    required this.compiler,
-  });
+const _usage = '''
+Usage: hooksman register
 
-  @override
-  final Logger logger;
-  @override
-  final FileSystem fs;
-  final GitService git;
-  final Compiler compiler;
+Register git hooks
+''';
 
-  @override
-  String get description => 'Register git hooks';
-
-  @override
-  String get name => 'register';
+class RegisterCommand with PathsMixin {
+  const RegisterCommand();
 
   (List<DefinedHook>, int?) definedHooks(String root) {
     final definedHooksDir = fs.directory(fs.path.join(root, 'hooks'));
@@ -66,7 +53,7 @@ class RegisterCommand extends Command<int> with PathsMixin {
     final s = definedHooks.length > 1 ? 's' : '';
     logger.info(green.wrap('Found ${definedHooks.length} hook$s'));
     for (final hook in definedHooks) {
-      logger.info(darkGray.wrap('  - ${p.basename(hook.fileName)}'));
+      logger.info(darkGray.wrap('  - ${fs.path.basename(hook.fileName)}'));
     }
     logger.write('\n');
 
@@ -102,8 +89,9 @@ void main(List<String> args) {
   executeHook('${hook.name}', hook.main(), args);
 }''';
 
-      final file = fs
-          .file(fs.path.join(hooksDartToolDir.path, p.basename(hook.fileName)))
+      final file = fs.file(
+        fs.path.join(hooksDartToolDir.path, fs.path.basename(hook.fileName)),
+      )
         ..createSync(recursive: true)
         ..writeAsStringSync(content);
 
@@ -198,8 +186,12 @@ void main(List<String> args) {
     return null;
   }
 
-  @override
-  FutureOr<int>? run() async {
+  Future<int> run() async {
+    if (args['help'] case true) {
+      logger.write(_usage);
+      return 0;
+    }
+
     if (await setHooksPath() case final int code) {
       return code;
     }

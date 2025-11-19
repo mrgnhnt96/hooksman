@@ -7,5 +7,11 @@ part of 'hook.dart';
 // **************************************************************************
 
 extension _$HookAutoequal on Hook {
-  List<Object?> get _$props => [diffArgs, diffFilters, tasks, verbose];
+  List<Object?> get _$props => [
+        diffArgs,
+        diffFilters,
+        tasks,
+        runInParallel,
+        verbose,
+      ];
 }

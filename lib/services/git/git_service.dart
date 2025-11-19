@@ -1,29 +1,21 @@
-import 'package:file/file.dart';
+import 'package:hooksman/deps/args.dart';
+import 'package:hooksman/deps/fs.dart';
+import 'package:hooksman/deps/logger.dart';
+import 'package:hooksman/deps/process.dart';
 import 'package:hooksman/services/git/git_checks_mixin.dart';
 import 'package:hooksman/services/git/git_context.dart';
 import 'package:hooksman/services/git/git_context_setter.dart';
-import 'package:hooksman/utils/process/process.dart';
-import 'package:mason_logger/mason_logger.dart';
 
 class GitService with GitChecksMixin {
   const GitService({
-    required this.logger,
-    required this.fs,
-    required this.debug,
-    required this.process,
-    required this.remoteName,
-    required this.remoteUrl,
+    this.remoteName,
+    this.remoteUrl,
   });
 
-  @override
-  final Logger logger;
-  final FileSystem fs;
-  @override
-  final Process process;
   final String? remoteName;
   final String? remoteUrl;
 
-  final bool debug;
+  bool get debug => args['loud'] == true;
 
   List<String> get gitDiffArgs => [
         // support binary files
@@ -53,7 +45,10 @@ class GitService with GitChecksMixin {
       ],
     );
 
-    return gitDir.stdout.trim();
+    return switch (gitDir.stdout) {
+      final String out => out.trim(),
+      _ => throw Exception('Failed to get git directory'),
+    };
   }
 
   Future<bool> setHooksDir() async {
@@ -107,7 +102,10 @@ class GitService with GitChecksMixin {
       '-z',
     ]);
 
-    final out = result.stdout.trim();
+    final out = switch (result.stdout) {
+      final String out => out.trim(),
+      final Future<String> out => (await out).trim(),
+    };
 
     final files =
         out.split('\x00').where((element) => element.isNotEmpty).toList();
@@ -137,7 +135,10 @@ class GitService with GitChecksMixin {
       'HEAD',
     ]);
 
-    final branch = result.stdout.trim();
+    final branch = switch (result.stdout) {
+      final String out => out.trim(),
+      final Future<String> out => (await out).trim(),
+    };
 
     return branch;
   }
@@ -194,7 +195,10 @@ class GitService with GitChecksMixin {
       return [];
     }
 
-    final out = status.stdout;
+    final out = switch (status.stdout) {
+      final String out => out,
+      final Future<String> out => (await out),
+    };
 
     final partiallyStaged = out
         .split(RegExp('\x00(?=[ AMDRCU?!])'))

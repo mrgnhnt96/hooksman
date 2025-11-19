@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:hooksman/deps/fs.dart';
 import 'package:hooksman/tasks/hook_task.dart';
 import 'package:hooksman/tasks/sequential_task.dart';
 import 'package:hooksman/utils/all_files.dart';
 import 'package:mason_logger/mason_logger.dart';
-import 'package:path/path.dart';
 
 typedef ShellCommands = List<String> Function(Iterable<String>);
 
@@ -67,7 +67,10 @@ class ShellTask extends SequentialTask {
     final paths = switch (workingDirectory) {
       final String cwd => [
           for (final path in filePaths)
-            if (isWithin(cwd, path)) relative(path, from: cwd) else path,
+            if (fs.path.isWithin(cwd, path))
+              fs.path.relative(path, from: cwd)
+            else
+              path,
         ],
       null => filePaths.toList(),
     };
@@ -118,7 +121,7 @@ class _OneShellTask extends HookTask {
     };
 
     final cwd = switch (workingDirectory) {
-      final String dir when isAbsolute(dir) => dir,
+      final String dir when fs.path.isAbsolute(dir) => dir,
       final String dir => dir,
       null => null,
     };
