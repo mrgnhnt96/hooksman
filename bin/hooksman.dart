@@ -24,7 +24,7 @@ Future<int> main(List<String> arguments) async {
     _run,
     values: {
       argsProvider.overrideWith(() => args),
-      loggerProvider..overrideWith(() => logger),
+      loggerProvider.overrideWith(() => logger),
       fsProvider,
       gitProvider,
       processProvider,
