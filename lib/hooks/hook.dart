@@ -79,12 +79,14 @@ sealed class Hook extends Equatable {
     required this.tasks,
     required this.diffFilters,
     required this.diffArgs,
+    this.runInParallel = true,
   }) : verbose = false;
 
   const Hook.verbose({
     required this.tasks,
     required this.diffFilters,
     required this.diffArgs,
+    this.runInParallel = true,
   }) : verbose = true;
 
   /// Defaults to ['--staged']
@@ -100,6 +102,7 @@ sealed class Hook extends Equatable {
   /// Check out the git [docs](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-filterACDMRTUXB82308203) to view more options
   final String diffFilters;
   final List<HookTask> tasks;
+  final bool runInParallel;
 
   final bool verbose;
 
@@ -113,6 +116,7 @@ sealed class Hook extends Equatable {
     return ResolvedHook(
       filePaths: filePaths,
       tasks: resolvedTasks,
+      runInParallel: runInParallel,
     );
   }
 

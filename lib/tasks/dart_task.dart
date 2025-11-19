@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:hooksman/tasks/hook_task.dart';
+import 'package:path/path.dart';
 
 typedef Run = FutureOr<int> Function(List<String>);
 
@@ -46,7 +47,15 @@ class DartTask extends HookTask {
     required String? workingDirectory,
   }) async {
     startTask(this);
-    final result = await _run(filePaths);
+    final paths = switch (workingDirectory) {
+      final String cwd => [
+          for (final path in filePaths)
+            if (isWithin(cwd, path)) relative(path, from: cwd) else path,
+        ],
+      null => filePaths.toList(),
+    };
+
+    final result = await _run(paths);
 
     completeTask(this, result);
 

@@ -7,6 +7,7 @@ class ResolvedHook extends Equatable {
   ResolvedHook({
     required this.filePaths,
     required this.tasks,
+    required this.runInParallel,
   }) {
     Iterable<ResolvedHookTask> subTasks(ResolvedHookTask task) sync* {
       for (final subTask in task.subTasks) {
@@ -29,6 +30,7 @@ class ResolvedHook extends Equatable {
 
   final List<String> filePaths;
   final List<ResolvedHookTask> tasks;
+  final bool runInParallel;
   late final Map<String, ResolvedHookTask> tasksById;
 
   @override

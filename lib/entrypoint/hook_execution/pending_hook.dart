@@ -85,6 +85,7 @@ class PendingHook {
       killCompleter: killCompleter,
       completedTasks: completedTasks,
       startedTasks: startedTasks,
+      runInParallel: hook.runInParallel,
     );
   }
 
@@ -94,7 +95,9 @@ class PendingHook {
     required Completer<void> killCompleter,
     required Set<int> completedTasks,
     required Set<int> startedTasks,
+    required bool runInParallel,
   })  : _killCompleter = killCompleter,
+        _runInParallel = runInParallel,
         _completedTasks = completedTasks,
         _startedTasks = startedTasks {
     _listenToKillSignal();
@@ -108,6 +111,7 @@ class PendingHook {
   final Set<int> _startedTasks;
   Set<int> get startedTasks => Set<int>.unmodifiable(_startedTasks);
   StreamSubscription<ProcessSignal>? _killSubscription;
+  final bool _runInParallel;
 
   bool _wasKilled = false;
   bool get wasKilled => _wasKilled;
@@ -196,15 +200,30 @@ class PendingHook {
   }
 
   Future<void> wait() async {
-    try {
-      await Future.wait(
-        topLevelTasks.map((e) => e.future).whereType(),
-        eagerError: true,
-      );
-    } catch (e) {
-      logger.delayed('Error: $e');
+    if (_runInParallel) {
+      try {
+        await Future.wait(
+          topLevelTasks.map((e) => e.future).whereType(),
+          eagerError: true,
+        );
+      } catch (e) {
+        logger.delayed('Error: $e');
 
-      killAll();
+        killAll();
+      }
+    } else {
+      try {
+        for (final task in topLevelTasks) {
+          final code = await task.future;
+
+          if (code case 0 || null) {
+            continue;
+          }
+
+          killAll();
+          return;
+        }
+      } catch (_) {}
     }
   }
 }

@@ -63,16 +63,26 @@ class ShellTask extends SequentialTask {
   String get name => _name ?? patternName;
 
   @override
-  List<HookTask> subTasks(Iterable<String> filePaths) => [
-        for (final (index, command) in _commands(filePaths).indexed)
-          switch (_always) {
-            true => _OneShellTask.always,
-            false => _OneShellTask.new,
-          }(
-            command: command,
-            index: index,
-          ),
-      ];
+  List<HookTask> subTasks(Iterable<String> filePaths) {
+    final paths = switch (workingDirectory) {
+      final String cwd => [
+          for (final path in filePaths)
+            if (isWithin(cwd, path)) relative(path, from: cwd) else path,
+        ],
+      null => filePaths.toList(),
+    };
+
+    return [
+      for (final (index, command) in _commands(paths).indexed)
+        switch (_always) {
+          true => _OneShellTask.always,
+          false => _OneShellTask.new,
+        }(
+          command: command,
+          index: index,
+        ),
+    ];
+  }
 }
 
 class _OneShellTask extends HookTask {
@@ -109,7 +119,7 @@ class _OneShellTask extends HookTask {
 
     final cwd = switch (workingDirectory) {
       final String dir when isAbsolute(dir) => dir,
-      final String dir => join('..', dir),
+      final String dir => dir,
       null => null,
     };
 
