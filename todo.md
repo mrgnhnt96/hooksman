@@ -6,6 +6,10 @@
 
 ## Fixed
 
+### 11.19.25
+
+- [x] Make task "pending" state when `runInParallel` is false in the hook
+
 ### 9.19.25
 
 - [x] multiple origins fails when default origin has no changes to push
