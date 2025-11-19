@@ -85,8 +85,7 @@ class HookExecutor {
 
     final progress = MultiLineProgress(createLabel: labelMaker.create)..start();
 
-    pendingHook.start();
-
+    await pendingHook.start();
     await pendingHook.wait();
 
     if (pendingHook.wasKilled) {

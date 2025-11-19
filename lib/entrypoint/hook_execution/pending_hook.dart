@@ -175,7 +175,16 @@ class PendingHook {
     }
   }
 
-  void start() {
+  /// Runs the tasks in the hook
+  Future<void> start() async {
+    if (_runInParallel) {
+      await _executeParallel();
+    } else {
+      await _executeSequential();
+    }
+  }
+
+  Future<void> _executeParallel() async {
     for (final runner in runners) {
       if (!runner.task.shouldAlwaysRun) {
         // If all files are empty, then we don't
@@ -194,31 +203,31 @@ class PendingHook {
     }
   }
 
-  Future<void> wait() async {
-    if (_runInParallel) {
-      try {
-        await Future.wait(
-          topLevelTasks.map((e) => e.future).whereType(),
-          eagerError: true,
-        );
-      } catch (e) {
-        logger.delayed('Error: $e');
+  Future<void> _executeSequential() async {
+    for (final (:task, :runner) in _tasks.values) {
+      final code = await runner.run();
+      complete(task.id, code);
 
+      final result = await task.future;
+
+      if (result != 0) {
         killAll();
+        return;
       }
-    } else {
-      try {
-        for (final task in topLevelTasks) {
-          final code = await task.future;
+    }
+  }
 
-          if (code case 0 || null) {
-            continue;
-          }
+  /// Waits for all tasks to complete
+  Future<void> wait() async {
+    try {
+      await Future.wait(
+        topLevelTasks.map((e) => e.future).whereType(),
+        eagerError: true,
+      );
+    } catch (e) {
+      logger.delayed('Error: $e');
 
-          killAll();
-          return;
-        }
-      } catch (_) {}
+      killAll();
     }
   }
 }

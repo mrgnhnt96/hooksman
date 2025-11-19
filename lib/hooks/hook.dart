@@ -70,9 +70,13 @@ part 'parts/pre_push_hook.dart';
 /// to specify the statuses of files to
 /// include or exclude, such as `added`, `modified`, or `deleted`.
 ///
-/// The `backupFiles` parameter specifies whether the original
-/// files should be backed up before running
-/// the hook.
+/// The `runInParallel` parameter allows you to specify whether the top level
+/// tasks should be run in parallel. Defaults to `true`.
+///
+/// The `verbose` parameter allows you to specify whether the hook
+/// should be verbose, which will slow down the execution of the tasks
+/// and output detailed information about the tasks being executed.
+/// Defaults to `false`.
 /// {@endtemplate}
 sealed class Hook extends Equatable {
   const Hook({
@@ -102,6 +106,8 @@ sealed class Hook extends Equatable {
   /// Check out the git [docs](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-filterACDMRTUXB82308203) to view more options
   final String diffFilters;
   final List<HookTask> tasks;
+
+  /// Whether to run the top level tasks in parallel
   final bool runInParallel;
 
   final bool verbose;
