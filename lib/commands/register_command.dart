@@ -27,7 +27,7 @@ class RegisterCommand with PathsMixin {
 
     if (!definedHooksDir.existsSync()) {
       logger.err('No hooks defined');
-      return ([], 1);
+      return (<DefinedHook>[], 1);
     }
 
     final dartGlob = Glob('*.dart');
@@ -36,16 +36,29 @@ class RegisterCommand with PathsMixin {
       root: definedHooksDir.path,
     );
 
+    logger.detail('Found ${dartFound.length} Dart hook(s)');
+    for (final entity in dartFound) {
+      logger.detail(darkGray.wrap('  - ${fs.path.basename(entity.path)}'));
+    }
+
     final shellGlob = Glob('*.sh');
     final shellFound = shellGlob.listFileSystemSync(
       fs,
       root: definedHooksDir.path,
     );
 
+    logger.detail('Found ${shellFound.length} Shell hook(s)');
+    for (final entity in shellFound) {
+      logger.detail(
+        darkGray.wrap(
+          '  - ${fs.path.basename(entity.path)} (${entity.runtimeType})',
+        ),
+      );
+    }
+    logger.detail('');
+
     final definedHooks = [
-      for (final entity in dartFound)
-        if (entity is File) DefinedHook(entity.path),
-      for (final entity in shellFound)
+      for (final entity in dartFound.followedBy(shellFound))
         if (entity is File) DefinedHook(entity.path),
     ];
 
