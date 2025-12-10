@@ -24,7 +24,13 @@ class LabelMaker {
   static const warning = '⚠️';
   static const waiting = '-';
 
-  int get maxWidth => stdout.terminalColumns;
+  int get maxWidth {
+    try {
+      return stdout.terminalColumns;
+    } catch (_) {
+      return 1000;
+    }
+  }
 
   String? fileCount(int count) {
     final string = switch (count) {
