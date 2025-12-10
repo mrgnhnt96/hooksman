@@ -1,5 +1,12 @@
 <!--  -->
 
+# 3.1.2 | 12.9.25
+
+## Fixes
+
+- Fix issue where the label maker would throw an error if the terminal was not available
+  - Would impact if the user was running the hook in a non-terminal environment (such as vscode extensions)
+
 # 3.1.1 | 11.19.25
 
 ## Features
