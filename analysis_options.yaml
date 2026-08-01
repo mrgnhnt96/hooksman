@@ -21,6 +21,10 @@ analyzer:
     - "**/*.g.dart"
     - test/.test_coverage.dart
     - lib/generated_plugin_registrant.dart
+    # Gitignored nocterm checkout — conflicts with hosted package:nocterm.
+    - "gen/**"
+    # Upstream style; do not lint vendored nocterm_provider / nocterm_nested.
+    - "lib/src/vendor/**"
 
 linter:
   rules:

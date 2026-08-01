@@ -102,3 +102,6 @@ fi
 } >"${GEN_DIR}/.sync_meta"
 
 echo "Done. Vendored packages are under gen/ (gitignored)."
+
+# Copy unpublished nocterm packages into committed lib/src/vendor/ for pub.dev.
+bash "${ROOT}/tool/vendor_from_gen.sh"

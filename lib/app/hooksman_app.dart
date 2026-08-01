@@ -5,8 +5,8 @@ import 'package:hooksman/app/steps/footer/step_footer.dart';
 import 'package:hooksman/app/steps/initial/initial_step.dart';
 import 'package:hooksman/app/steps/running/running.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
+import 'package:hooksman/src/vendor/nocterm_provider/provider.dart';
 import 'package:nocterm/nocterm.dart';
-import 'package:nocterm_provider/provider.dart';
 
 class HooksmanApp extends StatefulComponent {
   const HooksmanApp({

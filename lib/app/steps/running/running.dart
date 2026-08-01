@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:hooksman/app/data/is_debug.dart';
 import 'package:hooksman/models/pending_task.dart';
+import 'package:hooksman/src/vendor/nocterm_provider/provider.dart';
 import 'package:nocterm/nocterm.dart';
-import 'package:nocterm_provider/provider.dart';
 
 part 'components/__file_count.dart';
 part 'components/__icon.dart';

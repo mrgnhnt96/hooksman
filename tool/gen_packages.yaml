@@ -2,12 +2,16 @@
 # Run: sip gen sync   (or: bash tool/sync_gen.sh)
 #
 # Each entry is cloned into gen/<name>/ at the pinned ref.
-# Nested packages under packages/ are available as path deps.
+# Nested packages under packages/ are available as the gen/ source of truth;
+# tool/vendor_from_gen.sh copies nocterm_provider + nocterm_nested into
+# lib/src/vendor/ (committed) for pub.dev publish. Hosted nocterm in
+# pubspec.yaml should match this pin's package version.
 
 packages:
   nocterm:
     repo: https://github.com/Norbert515/nocterm.git
     # Full SHA required — short SHAs are not fetchable as remote refs.
-    ref: 00f924f605287fe969abd70f517a17f5a7f14d38
-    # Keep the full checkout — hooksman needs the root package and
-    # packages/nocterm_provider + packages/nocterm_nested.
+    # Package version at this SHA: 0.8.0 (matches pub.dev / tag v0.8.0).
+    ref: c343b182adf2cf1dd7f906ee46a08d8c5c37fda7
+    # Keep the full checkout — hooksman needs packages/nocterm_provider
+    # + packages/nocterm_nested for the vendor step.
