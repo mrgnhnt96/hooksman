@@ -1,4 +1,12 @@
 hooks: dart run hooksman register
+
+gen:
+  sync:
+    (aliases): s
+    (command): bash tool/sync_gen.sh
+  clean:
+    (command): rm -rf gen
+
 build_runner:
   (aliases): br
   build:
@@ -22,6 +30,20 @@ lint:
 publish:
   (bail):
   (command):
+    - |
+      # Path deps to gen/ cannot be published to pub.dev.
+      if grep -E '^\s*path:\s*gen/' pubspec.yaml >/dev/null 2>&1; then
+        echo ""
+        echo "ERROR: pubspec.yaml still has path: gen/ dependencies."
+        echo "hooksman cannot be published to pub.dev while nocterm is vendored"
+        echo "via gen/. Keep using sip gen sync for local/dev."
+        echo ""
+        echo "Publish awaits hosted nocterm / nocterm_provider packages,"
+        echo "or inlining a non-TUI fallback. See README § Publishing."
+        echo ""
+        exit 1
+      fi
+    - sip gen sync
     - sip test --bail --recursive --concurrent
     - "{$lint}"
     - |
@@ -53,5 +75,7 @@ publish:
     git push --tags
 
 install:
+  - sip gen sync
   - rm -rf .dart_tool
+  - dart pub get
   - dart pub global activate . --source path --overwrite

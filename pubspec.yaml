@@ -24,8 +24,22 @@ dependencies:
   glob: ^2.1.2
   mason_logger: ^0.3.1
   meta: ^1.16.0
+  # Vendored via `sip gen sync` → gen/nocterm (see tool/gen_packages.yaml)
+  nocterm:
+    path: gen/nocterm
+  nocterm_provider:
+    path: gen/nocterm/packages/nocterm_provider
   scoped_deps: ^0.1.0+2
   uuid: ^4.5.1
+
+# Point nested nocterm packages at the same vendored checkout.
+dependency_overrides:
+  nocterm:
+    path: gen/nocterm
+  nocterm_nested:
+    path: gen/nocterm/packages/nocterm_nested
+  nocterm_provider:
+    path: gen/nocterm/packages/nocterm_provider
 
 dev_dependencies:
   build_runner: ^2.10.4
