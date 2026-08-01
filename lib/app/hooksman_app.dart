@@ -54,26 +54,38 @@ class _HooksmanAppState extends State<HooksmanApp> {
   Component build(BuildContext context) {
     final step = component.steps.current;
 
-    return Provider(
-      create: (_) => IsDebug(component.debug),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          HookHeader(
-            nameOfHook: component.nameOfHook,
-            pendingHook: component.pendingHook,
-            debug: component.debug,
-          ),
-          const SizedBox(height: 1),
-          if (step == Step.start)
-            const InitialStep()
-          else ...[
-            for (final task in component.pendingHook.topLevelTasks)
-              Running(task),
+    // Intercept Ctrl+C so nocterm does not call requestExit(0). Task kill /
+    // exit code 1 are handled by PendingHook's ProcessSignal listener and
+    // HookExecutor.
+    return Focusable(
+      focused: true,
+      onKeyEvent: (event) {
+        if (event.matches(LogicalKey.keyC, ctrl: true)) {
+          return true;
+        }
+        return false;
+      },
+      child: Provider(
+        create: (_) => IsDebug(component.debug),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            HookHeader(
+              nameOfHook: component.nameOfHook,
+              pendingHook: component.pendingHook,
+              debug: component.debug,
+            ),
+            const SizedBox(height: 1),
+            if (step == Step.start)
+              const InitialStep()
+            else ...[
+              for (final task in component.pendingHook.topLevelTasks)
+                Running(task),
+            ],
+            StepFooter(step),
           ],
-          StepFooter(step),
-        ],
+        ),
       ),
     );
   }

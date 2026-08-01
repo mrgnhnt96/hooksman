@@ -102,6 +102,14 @@ class HookExecutor {
         ),
         enableHotReload: false,
       ),
+      onCancel: () {
+        // Stop the nocterm event loop so runApp completes. Do not use
+        // shutdownApp()/requestExit — that would exit(0) and race the hook's
+        // intentional non-zero exit after Ctrl+C.
+        try {
+          TerminalBinding.instance.shutdown();
+        } catch (_) {}
+      },
     );
 
     steps.current = Step.running;
