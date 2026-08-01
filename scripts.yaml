@@ -31,21 +31,25 @@ publish:
   (bail):
   (command):
     - |
-      # Path deps to gen/ cannot be published to pub.dev.
+      # Path/git deps cannot be published to pub.dev.
       if grep -E '^\s*path:\s*gen/' pubspec.yaml >/dev/null 2>&1; then
         echo ""
         echo "ERROR: pubspec.yaml still has path: gen/ dependencies."
-        echo "hooksman cannot be published to pub.dev while nocterm is vendored"
-        echo "via gen/. Keep using sip gen sync for local/dev."
+        echo "Use hosted nocterm and committed lib/src/vendor/ copies of"
+        echo "nocterm_provider / nocterm_nested (sip gen sync runs vendor_from_gen)."
         echo ""
-        echo "Publish awaits hosted nocterm / nocterm_provider packages,"
-        echo "or inlining a non-TUI fallback. See README § Publishing."
+        exit 1
+      fi
+      if grep -E '^\s*(path|git):' pubspec.yaml >/dev/null 2>&1; then
+        echo ""
+        echo "ERROR: pubspec.yaml has path/git dependencies — not publishable."
         echo ""
         exit 1
       fi
     - sip gen sync
     - sip test --bail --recursive --concurrent
     - "{$lint}"
+    - dart pub publish --dry-run
     - |
       # Sync changelog and pubspec versions
       version=$(grep -m 1 "# " CHANGELOG.md | awk '{print $2}')

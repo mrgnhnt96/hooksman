@@ -8,3 +8,5 @@ barreler.yaml
 analysis_optoins.yaml
 hooks
 !lib/hooks/**
+tool/
+gen/
