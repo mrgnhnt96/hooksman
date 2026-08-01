@@ -41,7 +41,7 @@ import 'package:uuid/uuid.dart';
 ///
 /// ```dart
 /// Hook main() {
-///   return Hook(
+///   return PreCommitHook(
 ///     tasks: [MyCustomTask()],
 ///   );
 /// }

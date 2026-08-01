@@ -1,5 +1,4 @@
 import 'package:hooksman/deps/args.dart';
-import 'package:hooksman/deps/fs.dart';
 import 'package:hooksman/deps/logger.dart';
 import 'package:hooksman/deps/process.dart';
 import 'package:hooksman/services/git/git_checks_mixin.dart';
@@ -42,20 +41,17 @@ class GitService with GitChecksMixin {
     };
   }
 
+  /// Points Git at the managed shim directory (`hooks/_`), husky-style.
+  ///
+  /// Uses a project-relative path so clones work without re-configuring
+  /// absolute paths. User sources stay in `hooks/*.dart|*.sh`; Git never
+  /// writes into `.git/hooks`.
   Future<bool> setHooksDir() async {
-    final gitDir = this.gitDir;
-
-    final hooksDir = fs.directory(fs.path.join(gitDir, 'hooks'));
-
-    if (!hooksDir.existsSync()) {
-      hooksDir.createSync(recursive: true);
-    }
-
     final result = await process.run('git', [
       'config',
       '--local',
       'core.hooksPath',
-      hooksDir.path,
+      'hooks/_',
     ]);
 
     if (result.exitCode != 0) {
@@ -63,6 +59,28 @@ class GitService with GitChecksMixin {
         ..err('Failed to set hooks directory')
         ..detail('Error: ${result.stderr}');
 
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Unsets `core.hooksPath` so Git falls back to `.git/hooks`.
+  ///
+  /// Exit code 5 means the key was not set — treated as success.
+  Future<bool> unsetHooksDir() async {
+    final result = await process.run('git', [
+      'config',
+      '--local',
+      '--unset',
+      'core.hooksPath',
+    ]);
+
+    final code = result.exitCode;
+    if (code != 0 && code != 5) {
+      logger
+        ..err('Failed to unset hooks directory')
+        ..detail('Error: ${result.stderr}');
       return false;
     }
 
@@ -93,32 +111,45 @@ class GitService with GitChecksMixin {
       '-z',
     ]);
 
+    if (result.exitCode != 0) {
+      // Missing upstream / failed `@{u}` should not fail the hook — treat as
+      // no files (e.g. first push of a branch with no remote tracking ref).
+      if (diffArgs.contains('@{u}')) {
+        if (remoteName case final String remoteName) {
+          final currentBranch = await getCurrentBranch();
+          final upstream = '$remoteName/$currentBranch';
+
+          logger.detail('git diff with @{u} failed; retrying with $upstream');
+
+          return diffFiles(
+            diffArgs: [
+              for (final arg in diffArgs)
+                if (arg == '@{u}') upstream else arg,
+            ],
+            diffFilters: diffFilters,
+          );
+        }
+
+        logger.detail(
+          'git diff with @{u} failed and no remote was provided; '
+          'treating as empty file list',
+        );
+        return [];
+      }
+
+      logger.detail(
+        'git diff failed (exit ${result.exitCode}); treating as empty. '
+        'stderr: ${result.stderr}',
+      );
+      return [];
+    }
+
     final out = switch (result.stdout) {
       final String out => out.trim(),
       final Future<String> out => (await out).trim(),
     };
 
-    final files = out
-        .split('\x00')
-        .where((element) => element.isNotEmpty)
-        .toList();
-
-    if (remoteName case final String remoteName
-        when files.isEmpty && diffArgs.contains('@{u}')) {
-      final currentBranch = await getCurrentBranch();
-
-      final upstream = '$remoteName/$currentBranch';
-
-      return diffFiles(
-        diffArgs: [
-          for (final arg in diffArgs)
-            if (arg == '@{u}') upstream else arg,
-        ],
-        diffFilters: diffFilters,
-      );
-    }
-
-    return files;
+    return out.split('\x00').where((element) => element.isNotEmpty).toList();
   }
 
   Future<String> getCurrentBranch() async {

@@ -20,3 +20,5 @@ dirs:
       - "hooks/*.dart"
       - "entrypoint/execute_hook.dart"
       - "utils/all_files.dart"
+      - "models/hook_context.dart"
+      - "deps/hook_context.dart"

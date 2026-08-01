@@ -4,8 +4,10 @@
 
 export 'package:glob/glob.dart';
 
+export 'deps/hook_context.dart';
 export 'entrypoint/execute_hook.dart';
 export 'hooks/hook.dart';
+export 'models/hook_context.dart';
 export 'tasks/dart_task.dart';
 export 'tasks/hook_task.dart';
 export 'tasks/parallel_task.dart';

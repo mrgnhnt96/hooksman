@@ -1,4 +1,5 @@
 import 'package:hooksman/commands/register_command.dart';
+import 'package:hooksman/commands/uninstall_command.dart';
 import 'package:hooksman/deps/args.dart';
 import 'package:hooksman/deps/logger.dart';
 
@@ -8,7 +9,8 @@ Usage: hooksman <command>
 Generate git hooks and tasks using Dart scripts and Shell commands.
 
 Commands:
-  [register]  Register git hooks
+  [register]   Register git hooks (default)
+  uninstall    Unset core.hooksPath and remove managed hooks/_ shims
 ''';
 
 class GitHookRunner {
@@ -18,6 +20,8 @@ class GitHookRunner {
     switch (args.path) {
       case [] || ['register']:
         return const RegisterCommand().run();
+      case ['uninstall']:
+        return const UninstallCommand().run();
     }
 
     logger.write(_usage);

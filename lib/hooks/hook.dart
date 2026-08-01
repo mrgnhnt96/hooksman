@@ -4,6 +4,7 @@ import 'package:hooksman/tasks/hook_task.dart';
 
 part 'hook.g.dart';
 part 'parts/any_hook.dart';
+part 'parts/commit_msg_hook.dart';
 part 'parts/pre_commit_hook.dart';
 part 'parts/pre_push_hook.dart';
 
@@ -17,14 +18,14 @@ part 'parts/pre_push_hook.dart';
 ///
 /// ## Usage
 ///
-/// To create a hook, instantiate the `Hook` class with the desired
-/// tasks and optional parameters:
+/// To create a hook, instantiate a concrete hook class such as
+/// [PreCommitHook], [PrePushHook], [CommitMsgHook], or [AnyHook]:
 ///
 /// ```dart
 /// import 'package:hooksman/hooksman.dart';
 ///
 /// Hook main() {
-///   return Hook(
+///   return PreCommitHook(
 ///     tasks: [
 ///       ReRegisterHooks(),
 ///       ShellTask(
