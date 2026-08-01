@@ -18,6 +18,9 @@ class Compiler {
   })
   ctor = Process.run;
 
+  /// Overridable for tests (`Platform.isWindows` is not mockable).
+  static bool Function() isWindows = () => Platform.isWindows;
+
   Future<ProcessResult> compile({
     required String file,
     required String outFile,
@@ -41,6 +44,11 @@ class Compiler {
     }
 
     await fs.file(file).copy(outFile);
+
+    // chmod is not available / not needed on Windows.
+    if (isWindows()) {
+      return ProcessResult(0, 0, '', '');
+    }
 
     final process = ctor(
       'chmod',

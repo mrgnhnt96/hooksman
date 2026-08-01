@@ -122,7 +122,7 @@ class _OneShellTask extends HookTask {
     };
 
     final result = await Process.run(coreCommand, [
-      '-c',
+      if (Platform.isWindows) '/c' else '-c',
       [if (cwd case final dir?) 'cd $dir && ', command].join(),
     ]);
 
