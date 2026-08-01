@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:hooksman/models/resolved_hook_task.dart';
 import 'package:hooksman/tasks/hook_task.dart';
+import 'package:nocterm/nocterm.dart';
 
-class PendingTask {
+class PendingTask extends ChangeNotifier {
   PendingTask({
     required this.files,
     required this.resolvedTask,
@@ -64,8 +65,14 @@ class PendingTask {
   }) => resolvedTask.original.run(
     files,
     print: print,
-    completeTask: completeTask,
-    startTask: startTask,
+    completeTask: (task, code) {
+      completeTask(task, code);
+      notifyListeners();
+    },
+    startTask: (task) {
+      startTask(task);
+      notifyListeners();
+    },
     workingDirectory: workingDirectory,
   );
 
@@ -115,6 +122,7 @@ class PendingTask {
 
     _code = code;
     _codeCompleter.complete(code);
+    notifyListeners();
   }
 
   void kill() {

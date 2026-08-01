@@ -1,11 +1,23 @@
+import 'package:async/async.dart';
+import 'package:hooksman/app/data/steps.dart';
+import 'package:hooksman/app/hooksman_app.dart';
 import 'package:hooksman/deps/args.dart';
 import 'package:hooksman/deps/git.dart';
 import 'package:hooksman/deps/logger.dart';
-import 'package:hooksman/entrypoint/hook_execution/label_maker.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
 import 'package:hooksman/hooks/hook.dart';
-import 'package:hooksman/utils/multi_line_progress.dart';
 import 'package:mason_logger/mason_logger.dart';
+import 'package:nocterm/nocterm.dart';
+
+/// Exit code after successful tasks given the post-task file list.
+///
+/// Only [PreCommitHook] without [PreCommitHook.allowEmpty] fails when empty.
+int postSuccessExitCode(Hook hook, List<String> files) {
+  if (hook case PreCommitHook(allowEmpty: false)) {
+    if (files.isEmpty) return 1;
+  }
+  return 0;
+}
 
 class HookExecutor {
   const HookExecutor(this.hook, {required this.hookName});
@@ -63,7 +75,8 @@ class HookExecutor {
 
     final pendingHook = PendingHook(hook.resolve(allFiles), logger: logger);
 
-    if (!pendingHook.topLevelTasks.any((e) => e.shouldAlwaysRun)) {
+    if (!hook.shouldRunOnEmpty &&
+        !pendingHook.topLevelTasks.any((e) => e.shouldAlwaysRun)) {
       if (pendingHook.topLevelTasks.every((e) => e.files.isEmpty)) {
         logger.info(
           darkGray.wrap('Skipping $hookName hook, no files match any tasks'),
@@ -74,53 +87,64 @@ class HookExecutor {
 
     final context = await git.prepareFiles();
 
-    final labelMaker = LabelMaker(
-      pendingHook: pendingHook,
-      nameOfHook: hookName,
-      debug: debug,
-    );
-
     logger.detail('Starting tasks');
     await _wait(durations.short);
 
-    final progress = MultiLineProgress(createLabel: labelMaker.create)..start();
+    final steps = Steps();
 
+    final runner = CancelableOperation.fromFuture(
+      runApp(
+        HooksmanApp(
+          pendingHook: pendingHook,
+          nameOfHook: hookName,
+          debug: debug,
+          steps: steps,
+        ),
+        enableHotReload: false,
+      ),
+    );
+
+    steps.current = Step.running;
     await pendingHook.start();
     await pendingHook.wait();
 
-    if (pendingHook.wasKilled) {
-      progress
-        ..dispose()
-        ..print();
+    final failed = pendingHook.topLevelTasks.any((task) {
+      final code = task.code;
+      return code != null && code != 0;
+    });
 
+    if (pendingHook.wasKilled) {
+      steps.current = Step.quit;
       logger.detail('Hook was killed');
-      if (logger.level.index == Level.verbose.index) {
-        logger.flush();
+    } else if (failed) {
+      steps.current = Step.error;
+      for (final task in pendingHook.topLevelTasks) {
+        final code = task.code;
+        if (code != null && code != 0) {
+          logger.detail(
+            'Task failed: ${task.resolvedTask.original.resolvedName}',
+          );
+        }
       }
     } else {
-      await progress.closeNextFrame();
-
-      logger
-        ..detail('Tasks finished')
-        ..flush()
-        ..write('\n');
+      steps.current = Step.complete;
+      logger.detail('Tasks finished');
     }
 
-    var failed = false;
-    for (final task in pendingHook.topLevelTasks) {
-      if (task.code case final int code when code != 0) {
-        failed = true;
-        logger.detail(
-          'Task failed: ${task.resolvedTask.original.resolvedName}',
-        );
-      }
+    // Let the final step paint before tearing down the TUI.
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    await runner.cancel();
 
-      if (failed) {
-        logger
-          ..detail('stopping hook tasks')
-          ..flush();
-        return 1;
-      }
+    if (logger.level.index == Level.verbose.index || !pendingHook.wasKilled) {
+      logger.flush();
+    }
+    if (!pendingHook.wasKilled) {
+      logger.write('\n');
+    }
+
+    if (pendingHook.wasKilled || failed) {
+      logger.detail('stopping hook tasks');
+      return 1;
     }
 
     if (hook is PreCommitHook) {
@@ -138,21 +162,21 @@ class HookExecutor {
       logger.detail('Skipped applying modifications for $hookName');
     }
 
-    if (hook case PreCommitHook(allowEmpty: true)) {
-      logger.detail('--FINISHED--');
-      return 0;
-    }
+    // Only PreCommitHook (without allowEmpty) should fail when tasks left
+    // nothing to commit. Other hooks succeed after successful task runs.
+    if (hook case PreCommitHook(allowEmpty: false)) {
+      final files = await git.diffFiles(
+        diffArgs: hook.diffArgs,
+        diffFilters: hook.diffFilters,
+      );
 
-    final files = await git.diffFiles(
-      diffArgs: hook.diffArgs,
-      diffFilters: hook.diffFilters,
-    );
-
-    if (files.isEmpty) {
-      logger
-        ..info('No changes to commit')
-        ..detail('--FINISHED--');
-      return 1;
+      final code = postSuccessExitCode(hook, files);
+      if (code != 0) {
+        logger
+          ..info('No changes to commit')
+          ..detail('--FINISHED--');
+        return code;
+      }
     }
 
     logger.detail('--FINISHED--');
