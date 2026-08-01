@@ -28,18 +28,68 @@ dart pub add hooksman --dev
 
 Then, run `dart pub get` to install the package.
 
+## Development
+
+Unpublished nocterm packages are vendored into `gen/` (gitignored):
+
+```sh
+sip gen sync   # clone pins from tool/gen_packages.yaml → gen/
+sip install    # sync + pub get + global activate
+```
+
+Add or bump pins in `tool/gen_packages.yaml`, then re-run `sip gen sync`.
+
+### Publishing
+
+`path: gen/` dependencies block `dart pub publish`. The `sip publish` script fails early with a clear message while nocterm is vendored this way. Publishing awaits hosted `nocterm` / `nocterm_provider` packages (or an optional non-TUI fallback). Do not commit `gen/`.
+
 ## Register Hooks
 
 To register your hooks with Git, run the following command:
 
 ```sh
 dart run hooksman
+# or explicitly:
+dart run hooksman register
 ```
 
-This command will compile your hooks and copy the executables to the hooks directory.
+This compiles your Dart hooks into `.dart_tool/hooksman/executables/`, writes thin shims into `hooks/_/`, and sets `core.hooksPath` to `hooks/_` (husky-style). User sources in `hooks/*.dart` and `hooks/*.sh` are never deleted.
 
-> [!WARNING]
-> The `hooksman` package will overwrite **all** existing hooks in the `.git/hooks` directory with the new hooks. Make sure to back up any existing hooks before running the `hooksman` command.
+Layout after register:
+
+```tree
+.
+├── hooks
+│   ├── pre_commit.dart      # authored source
+│   ├── post-commit.sh       # authored source
+│   └── _                    # managed shims (gitignored; do not edit)
+│       ├── pre-commit
+│       └── post-commit
+├── .dart_tool/hooksman/executables/   # compiled binaries (local)
+└── pubspec.yaml
+```
+
+> [!IMPORTANT]
+> After cloning a repo, run `dart run hooksman register` so compiled binaries exist. Shims under `hooks/_` invoke `.dart_tool/hooksman/executables/<name>` and forward args/stdin.
+
+> [!NOTE]
+> Hooksman no longer writes into or wipes `.git/hooks`. Existing hooks there are left alone; Git uses `hooks/_` via `core.hooksPath`.
+
+### Uninstall
+
+```sh
+dart run hooksman uninstall
+```
+
+Unsets `core.hooksPath` and removes managed shims under `hooks/_` (keeps `.gitignore` / `README.md`). Authored sources are untouched.
+
+### Skipping hooks
+
+Set `HOOKSMAN=0` (or `SKIP=1` / `SKIP=true`) to no-op hooks early in the shim and in Dart execution:
+
+```sh
+HOOKSMAN=0 git commit -m "wip"
+```
 
 ## Dart Hooks
 
@@ -57,7 +107,7 @@ Create a `hooks` directory in the root of your project to store your hooks.
 
 ### Create Hook
 
-Create your hooks as Dart files in the `hooks` directory. Each file should contain a `main` function that returns the `Hook` type, imported from the `hooksman` package.
+Create your hooks as Dart files in the `hooks` directory. Each file should contain a `main` function that returns a `Hook` subtype, imported from the `hooksman` package.
 
 ```dart
 // hooks/pre_commit.dart
@@ -75,11 +125,33 @@ The pre-defined hooks are:
 
 - `PreCommitHook`: Runs before a commit is made
 - `PrePushHook`: Runs before a push is made
+- `CommitMsgHook`: Runs for `commit-msg`; binds `$1` as `messageFile` / `hookContext.messageFile`
 - `AnyHook`: A general purpose hook that can be used to create custom hooks
+
+Git hook args and stdin are forwarded into `hookContext` during execution.
+
+```dart
+// hooks/commit_msg.dart
+import 'package:hooksman/hooksman.dart';
+
+Hook main() {
+  return CommitMsgHook(
+    tasks: [
+      ShellTask.always(
+        name: 'Ensure message file exists',
+        commands: (_) {
+          final file = hookContext.messageFile ?? '';
+          return ['test -f "$file"'];
+        },
+      ),
+    ],
+  );
+}
+```
 
 > [!NOTE]
 >
-> `hooksman` scans the `hooks` directory for Dart files to use as hooks. You can organize your code by placing additional Dart files in subdirectories within the `hooks` directory. These files can be imported into your hook files and will not be picked up by `hooksman` as hooks.
+> `hooksman` scans the `hooks` directory for top-level Dart/shell files to use as hooks. You can organize your code by placing additional Dart files in subdirectories within the `hooks` directory. These files can be imported into your hook files and will not be picked up by `hooksman` as hooks. The managed `hooks/_` directory is ignored.
 >
 > ```bash
 > .
@@ -87,6 +159,7 @@ The pre-defined hooks are:
 >     ├── tasks
 >     │   ├── some_dart_task.dart # ignored
 >     │   └── ...
+>     ├── _                      # managed shims
 >     └── pre_commit.dart # picked up
 > ```
 
@@ -100,7 +173,7 @@ The name of the hook is derived from the file name. For example, a file named `p
 
 ## Shell Hooks
 
-You can create stand alone shell hooks by creating shell files within the hooks directory. These files will be copied to the `.git/hooks` directory and executed when the corresponding Git hook event occurs.
+You can create stand alone shell hooks by creating shell files within the hooks directory. These are prepared under `.dart_tool/hooksman/executables/` and invoked via shims in `hooks/_`.
 
 ### Create Shell Hook
 
@@ -126,13 +199,7 @@ echo "Running post-commit hook"
 
 > [!TIP]
 >
-> You can execute the dart hooks from the shell hooks by using the name of the executable file
->
-> ```bash
-> #!/bin/sh
->
-> ./pre-commit # Execute the pre-commit dart hook
-> ```
+> From a shell hook you can invoke another registered hook by name via its shim, e.g. `hooks/_/pre-commit` (or the executable under `.dart_tool/hooksman/executables/`).
 
 ## Tasks
 
@@ -251,13 +318,13 @@ ParallelTasks(
 
 ### ReRegisterHooks
 
-It can be easy to forget to re-register the hooks with Git after making changes. Re-registering the hooks is necessary to ensure that the changes are applied, since your dart files are compiled into executables then copied to the `.git/hooks` directory.
+It can be easy to forget to re-register the hooks with Git after making changes. Re-registering compiles sources into `.dart_tool/hooksman/` and refreshes shims in `hooks/_`.
 
-To automate this process, you can use the `ReRegisterHooks` task. This task will re-register your hooks with Git whenever any hook files are created, modified, or deleted.
+To automate this process, you can use the `ReRegisterHooks` task. This task will re-register your hooks whenever any authored hook files are created, modified, or deleted (managed `hooks/_` shims are excluded).
 
 ```dart
 Hook main() {
-  return Hook(
+  return PreCommitHook(
     tasks: [
       ReRegisterHooks(),
     ],
