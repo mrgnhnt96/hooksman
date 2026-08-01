@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' show ProcessResult;
 
 import 'package:file/file.dart';
 import 'package:file/memory.dart';
@@ -350,85 +350,122 @@ void main() {
 
     group('#copyExecutables', () {
       test(
-        'should create the hooks directory when it does not exist',
+        'should create the hooks/_ directory when it does not exist',
         () async {
           final code = cmd.copyExecutables(
             [],
-            gitHooksDir: fs.path.join('.git', 'hooks'),
+            gitHooksDir: fs.path.join('hooks', '_'),
           );
 
           expect(code, 0);
-          expect(
-            fs.directory(fs.path.join('.git', 'hooks')).existsSync(),
-            isTrue,
-          );
+          expect(fs.directory(fs.path.join('hooks', '_')).existsSync(), isTrue);
         },
       );
 
-      test('should copy executables from dart tool to git hooks', () async {
+      test('should write shims that exec dart_tool binaries', () async {
         fs.directory('executables').createSync(recursive: true);
 
         final executables = [
           fs.file(
-            fs.path.join('.dart_tool', 'hooksman', 'execs', 'pre-commit'),
+            fs.path.join('.dart_tool', 'hooksman', 'executables', 'pre-commit'),
           ),
-          fs.file(fs.path.join('.dart_tool', 'hooksman', 'execs', 'pre-push')),
+          fs.file(
+            fs.path.join('.dart_tool', 'hooksman', 'executables', 'pre-push'),
+          ),
         ];
 
         for (final exe in executables) {
-          exe
-            ..createSync(recursive: true)
-            ..writeAsStringSync(fs.path.basename(exe.path));
+          exe.createSync(recursive: true);
         }
 
-        final hooksDir = fs.directory(fs.path.join('.git', 'hooks'));
+        final hooksDir = fs.directory(fs.path.join('hooks', '_'));
 
         cmd.copyExecutables(
           executables.map((e) => e.path).toList(),
           gitHooksDir: hooksDir.path,
         );
 
-        final hooks = hooksDir.listSync();
+        final hooks = hooksDir.listSync().where((e) {
+          if (e is! File) return false;
+          final name = fs.path.basename(e.path);
+          return name != '.gitignore' && name != 'README.md';
+        }).toList();
 
         expect(
           hooks.map((e) => e.path),
           unorderedEquals([
-            fs.path.join('.git', 'hooks', 'pre-commit'),
-            fs.path.join('.git', 'hooks', 'pre-push'),
+            fs.path.join('hooks', '_', 'pre-commit'),
+            fs.path.join('hooks', '_', 'pre-push'),
           ]),
         );
 
         for (final hook in hooks) {
           final content = fs.file(hook.path).readAsStringSync();
+          final name = fs.path.basename(hook.path);
 
-          expect(content, fs.path.basename(hook.path));
+          expect(content, contains('#!/usr/bin/env sh'));
+          expect(content, contains('HOOKSMAN'));
+          expect(content, contains(r'[ "${SKIP-}" = "1" ] && exit 0'));
+          expect(content, contains(r'[ "${SKIP-}" = "true" ] && exit 0'));
+          expect(
+            content,
+            contains('../../.dart_tool/hooksman/executables/$name'),
+          );
+          expect(content, contains(r'"$@"'));
         }
       });
 
-      test('should create hooks dir when it does not exist', () async {
-        cmd.copyExecutables([], gitHooksDir: fs.path.join('.git', 'hooks'));
+      test('should preserve existing README.md', () async {
+        final hooks = fs.directory(fs.path.join('hooks', '_'))
+          ..createSync(recursive: true);
+        hooks.childFile('README.md').writeAsStringSync('custom readme\n');
+        hooks.childFile('.gitignore').writeAsStringSync('*\n');
+        hooks.childFile('old-shim').writeAsStringSync('x');
+
+        cmd.copyExecutables([], gitHooksDir: hooks.path);
 
         expect(
-          fs.directory(fs.path.join('.git', 'hooks')).existsSync(),
-          isTrue,
+          hooks.childFile('README.md').readAsStringSync(),
+          'custom readme\n',
         );
+        expect(hooks.childFile('.gitignore').existsSync(), isTrue);
+        expect(hooks.childFile('old-shim').existsSync(), isFalse);
       });
 
-      test('should delete hooks dir when it does exist', () async {
-        final hooks = fs.directory(fs.path.join('.git', 'hooks'))
+      test('should not touch .git/hooks', () async {
+        final gitHooks = fs.directory(fs.path.join('.git', 'hooks'))
+          ..createSync(recursive: true);
+        gitHooks.childFile('pre-commit').writeAsStringSync('original');
+
+        cmd.copyExecutables([], gitHooksDir: fs.path.join('hooks', '_'));
+
+        expect(gitHooks.childFile('pre-commit').readAsStringSync(), 'original');
+        expect(fs.directory(fs.path.join('hooks', '_')).existsSync(), isTrue);
+      });
+
+      test('should create hooks/_ when it does not exist', () async {
+        cmd.copyExecutables([], gitHooksDir: fs.path.join('hooks', '_'));
+
+        expect(fs.directory(fs.path.join('hooks', '_')).existsSync(), isTrue);
+      });
+
+      test('should remove old shims but keep .gitignore', () async {
+        final hooks = fs.directory(fs.path.join('hooks', '_'))
           ..createSync(recursive: true)
-          ..childFile('a-file-to-delete').createSync();
+          ..childFile('a-file-to-delete').createSync()
+          ..childFile('.gitignore').writeAsStringSync('*\n');
 
         cmd.copyExecutables([], gitHooksDir: hooks.path);
 
         expect(hooks.existsSync(), isTrue);
         expect(hooks.childFile('a-file-to-delete').existsSync(), isFalse);
+        expect(hooks.childFile('.gitignore').existsSync(), isTrue);
       });
 
-      test('should return 0 when hooks are copied successfully', () async {
+      test('should return 0 when shims are written successfully', () async {
         final code = cmd.copyExecutables(
           [],
-          gitHooksDir: fs.path.join('.git', 'hooks'),
+          gitHooksDir: fs.path.join('hooks', '_'),
         );
 
         expect(code, 0);
@@ -476,6 +513,65 @@ void main() {
         expect(code, 1);
 
         verify(() => logger.err(any())).called(1);
+      });
+    });
+
+    group('windows path separators', () {
+      setUp(() {
+        fs = MemoryFileSystem(style: FileSystemStyle.windows);
+        git = _MockGitService();
+        logger = _MockLogger();
+        compiler = _MockCompiler();
+        cmd = const RegisterCommand();
+      });
+
+      test('shim relativeBin always uses forward slashes', () async {
+        final exeDir = fs.directory(r'.dart_tool\hooksman\executables')
+          ..createSync(recursive: true);
+        final exe = exeDir.childFile('pre-commit')..createSync();
+
+        cmd.copyExecutables([
+          exe.path,
+        ], gitHooksDir: fs.path.join('hooks', '_'));
+
+        final shim = fs.file(fs.path.join('hooks', '_', 'pre-commit'));
+        final content = shim.readAsStringSync();
+        expect(content, contains('../../.dart_tool/hooksman/executables/'));
+        expect(
+          content.split('\n').where((l) => l.contains('executables')),
+          everyElement(isNot(contains(r'\'))),
+        );
+      });
+
+      test('generated dart import URI uses forward slashes', () async {
+        when(
+          () => compiler.compile(
+            file: any(named: 'file'),
+            outFile: any(named: 'outFile'),
+          ),
+        ).thenAnswer((_) => Future.value(ProcessResult(0, 0, '', '')));
+
+        final hooksDartToolDir = fs.directory(
+          fs.path.join('.dart_tool', 'hooksman'),
+        );
+
+        cmd
+            .prepareExecutables(
+              [DefinedHook(fs.path.join('hooks', 'pre_commit.dart'))],
+              hooksDartToolDir: hooksDartToolDir,
+              executablesDir: fs.directory('executables'),
+            )
+            .toList();
+
+        final content = await fs
+            .file(fs.path.join('.dart_tool', 'hooksman', 'pre_commit.dart'))
+            .readAsString();
+
+        expect(
+          content,
+          contains("import '../../hooks/pre_commit.dart' as hook;"),
+        );
+        expect(content, isNot(contains(r"import '..\..\hooks")));
       });
     });
   });

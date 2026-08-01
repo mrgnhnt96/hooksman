@@ -62,6 +62,22 @@ void main() {
       );
     });
 
+    group('#root (windows)', () {
+      setUp(() {
+        fs = MemoryFileSystem(style: FileSystemStyle.windows);
+        mixin = const _TestMixin();
+      });
+
+      test('stops at drive root without infinite walk', () {
+        final driveRoot = fs.directory(r'C:\')..createSync();
+        final nested = driveRoot.childDirectory('apps').childDirectory('pkg')
+          ..createSync(recursive: true);
+        fs.currentDirectory = nested;
+
+        expect(mixin.root, isNull);
+      });
+    });
+
     group('#gitDir', () {
       test('returns null when root is null', () {
         expect(mixin.gitDir, isNull);
@@ -106,36 +122,32 @@ void main() {
     });
 
     group('#gitHooksDir', () {
-      test('returns null when gitDir is null', () {
+      test('returns null when root is null', () {
         expect(mixin.gitHooksDir, isNull);
       });
 
-      test('returns the hooks directory when .git directory is found', () {
+      test('returns hooks/_ when project root is found', () {
         final rootDir = fs.directory('/project')..createSync();
         fs.currentDirectory = rootDir;
         rootDir.childFile('pubspec.yaml').createSync();
-        rootDir.childDirectory('.git').createSync();
 
-        expect(mixin.gitHooksDir, equals('/project/.git/hooks'));
+        expect(mixin.gitHooksDir, equals('/project/hooks/_'));
       });
 
-      test('returns the hooks directory when .git directory is '
-          'found in a parent directory', () {
+      test('returns hooks/_ when pubspec is in a parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
         fs.currentDirectory = subDir;
         rootDir.childFile('pubspec.yaml').createSync();
-        rootDir.childDirectory('.git').createSync();
 
-        expect(mixin.gitHooksDir, equals('/project/.git/hooks'));
+        expect(mixin.gitHooksDir, equals('/project/hooks/_'));
       });
 
-      test('returns null when .git directory is not '
-          'found in any parent directory', () {
+      test('returns null when pubspec is not found '
+          'in any parent directory', () {
         final rootDir = fs.directory('/project')..createSync();
         final subDir = rootDir.childDirectory('subdir')..createSync();
         fs.currentDirectory = subDir;
-        rootDir.childFile('pubspec.yaml').createSync();
 
         expect(mixin.gitHooksDir, isNull);
       });

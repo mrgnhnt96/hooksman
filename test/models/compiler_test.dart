@@ -35,6 +35,7 @@ void main() {
       compiler = const Compiler();
       mockProcess = MockProcess();
       Compiler.ctor = mockProcess.call;
+      Compiler.isWindows = () => Platform.isWindows;
     });
 
     void stub() {
@@ -124,6 +125,33 @@ void main() {
 
         expect(out.readAsStringSync(), file.readAsStringSync());
         return;
+      });
+
+      test('skips chmod on Windows', () async {
+        Compiler.isWindows = () => true;
+        addTearDown(() => Compiler.isWindows = () => Platform.isWindows);
+
+        fs.file('script.sh').writeAsStringSync('#!/bin/sh\n');
+        stub();
+
+        final result = await compiler.prepareShellExecutable(
+          file: 'script.sh',
+          outFile: 'out.sh',
+        );
+
+        expect(result.exitCode, 0);
+        verifyNever(
+          () => mockProcess.call(
+            'chmod',
+            any(),
+            environment: any(named: 'environment'),
+            includeParentEnvironment: any(named: 'includeParentEnvironment'),
+            runInShell: any(named: 'runInShell'),
+            stderrEncoding: any(named: 'stderrEncoding'),
+            stdoutEncoding: any(named: 'stdoutEncoding'),
+            workingDirectory: any(named: 'workingDirectory'),
+          ),
+        );
       });
     });
   });
