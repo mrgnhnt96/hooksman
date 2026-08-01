@@ -1,5 +1,19 @@
 <!--  -->
 
+# 3.2.0 | 7.31.26
+
+## Features
+
+- Migrate hook progress UI to nocterm TUI
+- Add husky-style `hooks/_` path, `uninstall`, and `CommitMsgHook`
+- Depend on hosted `nocterm`; vendor unpublished `nocterm_provider` / `nocterm_nested` under `lib/src/vendor/` for pub.dev publish
+
+## Fixes
+
+- Exit cleanly on Ctrl-C during nocterm UI
+- Skip chmod and use cmd on Windows
+- Restore equatable codegen and builder config
+
 # 3.1.2 | 12.9.25
 
 ## Fixes

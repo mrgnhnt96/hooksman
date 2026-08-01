@@ -30,18 +30,18 @@ Then, run `dart pub get` to install the package.
 
 ## Development
 
-Unpublished nocterm packages are vendored into `gen/` (gitignored):
+`nocterm` is a hosted pub.dev dependency. Unpublished siblings (`nocterm_provider`, `nocterm_nested`) are cloned into `gen/` (gitignored), then copied into committed `lib/src/vendor/` for publish:
 
 ```sh
-sip gen sync   # clone pins from tool/gen_packages.yaml → gen/
+sip gen sync   # clone pins → gen/, then vendor into lib/src/vendor/
 sip install    # sync + pub get + global activate
 ```
 
-Add or bump pins in `tool/gen_packages.yaml`, then re-run `sip gen sync`.
+Add or bump pins in `tool/gen_packages.yaml`, then re-run `sip gen sync` (runs `tool/vendor_from_gen.sh`). Do not commit `gen/`; do commit `lib/src/vendor/`.
 
 ### Publishing
 
-`path: gen/` dependencies block `dart pub publish`. The `sip publish` script fails early with a clear message while nocterm is vendored this way. Publishing awaits hosted `nocterm` / `nocterm_provider` packages (or an optional non-TUI fallback). Do not commit `gen/`.
+`sip publish` refuses `path: gen/` (and other path/git) deps, re-syncs/vendors, tests, lints, then dry-runs and publishes. Hosted `nocterm` must stay compatible with the pin in `tool/gen_packages.yaml`.
 
 ## Register Hooks
 
