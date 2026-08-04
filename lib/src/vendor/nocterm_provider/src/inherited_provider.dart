@@ -35,8 +35,8 @@ typedef Dispose<T> = void Function(BuildContext context, T value);
 /// - [InheritedProvider]
 /// - [DeferredStartListening], a variant of this typedef for more advanced
 ///   listening.
-typedef StartListening<T> = VoidCallback Function(
-    InheritedContext<T?> element, T value);
+typedef StartListening<T> =
+    VoidCallback Function(InheritedContext<T?> element, T value);
 
 /// A generic implementation of an [InheritedComponent].
 ///
@@ -65,16 +65,16 @@ class InheritedProvider<T> extends SingleChildStatelessComponent {
     this.builder,
     bool? lazy,
     Component? child,
-  })  : _lazy = lazy,
-        _delegate = _CreateInheritedProvider(
-          create: create,
-          update: update,
-          updateShouldNotify: updateShouldNotify,
-          debugCheckInvalidValueType: debugCheckInvalidValueType,
-          startListening: startListening,
-          dispose: dispose,
-        ),
-        super(key: key, child: child);
+  }) : _lazy = lazy,
+       _delegate = _CreateInheritedProvider(
+         create: create,
+         update: update,
+         updateShouldNotify: updateShouldNotify,
+         debugCheckInvalidValueType: debugCheckInvalidValueType,
+         startListening: startListening,
+         dispose: dispose,
+       ),
+       super(key: key, child: child);
 
   /// Expose to its descendants an existing value,
   InheritedProvider.value({
@@ -85,13 +85,13 @@ class InheritedProvider<T> extends SingleChildStatelessComponent {
     bool? lazy,
     this.builder,
     Component? child,
-  })  : _lazy = lazy,
-        _delegate = _ValueInheritedProvider(
-          value: value,
-          updateShouldNotify: updateShouldNotify,
-          startListening: startListening,
-        ),
-        super(key: key, child: child);
+  }) : _lazy = lazy,
+       _delegate = _ValueInheritedProvider(
+         value: value,
+         updateShouldNotify: updateShouldNotify,
+         startListening: startListening,
+       ),
+       super(key: key, child: child);
 
   InheritedProvider._constructor({
     Key? key,
@@ -99,9 +99,9 @@ class InheritedProvider<T> extends SingleChildStatelessComponent {
     bool? lazy,
     this.builder,
     Component? child,
-  })  : _lazy = lazy,
-        _delegate = delegate,
-        super(key: key, child: child);
+  }) : _lazy = lazy,
+       _delegate = delegate,
+       super(key: key, child: child);
 
   final _Delegate<T> _delegate;
   final bool? _lazy;
@@ -304,8 +304,8 @@ class _InheritedProviderScope<T> extends InheritedComponent {
     required this.debugType,
     required Component child,
     Key? key,
-  })  : assert(null is T),
-        super(key: key, child: child);
+  }) : assert(null is T),
+       super(key: key, child: child);
 
   final InheritedProvider<T> owner;
   final String debugType;
@@ -330,7 +330,7 @@ class _Dependency<T> {
 class _InheritedProviderScopeElement<T> extends InheritedElement
     implements InheritedContext<T> {
   _InheritedProviderScopeElement(_InheritedProviderScope<T> Component)
-      : super(Component);
+    : super(Component);
 
   bool _shouldNotifyDependents = false;
   bool _debugInheritLocked = false;
@@ -342,7 +342,8 @@ class _InheritedProviderScopeElement<T> extends InheritedElement
 
   @override
   InheritedElement? getElementForInheritedComponentOfExactType<
-      InheritedComponentType extends InheritedComponent>() {
+    InheritedComponentType extends InheritedComponent
+  >() {
     InheritedElement? inheritedElement;
 
     // An InheritedProvider<T>'s update tries to obtain a parent provider of
@@ -599,8 +600,8 @@ class _CreateInheritedProvider<T> extends _Delegate<T> {
     this.debugCheckInvalidValueType,
     this.startListening,
     this.dispose,
-  })  : assert(create != null || update != null),
-        _updateShouldNotify = updateShouldNotify;
+  }) : assert(create != null || update != null),
+       _updateShouldNotify = updateShouldNotify;
 
   final Create<T>? create;
   final T Function(BuildContext context, T? value)? update;

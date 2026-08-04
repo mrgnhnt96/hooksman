@@ -5,8 +5,8 @@ import 'package:hooksman/src/vendor/nocterm_nested/nested.dart';
 import 'consumer.dart';
 import 'provider.dart';
 
-typedef ValueComponentBuilder<T> = Component Function(
-    BuildContext context, T value, Component? child);
+typedef ValueComponentBuilder<T> =
+    Component Function(BuildContext context, T value, Component? child);
 
 /// Used by providers to determine whether dependents needs to be updated
 /// when the value exposed changes
@@ -40,8 +40,8 @@ class Selector0<T> extends SingleChildStatefulComponent {
     required this.selector,
     ShouldRebuild<T>? shouldRebuild,
     Component? child,
-  })  : _shouldRebuild = shouldRebuild,
-        super(key: key, child: child);
+  }) : _shouldRebuild = shouldRebuild,
+       super(key: key, child: child);
 
   /// A function that builds a Component tree from `child` and the last result of
   /// [selector].
@@ -76,7 +76,8 @@ class _Selector0State<T> extends SingleChildState<Selector0<T>> {
   Component buildWithChild(BuildContext context, Component? child) {
     final selected = component.selector(context);
 
-    final shouldInvalidateCache = oldComponent != component ||
+    final shouldInvalidateCache =
+        oldComponent != component ||
         (component._shouldRebuild != null &&
             component._shouldRebuild!(value as T, selected)) ||
         (component._shouldRebuild == null &&
@@ -156,12 +157,12 @@ class Selector<A, S> extends Selector0<S> {
     ShouldRebuild<S>? shouldRebuild,
     Component? child,
   }) : super(
-          key: key,
-          shouldRebuild: shouldRebuild,
-          builder: builder,
-          selector: (context) => selector(context, Provider.of(context)),
-          child: child,
-        );
+         key: key,
+         shouldRebuild: shouldRebuild,
+         builder: builder,
+         selector: (context) => selector(context, Provider.of(context)),
+         child: child,
+       );
 }
 
 /// {@macro provider.selector}
@@ -174,13 +175,13 @@ class Selector2<A, B, S> extends Selector0<S> {
     ShouldRebuild<S>? shouldRebuild,
     Component? child,
   }) : super(
-          key: key,
-          shouldRebuild: shouldRebuild,
-          builder: builder,
-          selector: (context) =>
-              selector(context, Provider.of(context), Provider.of(context)),
-          child: child,
-        );
+         key: key,
+         shouldRebuild: shouldRebuild,
+         builder: builder,
+         selector: (context) =>
+             selector(context, Provider.of(context), Provider.of(context)),
+         child: child,
+       );
 }
 
 /// {@macro provider.selector}
@@ -193,17 +194,17 @@ class Selector3<A, B, C, S> extends Selector0<S> {
     ShouldRebuild<S>? shouldRebuild,
     Component? child,
   }) : super(
-          key: key,
-          shouldRebuild: shouldRebuild,
-          builder: builder,
-          selector: (context) => selector(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-          ),
-          child: child,
-        );
+         key: key,
+         shouldRebuild: shouldRebuild,
+         builder: builder,
+         selector: (context) => selector(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+         ),
+         child: child,
+       );
 }
 
 /// {@macro provider.selector}
@@ -216,18 +217,18 @@ class Selector4<A, B, C, D, S> extends Selector0<S> {
     ShouldRebuild<S>? shouldRebuild,
     Component? child,
   }) : super(
-          key: key,
-          shouldRebuild: shouldRebuild,
-          builder: builder,
-          selector: (context) => selector(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-          ),
-          child: child,
-        );
+         key: key,
+         shouldRebuild: shouldRebuild,
+         builder: builder,
+         selector: (context) => selector(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+         ),
+         child: child,
+       );
 }
 
 /// {@macro provider.selector}
@@ -240,19 +241,19 @@ class Selector5<A, B, C, D, E, S> extends Selector0<S> {
     ShouldRebuild<S>? shouldRebuild,
     Component? child,
   }) : super(
-          key: key,
-          shouldRebuild: shouldRebuild,
-          builder: builder,
-          selector: (context) => selector(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-          ),
-          child: child,
-        );
+         key: key,
+         shouldRebuild: shouldRebuild,
+         builder: builder,
+         selector: (context) => selector(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+         ),
+         child: child,
+       );
 }
 
 /// {@macro provider.selector}
@@ -265,18 +266,18 @@ class Selector6<A, B, C, D, E, F, S> extends Selector0<S> {
     ShouldRebuild<S>? shouldRebuild,
     Component? child,
   }) : super(
-          key: key,
-          shouldRebuild: shouldRebuild,
-          builder: builder,
-          selector: (context) => selector(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-          ),
-          child: child,
-        );
+         key: key,
+         shouldRebuild: shouldRebuild,
+         builder: builder,
+         selector: (context) => selector(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+         ),
+         child: child,
+       );
 }

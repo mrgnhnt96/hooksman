@@ -27,14 +27,14 @@ class ListenableProvider<T extends Listenable?> extends InheritedProvider<T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          startListening: _startListening,
-          create: create,
-          dispose: dispose,
-          lazy: lazy,
-          builder: builder,
-          child: child,
-        );
+         key: key,
+         startListening: _startListening,
+         create: create,
+         dispose: dispose,
+         lazy: lazy,
+         builder: builder,
+         child: child,
+       );
 
   /// Provides an existing [Listenable].
   ListenableProvider.value({
@@ -44,13 +44,13 @@ class ListenableProvider<T extends Listenable?> extends InheritedProvider<T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super.value(
-          key: key,
-          builder: builder,
-          value: value,
-          updateShouldNotify: updateShouldNotify,
-          startListening: _startListening,
-          child: child,
-        );
+         key: key,
+         builder: builder,
+         value: value,
+         updateShouldNotify: updateShouldNotify,
+         startListening: _startListening,
+         child: child,
+       );
 
   static VoidCallback _startListening(
     InheritedContext<Listenable?> e,
@@ -75,16 +75,16 @@ class ListenableProxyProvider0<R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          update: update,
-          lazy: lazy,
-          builder: builder,
-          dispose: dispose,
-          updateShouldNotify: updateShouldNotify,
-          startListening: ListenableProvider._startListening,
-          child: child,
-        );
+         key: key,
+         create: create,
+         update: update,
+         lazy: lazy,
+         builder: builder,
+         dispose: dispose,
+         updateShouldNotify: updateShouldNotify,
+         startListening: ListenableProvider._startListening,
+         child: child,
+       );
 }
 
 /// {@template provider.listenableproxyprovider}
@@ -113,15 +113,15 @@ class ListenableProxyProvider<T, R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          lazy: lazy,
-          builder: builder,
-          update: (context, previous) =>
-              update(context, Provider.of(context), previous),
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         create: create,
+         lazy: lazy,
+         builder: builder,
+         update: (context, previous) =>
+             update(context, Provider.of(context), previous),
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.listenableproxyprovider}
@@ -137,19 +137,19 @@ class ListenableProxyProvider2<T, T2, R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          lazy: lazy,
-          builder: builder,
-          update: (context, previous) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            previous,
-          ),
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         create: create,
+         lazy: lazy,
+         builder: builder,
+         update: (context, previous) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           previous,
+         ),
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.listenableproxyprovider}
@@ -165,20 +165,20 @@ class ListenableProxyProvider3<T, T2, T3, R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          lazy: lazy,
-          builder: builder,
-          update: (context, previous) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            previous,
-          ),
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         create: create,
+         lazy: lazy,
+         builder: builder,
+         update: (context, previous) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           previous,
+         ),
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.listenableproxyprovider}
@@ -194,21 +194,21 @@ class ListenableProxyProvider4<T, T2, T3, T4, R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          lazy: lazy,
-          builder: builder,
-          update: (context, previous) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            previous,
-          ),
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         create: create,
+         lazy: lazy,
+         builder: builder,
+         update: (context, previous) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           previous,
+         ),
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.listenableproxyprovider}
@@ -224,22 +224,22 @@ class ListenableProxyProvider5<T, T2, T3, T4, T5, R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          lazy: lazy,
-          builder: builder,
-          update: (context, previous) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            previous,
-          ),
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         create: create,
+         lazy: lazy,
+         builder: builder,
+         update: (context, previous) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           previous,
+         ),
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.listenableproxyprovider}
@@ -255,21 +255,21 @@ class ListenableProxyProvider6<T, T2, T3, T4, T5, T6, R extends Listenable?>
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          create: create,
-          lazy: lazy,
-          builder: builder,
-          update: (context, previous) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            previous,
-          ),
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         create: create,
+         lazy: lazy,
+         builder: builder,
+         update: (context, previous) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           previous,
+         ),
+         dispose: dispose,
+         child: child,
+       );
 }

@@ -66,10 +66,10 @@ class Nested extends StatelessComponent implements SingleChildComponent {
     Key? key,
     required List<SingleChildComponent> children,
     Component? child,
-  })  : assert(children.isNotEmpty),
-        _children = children,
-        _child = child,
-        super(key: key);
+  }) : assert(children.isNotEmpty),
+       _children = children,
+       _child = child,
+       super(key: key);
 
   final List<SingleChildComponent> _children;
   final Component? _child;
@@ -244,8 +244,8 @@ abstract class SingleChildStatelessComponent extends StatelessComponent
     implements SingleChildComponent {
   /// Creates a component that has exactly one child component.
   const SingleChildStatelessComponent({Key? key, Component? child})
-      : _child = child,
-        super(key: key);
+    : _child = child,
+      super(key: key);
 
   final Component? _child;
 
@@ -271,7 +271,7 @@ class SingleChildStatelessElement extends StatelessElement
     with SingleChildComponentElementMixin {
   /// Creates an element that uses the given component as its configuration.
   SingleChildStatelessElement(SingleChildStatelessComponent component)
-      : super(component);
+    : super(component);
 
   @override
   Component build() {
@@ -291,8 +291,8 @@ abstract class SingleChildStatefulComponent extends StatefulComponent
     implements SingleChildComponent {
   /// Creates a component that has exactly one child component.
   const SingleChildStatefulComponent({Key? key, Component? child})
-      : _child = child,
-        super(key: key);
+    : _child = child,
+      super(key: key);
 
   final Component? _child;
 
@@ -325,7 +325,7 @@ class SingleChildStatefulElement extends StatefulElement
     with SingleChildComponentElementMixin {
   /// Creates an element that uses the given component as its configuration.
   SingleChildStatefulElement(SingleChildStatefulComponent component)
-      : super(component);
+    : super(component);
 
   @override
   SingleChildStatefulComponent get component =>
@@ -352,7 +352,7 @@ class SingleChildBuilder extends SingleChildStatelessComponent {
   ///
   /// The [builder] argument must not be null.
   const SingleChildBuilder({Key? key, required this.builder, Component? child})
-      : super(key: key, child: child);
+    : super(key: key, child: child);
 
   /// Called to obtain the child component.
   ///
@@ -408,7 +408,7 @@ mixin SingleChildStateMixin<T extends StatefulComponent> on State<T> {
 class _SingleChildStatefulMixinElement extends StatefulElement
     with SingleChildComponentElementMixin {
   _SingleChildStatefulMixinElement(SingleChildStatefulComponentMixin component)
-      : super(component);
+    : super(component);
 
   @override
   SingleChildStatefulComponentMixin get component =>

@@ -3,58 +3,62 @@ import 'package:nocterm/nocterm.dart';
 import 'provider.dart';
 
 // ignore: public_member_api_docs
-typedef ProviderBuilder<R> = Component Function(
-    BuildContext context, R value, Component child);
+typedef ProviderBuilder<R> =
+    Component Function(BuildContext context, R value, Component child);
 
 // ignore: public_member_api_docs
-typedef ProxyProviderBuilder<T, R> = R Function(
-    BuildContext context, T value, R? previous);
+typedef ProxyProviderBuilder<T, R> =
+    R Function(BuildContext context, T value, R? previous);
 
 // ignore: public_member_api_docs
-typedef ProxyProviderBuilder2<T, T2, R> = R Function(
-    BuildContext context, T value, T2 value2, R? previous);
+typedef ProxyProviderBuilder2<T, T2, R> =
+    R Function(BuildContext context, T value, T2 value2, R? previous);
 
 // ignore: public_member_api_docs
-typedef ProxyProviderBuilder3<T, T2, T3, R> = R Function(
-  BuildContext context,
-  T value,
-  T2 value2,
-  T3 value3,
-  R? previous,
-);
+typedef ProxyProviderBuilder3<T, T2, T3, R> =
+    R Function(
+      BuildContext context,
+      T value,
+      T2 value2,
+      T3 value3,
+      R? previous,
+    );
 
 // ignore: public_member_api_docs
-typedef ProxyProviderBuilder4<T, T2, T3, T4, R> = R Function(
-  BuildContext context,
-  T value,
-  T2 value2,
-  T3 value3,
-  T4 value4,
-  R? previous,
-);
+typedef ProxyProviderBuilder4<T, T2, T3, T4, R> =
+    R Function(
+      BuildContext context,
+      T value,
+      T2 value2,
+      T3 value3,
+      T4 value4,
+      R? previous,
+    );
 
 // ignore: public_member_api_docs
-typedef ProxyProviderBuilder5<T, T2, T3, T4, T5, R> = R Function(
-  BuildContext context,
-  T value,
-  T2 value2,
-  T3 value3,
-  T4 value4,
-  T5 value5,
-  R? previous,
-);
+typedef ProxyProviderBuilder5<T, T2, T3, T4, T5, R> =
+    R Function(
+      BuildContext context,
+      T value,
+      T2 value2,
+      T3 value3,
+      T4 value4,
+      T5 value5,
+      R? previous,
+    );
 
 // ignore: public_member_api_docs
-typedef ProxyProviderBuilder6<T, T2, T3, T4, T5, T6, R> = R Function(
-  BuildContext context,
-  T value,
-  T2 value2,
-  T3 value3,
-  T4 value4,
-  T5 value5,
-  T6 value6,
-  R? previous,
-);
+typedef ProxyProviderBuilder6<T, T2, T3, T4, T5, T6, R> =
+    R Function(
+      BuildContext context,
+      T value,
+      T2 value2,
+      T3 value3,
+      T4 value4,
+      T5 value5,
+      T6 value6,
+      R? previous,
+    );
 
 /// {@macro provider.proxyprovider}
 class ProxyProvider0<R> extends InheritedProvider<R> {
@@ -69,17 +73,17 @@ class ProxyProvider0<R> extends InheritedProvider<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: update,
-          dispose: dispose,
-          updateShouldNotify: updateShouldNotify,
-          debugCheckInvalidValueType: (R value) =>
-              Provider.debugCheckInvalidValueType?.call<R>(value),
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: update,
+         dispose: dispose,
+         updateShouldNotify: updateShouldNotify,
+         debugCheckInvalidValueType: (R value) =>
+             Provider.debugCheckInvalidValueType?.call<R>(value),
+         child: child,
+       );
 }
 
 /// {@template provider.proxyprovider}
@@ -140,16 +144,16 @@ class ProxyProvider<T, R> extends ProxyProvider0<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: (context, value) =>
-              update(context, Provider.of(context), value),
-          updateShouldNotify: updateShouldNotify,
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: (context, value) =>
+             update(context, Provider.of(context), value),
+         updateShouldNotify: updateShouldNotify,
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.proxyprovider}
@@ -165,16 +169,16 @@ class ProxyProvider2<T, T2, R> extends ProxyProvider0<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: (context, value) => update(
-              context, Provider.of(context), Provider.of(context), value),
-          updateShouldNotify: updateShouldNotify,
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: (context, value) =>
+             update(context, Provider.of(context), Provider.of(context), value),
+         updateShouldNotify: updateShouldNotify,
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.proxyprovider}
@@ -190,21 +194,21 @@ class ProxyProvider3<T, T2, T3, R> extends ProxyProvider0<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: (context, value) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            value,
-          ),
-          updateShouldNotify: updateShouldNotify,
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: (context, value) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           value,
+         ),
+         updateShouldNotify: updateShouldNotify,
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.proxyprovider}
@@ -220,22 +224,22 @@ class ProxyProvider4<T, T2, T3, T4, R> extends ProxyProvider0<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: (context, value) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            value,
-          ),
-          updateShouldNotify: updateShouldNotify,
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: (context, value) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           value,
+         ),
+         updateShouldNotify: updateShouldNotify,
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.proxyprovider}
@@ -251,23 +255,23 @@ class ProxyProvider5<T, T2, T3, T4, T5, R> extends ProxyProvider0<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: (context, value) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            value,
-          ),
-          updateShouldNotify: updateShouldNotify,
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: (context, value) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           value,
+         ),
+         updateShouldNotify: updateShouldNotify,
+         dispose: dispose,
+         child: child,
+       );
 }
 
 /// {@macro provider.proxyprovider}
@@ -283,22 +287,22 @@ class ProxyProvider6<T, T2, T3, T4, T5, T6, R> extends ProxyProvider0<R> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          update: (context, value) => update(
-            context,
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            Provider.of(context),
-            value,
-          ),
-          updateShouldNotify: updateShouldNotify,
-          dispose: dispose,
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         update: (context, value) => update(
+           context,
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           Provider.of(context),
+           value,
+         ),
+         updateShouldNotify: updateShouldNotify,
+         dispose: dispose,
+         child: child,
+       );
 }

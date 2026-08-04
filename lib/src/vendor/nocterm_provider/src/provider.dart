@@ -12,8 +12,8 @@ import 'reassemble_handler.dart';
 part 'deferred_inherited_provider.dart';
 part 'inherited_provider.dart';
 
-typedef TransitionBuilder = Component Function(
-    BuildContext context, Component? child);
+typedef TransitionBuilder =
+    Component Function(BuildContext context, Component? child);
 
 /// Whether the runtime has null safe sound mode enabled.
 ///
@@ -128,12 +128,12 @@ class MultiProvider extends Nested {
     Component? child,
     TransitionBuilder? builder,
   }) : super(
-          key: key,
-          children: _collapseProviders(providers),
-          child: builder != null
-              ? Builder(builder: (context) => builder(context, child))
-              : child,
-        );
+         key: key,
+         children: _collapseProviders(providers),
+         child: builder != null
+             ? Builder(builder: (context) => builder(context, child))
+             : child,
+       );
 
   static List<SingleChildComponent> _collapseProviders(
     List<SingleChildComponent> providers,
@@ -149,7 +149,7 @@ class MultiProvider extends Nested {
 
         final builder = p == null
             ? (Component? child) =>
-                provider._buildWithChild(child, key: provider.key)
+                  provider._buildWithChild(child, key: provider.key)
             : (Component? child) {
                 return p(provider._buildWithChild(child, key: provider.key));
               };
@@ -243,15 +243,15 @@ class Provider<T> extends InheritedProvider<T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          dispose: dispose,
-          debugCheckInvalidValueType: (T value) =>
-              Provider.debugCheckInvalidValueType?.call<T>(value),
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         dispose: dispose,
+         debugCheckInvalidValueType: (T value) =>
+             Provider.debugCheckInvalidValueType?.call<T>(value),
+         child: child,
+       );
 
   /// Expose an existing value without disposing it.
   ///
@@ -268,17 +268,17 @@ class Provider<T> extends InheritedProvider<T> {
     UpdateShouldNotify<T>? updateShouldNotify,
     TransitionBuilder? builder,
     Component? child,
-  })  : assert(() {
-          Provider.debugCheckInvalidValueType?.call<T>(value);
-          return true;
-        }()),
-        super.value(
-          key: key,
-          builder: builder,
-          value: value,
-          updateShouldNotify: updateShouldNotify,
-          child: child,
-        );
+  }) : assert(() {
+         Provider.debugCheckInvalidValueType?.call<T>(value);
+         return true;
+       }()),
+       super.value(
+         key: key,
+         builder: builder,
+         value: value,
+         updateShouldNotify: updateShouldNotify,
+         child: child,
+       );
 
   /// Obtains the nearest [Provider<T>] up its Component tree and returns its
   /// value.
@@ -342,8 +342,12 @@ unsupported.
 If you want to expose a variable that can be anything, consider changing
 `dynamic` to `Object` instead.
 ''');
-    final inheritedElement = context.getElementForInheritedComponentOfExactType<
-        _InheritedProviderScope<T?>>() as _InheritedProviderScopeElement<T?>?;
+    final inheritedElement =
+        context
+                .getElementForInheritedComponentOfExactType<
+                  _InheritedProviderScope<T?>
+                >()
+            as _InheritedProviderScopeElement<T?>?;
 
     if (inheritedElement == null && null is! T) {
       throw ProviderNotFoundException(T, context.component.runtimeType);

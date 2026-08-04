@@ -86,17 +86,17 @@ class StreamProvider<T> extends DeferredInheritedProvider<Stream<T>?, T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          updateShouldNotify: updateShouldNotify,
-          startListening: _streamStartListening(
-            catchError: catchError,
-            initialData: initialData,
-          ),
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         updateShouldNotify: updateShouldNotify,
+         startListening: _streamStartListening(
+           catchError: catchError,
+           initialData: initialData,
+         ),
+         child: child,
+       );
 
   /// Listens to `value` and expose it to all of [StreamProvider] descendants.
   StreamProvider.value({
@@ -109,17 +109,17 @@ class StreamProvider<T> extends DeferredInheritedProvider<Stream<T>?, T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super.value(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          value: value,
-          updateShouldNotify: updateShouldNotify,
-          startListening: _streamStartListening(
-            catchError: catchError,
-            initialData: initialData,
-          ),
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         value: value,
+         updateShouldNotify: updateShouldNotify,
+         startListening: _streamStartListening(
+           catchError: catchError,
+           initialData: initialData,
+         ),
+         child: child,
+       );
 }
 
 DeferredStartListening<Future<T>?, T> _futureStartListening<T>({
@@ -191,17 +191,17 @@ class FutureProvider<T> extends DeferredInheritedProvider<Future<T>?, T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super(
-          key: key,
-          lazy: lazy,
-          builder: builder,
-          create: create,
-          updateShouldNotify: updateShouldNotify,
-          startListening: _futureStartListening(
-            catchError: catchError,
-            initialData: initialData,
-          ),
-          child: child,
-        );
+         key: key,
+         lazy: lazy,
+         builder: builder,
+         create: create,
+         updateShouldNotify: updateShouldNotify,
+         startListening: _futureStartListening(
+           catchError: catchError,
+           initialData: initialData,
+         ),
+         child: child,
+       );
 
   /// Listens to `value` and expose it to all of [FutureProvider] descendants.
   FutureProvider.value({
@@ -213,15 +213,15 @@ class FutureProvider<T> extends DeferredInheritedProvider<Future<T>?, T> {
     TransitionBuilder? builder,
     Component? child,
   }) : super.value(
-          key: key,
-          builder: builder,
-          lazy: false,
-          value: value,
-          updateShouldNotify: updateShouldNotify,
-          startListening: _futureStartListening(
-            catchError: catchError,
-            initialData: initialData,
-          ),
-          child: child,
-        );
+         key: key,
+         builder: builder,
+         lazy: false,
+         value: value,
+         updateShouldNotify: updateShouldNotify,
+         startListening: _futureStartListening(
+           catchError: catchError,
+           initialData: initialData,
+         ),
+         child: child,
+       );
 }
