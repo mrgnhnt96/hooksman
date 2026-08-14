@@ -1,6 +1,6 @@
 <!--  -->
 
-# Unreleased
+# 3.3.0 | 8.13.26
 
 ## Features
 
