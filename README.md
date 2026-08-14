@@ -354,9 +354,38 @@ An example of this behavior is when you have a `ShellTask` that formats the code
 
 If an error occurs during the execution of a task, `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code. This will prevent the commit from being made, allowing you to fix the issue before committing again.
 
+### Rolling Back a Failed Hook
+
+Tasks edit files in place, so a task that rewrites files — a formatter, a code generator, `dart fix --apply` — leaves those edits behind even when a *later* task fails. Without a rollback, a failed hook can quietly destroy uncommitted work, and the next commit attempt picks up whatever the tasks left in the working tree.
+
+Before the first task runs, `hooksman` snapshots the index and the working tree. If the hook exits for any reason other than success, it restores that snapshot, so a failed hook leaves the repository exactly as it found it. On success the snapshot is discarded and task edits are kept (see [Amending to the Commit](#amending-to-the-commit-precommithook)).
+
+A few details worth knowing:
+
+- **Untracked files are never rolled back.** The snapshot cannot capture them, so removing them would be pure data loss. Files a task creates but does not stage are left in place.
+- **The snapshot is kept at `refs/hooksman/backup` until the hook succeeds.** If the hook is killed outright — a second `Ctrl+C`, a closed terminal — it never gets the chance to restore, but the work is still recoverable:
+
+  ```sh
+  git stash apply refs/hooksman/backup
+  ```
+
+- **Nothing is pushed onto your stash stack.** `git stash list` is untouched.
+- **The first commit in a repository is not snapshotted**, since there is no `HEAD` to snapshot against. The hook still runs.
+
+To turn the rollback off for a hook, set `backup` to `false`:
+
+```dart
+Hook main() {
+  return PreCommitHook(
+    backup: false,
+    tasks: [...],
+  );
+}
+```
+
 ### `Ctrl+C` (Signal Interruption)
 
-If the user interrupts the hook execution (e.g., by pressing `Ctrl+C`), `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code.
+If the user interrupts the hook execution (e.g., by pressing `Ctrl+C`), `hooksman` will stop the execution of the remaining tasks and exit with a non-zero status code. The working tree is rolled back to its pre-hook state, as described above.
 
 ## Configuration
 
