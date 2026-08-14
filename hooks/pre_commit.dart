@@ -23,7 +23,12 @@ Hook main() {
         name: 'Tests',
         include: [Glob('**.dart')],
         exclude: [Glob('hooks/**')],
-        commands: (filePaths) => ['sip test --concurrent --bail'],
+        // Scoped to test/ on purpose. sip discovers tests with a
+        // `**/*_test.dart` glob from the package root and offers no way to
+        // exclude a directory, so an unscoped run walks into the gitignored
+        // gen/ tree and tries to compile the vendored packages' own tests.
+        // Those never resolve here, and the whole run reports zero tests.
+        commands: (filePaths) => ['sip test --concurrent --bail test/'],
       ),
     ],
   );
