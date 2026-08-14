@@ -37,21 +37,6 @@ dart pub add hooksman --dev
 
 Then, run `dart pub get` to install the package.
 
-## Development
-
-`nocterm` is a hosted pub.dev dependency. Unpublished siblings (`nocterm_provider`, `nocterm_nested`) are cloned into `gen/` (gitignored), then copied into committed `lib/src/vendor/` for publish:
-
-```sh
-sip gen sync   # clone pins → gen/, then vendor into lib/src/vendor/
-sip install    # sync + pub get + global activate
-```
-
-Add or bump pins in `tool/gen_packages.yaml`, then re-run `sip gen sync` (runs `tool/vendor_from_gen.sh`). Do not commit `gen/`; do commit `lib/src/vendor/`.
-
-### Publishing
-
-`sip publish` refuses `path: gen/` (and other path/git) deps, re-syncs/vendors, tests, lints, then dry-runs and publishes. Hosted `nocterm` must stay compatible with the pin in `tool/gen_packages.yaml`.
-
 ## Register Hooks
 
 To register your hooks with Git, run the following command:
@@ -478,6 +463,16 @@ Hook main() {
   );
 }
 ```
+
+## Contributing
+
+`nocterm` is a hosted pub.dev dependency. Its unpublished siblings (`nocterm_provider`, `nocterm_nested`) are cloned into `gen/` (gitignored), then copied into committed `lib/src/vendor/`, so a checkout needs one extra step before `pub get`:
+
+```sh
+sip install    # gen sync + pub get + global activate
+```
+
+[`AGENTS.md`](https://github.com/mrgnhnt96/hooksman/blob/main/AGENTS.md) covers the rest: repository layout, the generated files, the vendoring rules, testing, and the release process.
 
 ## License
 
