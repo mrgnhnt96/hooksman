@@ -5,10 +5,12 @@ class AnyHook extends Hook {
     required super.tasks,
     super.diffArgs = const [],
     super.diffFilters = '',
+    super.backup,
   });
   const AnyHook.verbose({
     required super.tasks,
     super.diffArgs = const [],
     super.diffFilters = '',
+    super.backup,
   }) : super.verbose();
 }

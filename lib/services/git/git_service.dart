@@ -1,17 +1,30 @@
 import 'package:hooksman/deps/args.dart';
 import 'package:hooksman/deps/logger.dart';
 import 'package:hooksman/deps/process.dart';
+import 'package:hooksman/models/process_details.dart';
 import 'package:hooksman/services/git/git_checks_mixin.dart';
 import 'package:hooksman/services/git/git_context.dart';
 import 'package:hooksman/services/git/git_context_setter.dart';
 
 class GitService with GitChecksMixin {
-  const GitService({this.remoteName, this.remoteUrl});
+  const GitService({this.remoteName, this.remoteUrl, this.workingDirectory});
 
   final String? remoteName;
   final String? remoteUrl;
 
+  /// Directory to run `git` in.
+  ///
+  /// Defaults to the process working directory, which is where Git invokes a
+  /// hook from. Tests set it explicitly so they do not have to mutate
+  /// process-wide state that concurrent suites share.
+  final String? workingDirectory;
+
   bool get debug => args['loud'] == true;
+
+  Future<ProcessDetails> _git(List<String> args) => switch (workingDirectory) {
+    final String cwd => process.run('git', args, workingDirectory: cwd),
+    _ => process.run('git', args),
+  };
 
   List<String> get gitDiffArgs => [
     // support binary files
@@ -33,7 +46,13 @@ class GitService with GitChecksMixin {
   ];
 
   String get gitDir {
-    final gitDir = process.sync('git', ['rev-parse', '--git-dir']);
+    final gitDir = switch (workingDirectory) {
+      final String cwd => process.sync('git', [
+        'rev-parse',
+        '--git-dir',
+      ], workingDirectory: cwd),
+      _ => process.sync('git', ['rev-parse', '--git-dir']),
+    };
 
     return switch (gitDir.stdout) {
       final String out => out.trim(),
@@ -47,7 +66,7 @@ class GitService with GitChecksMixin {
   /// absolute paths. User sources stay in `hooks/*.dart|*.sh`; Git never
   /// writes into `.git/hooks`.
   Future<bool> setHooksDir() async {
-    final result = await process.run('git', [
+    final result = await _git([
       'config',
       '--local',
       'core.hooksPath',
@@ -69,7 +88,7 @@ class GitService with GitChecksMixin {
   ///
   /// Exit code 5 means the key was not set — treated as success.
   Future<bool> unsetHooksDir() async {
-    final result = await process.run('git', [
+    final result = await _git([
       'config',
       '--local',
       '--unset',
@@ -103,7 +122,7 @@ class GitService with GitChecksMixin {
     required List<String> diffArgs,
     required String diffFilters,
   }) async {
-    final result = await process.run('git', [
+    final result = await _git([
       'diff',
       ...diffArgs,
       if (diffFilters.isNotEmpty) '--diff-filter=$diffFilters',
@@ -153,11 +172,7 @@ class GitService with GitChecksMixin {
   }
 
   Future<String> getCurrentBranch() async {
-    final result = await process.run('git', [
-      'rev-parse',
-      '--abbrev-ref',
-      'HEAD',
-    ]);
+    final result = await _git(['rev-parse', '--abbrev-ref', 'HEAD']);
 
     final branch = switch (result.stdout) {
       final String out => out.trim(),
@@ -203,7 +218,7 @@ class GitService with GitChecksMixin {
   // Get a list of files with both staged and unstaged changes.
   // Unstaged changes to these files should be hidden before the tasks run.
   Future<List<String>> partiallyStagedFiles() async {
-    final status = await process.run('git', ['status', '-z']);
+    final status = await _git(['status', '-z']);
     // See https://git-scm.com/docs/git-status#_short_format
     // Entries returned in machine format are separated by a NUL character.
     // The first letter of each entry represents current index status,
@@ -279,7 +294,103 @@ class GitService with GitChecksMixin {
   }
 
   Future<void> add(List<String> filePaths) async {
-    await process.run('git', ['add', '--', ...filePaths]);
+    await _git(['add', '--', ...filePaths]);
+  }
+
+  /// Ref that anchors the snapshot created by [createBackup].
+  ///
+  /// A bare `git stash create` commit is unreferenced and can be reclaimed by
+  /// `git gc`. Anchoring it means a hook that dies before it can restore
+  /// (SIGKILL, crashed terminal, power loss) still leaves the user's work
+  /// recoverable with `git stash apply refs/hooksman/backup`.
+  static const backupRef = 'refs/hooksman/backup';
+
+  /// Snapshots the index and working tree without modifying either.
+  ///
+  /// Returns the snapshot commit sha, or `null` when there is nothing to back
+  /// up (clean tree) or a snapshot cannot be taken (unborn `HEAD`, i.e. the
+  /// very first commit in a repository). Never throws: a hook must still be
+  /// able to run when backups are unavailable.
+  Future<String?> createBackup() async {
+    // `stash create` writes a commit object but leaves the index, the working
+    // tree, and the stash stack untouched -- unlike `stash push`.
+    final result = await _git(['stash', 'create']);
+
+    if (result.exitCode != 0) {
+      logger.detail(
+        'Could not create a backup (exit ${result.exitCode}); '
+        'continuing without one. Error: ${result.stderr}',
+      );
+      return null;
+    }
+
+    final sha = switch (result.stdout) {
+      final String out => out.trim(),
+      final Future<String> out => (await out).trim(),
+    };
+
+    if (sha.isEmpty) {
+      logger.detail('Nothing to back up, the index and working tree are clean');
+      return null;
+    }
+
+    final anchored = await _git(['update-ref', backupRef, sha]);
+    if (anchored.exitCode != 0) {
+      // The snapshot still exists and [restoreBackup] still works; it is only
+      // unprotected from `git gc`, so keep going rather than failing the hook.
+      logger.detail(
+        'Failed to anchor the backup at $backupRef. '
+        'Error: ${anchored.stderr}',
+      );
+    }
+
+    logger.detail('Backed up the index and working tree at $sha');
+
+    return sha;
+  }
+
+  /// Restores the index and working tree to the [sha] snapshot.
+  ///
+  /// Untracked files are left alone -- `stash create` does not capture them,
+  /// so reverting them would destroy work the snapshot cannot restore.
+  Future<bool> restoreBackup(String sha) async {
+    // A stash commit records the working tree as its own tree and the index as
+    // its second parent, so restoring both takes two steps.
+
+    // 1. Index and working tree both become the snapshot's working tree.
+    final workingTree = await _git(['read-tree', '--reset', '-u', sha]);
+
+    if (workingTree.exitCode != 0) {
+      logger.detail(
+        'Failed to restore the working tree from $sha. '
+        'Error: ${workingTree.stderr}',
+      );
+      return false;
+    }
+
+    // 2. The index alone becomes the snapshot's index, leaving the working
+    // tree from step 1 in place.
+    final index = await _git(['read-tree', '--reset', '$sha^2']);
+
+    if (index.exitCode != 0) {
+      logger.detail(
+        'Failed to restore the index from $sha. Error: ${index.stderr}',
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Deletes [backupRef], letting `git gc` reclaim the snapshot.
+  Future<void> dropBackup() async {
+    final result = await _git(['update-ref', '-d', backupRef]);
+
+    if (result.exitCode != 0) {
+      logger.detail(
+        'Failed to drop the backup ref $backupRef. Error: ${result.stderr}',
+      );
+    }
   }
 
   Future<void> applyModifications(List<String> existing) async {

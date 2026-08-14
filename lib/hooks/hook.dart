@@ -85,6 +85,7 @@ sealed class Hook extends Equatable {
     required this.diffFilters,
     required this.diffArgs,
     this.runInParallel = true,
+    this.backup = true,
   }) : verbose = false;
 
   const Hook.verbose({
@@ -92,6 +93,7 @@ sealed class Hook extends Equatable {
     required this.diffFilters,
     required this.diffArgs,
     this.runInParallel = true,
+    this.backup = true,
   }) : verbose = true;
 
   /// Defaults to ['--staged']
@@ -110,6 +112,19 @@ sealed class Hook extends Equatable {
 
   /// Whether to run the top level tasks in parallel
   final bool runInParallel;
+
+  /// Whether to snapshot the index and working tree before the tasks run and
+  /// roll back to it when the hook fails.
+  ///
+  /// Tasks edit files in place, so a task that rewrites a file during a run
+  /// that later fails would otherwise leave those edits behind with no way to
+  /// undo them. With [backup] enabled a failed hook leaves the repository
+  /// exactly as it found it. Defaults to `true`.
+  ///
+  /// Untracked files are never rolled back, and the snapshot is kept at
+  /// `refs/hooksman/backup` until the hook succeeds, so work is still
+  /// recoverable by hand if the hook is killed before it can restore.
+  final bool backup;
 
   final bool verbose;
 

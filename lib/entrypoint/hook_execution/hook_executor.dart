@@ -6,7 +6,10 @@ import 'package:hooksman/deps/git.dart';
 import 'package:hooksman/deps/logger.dart';
 import 'package:hooksman/entrypoint/hook_execution/pending_hook.dart';
 import 'package:hooksman/hooks/hook.dart';
+import 'package:hooksman/services/git/git_context.dart';
+import 'package:hooksman/services/git/git_service.dart';
 import 'package:mason_logger/mason_logger.dart';
+import 'package:meta/meta.dart';
 import 'package:nocterm/nocterm.dart';
 
 /// Exit code after successful tasks given the post-task file list.
@@ -87,6 +90,51 @@ class HookExecutor {
 
     final context = await git.prepareFiles();
 
+    // Snapshot before the first task touches a file, so any exit other than a
+    // clean success can put the repository back exactly as it was found.
+    final backup = hook.backup ? await git.createBackup() : null;
+
+    var succeeded = false;
+    try {
+      final code = await _runTasks(pendingHook, context);
+      succeeded = code == 0;
+      return code;
+    } finally {
+      await releaseBackup(backup, succeeded: succeeded);
+    }
+  }
+
+  /// Rolls the repository back to [backup] unless the hook succeeded, then
+  /// releases the snapshot.
+  ///
+  /// The ref is deliberately left in place when a restore fails -- that is the
+  /// one case where the user's only remaining copy of their work is the
+  /// snapshot itself.
+  @visibleForTesting
+  Future<void> releaseBackup(String? backup, {required bool succeeded}) async {
+    if (backup == null) return;
+
+    if (succeeded) {
+      await git.dropBackup();
+      return;
+    }
+
+    logger.detail('Hook did not succeed, restoring $backup');
+
+    if (await git.restoreBackup(backup)) {
+      logger.detail('Restored the index and working tree');
+      await git.dropBackup();
+      return;
+    }
+
+    logger.err(
+      'Failed to restore your files after the hook did not succeed.\n'
+      'Your work is safe in a backup. Recover it by running:\n'
+      '  git stash apply ${GitService.backupRef}',
+    );
+  }
+
+  Future<int> _runTasks(PendingHook pendingHook, GitContext context) async {
     logger.detail('Starting tasks');
     await _wait(durations.short);
 

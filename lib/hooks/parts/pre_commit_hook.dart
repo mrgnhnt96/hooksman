@@ -11,6 +11,7 @@ class PreCommitHook extends Hook {
     super.diffArgs = _defaultDiffArgs,
     this.allowEmpty = false,
     super.runInParallel,
+    super.backup,
   });
 
   const PreCommitHook.verbose({
@@ -19,6 +20,7 @@ class PreCommitHook extends Hook {
     super.diffArgs = _defaultDiffArgs,
     this.allowEmpty = false,
     super.runInParallel,
+    super.backup,
   }) : super.verbose();
 
   static const _defaultDiffArgs = ['--staged', 'HEAD', '--name-only'];

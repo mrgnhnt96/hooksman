@@ -7,6 +7,7 @@ class PrePushHook extends Hook {
     super.diffFilters = 'ACMR',
     super.diffArgs = const ['@{u}', 'HEAD'],
     super.runInParallel,
+    super.backup,
   });
 
   const PrePushHook.verbose({
@@ -14,5 +15,6 @@ class PrePushHook extends Hook {
     super.diffFilters = 'ACMR',
     super.diffArgs = const ['@{u}', 'HEAD'],
     super.runInParallel,
+    super.backup,
   }) : super.verbose();
 }

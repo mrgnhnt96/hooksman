@@ -12,6 +12,7 @@ extension _$HookEquatableAnnotations on Hook {
     diffFilters,
     tasks,
     runInParallel,
+    backup,
     verbose,
   ];
 }

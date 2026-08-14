@@ -36,6 +36,7 @@ class CommitMsgHook extends Hook {
     super.diffArgs = const [],
     super.diffFilters = '',
     super.runInParallel,
+    super.backup,
   });
 
   const CommitMsgHook.verbose({
@@ -44,6 +45,7 @@ class CommitMsgHook extends Hook {
     super.diffArgs = const [],
     super.diffFilters = '',
     super.runInParallel,
+    super.backup,
   }) : super.verbose();
 
   /// Path to the commit message file (`$1` from Git). Bound at runtime.
