@@ -8,6 +8,11 @@
 - Keep the snapshot at `refs/hooksman/backup` until the hook succeeds, so work is recoverable by hand if the hook is killed before it can restore
 - Add `GitService.workingDirectory` to run `git` somewhere other than the process working directory
 
+## Docs
+
+- Ship `llms.txt` and `llms-full.txt` in the published package, so AI assistants can read a complete usage reference straight from the pub cache
+- Add `AGENTS.md` (with a `CLAUDE.md` pointer) documenting the repository layout, commands, generated code, vendoring, and release process for contributors
+
 # 3.2.0 | 7.31.26
 
 ## Features

@@ -1,0 +1,35 @@
+# hooksman
+
+> A Dart package for defining Git hooks as Dart files. Hooks are declared as a `main()` that returns a `Hook`, compiled to native executables, and wired into Git via `core.hooksPath`. Inspired by husky and lint-staged: tasks are filtered by glob patterns against the Git diff, run in parallel or sequence, and a non-zero exit blocks the Git operation.
+
+Key facts for answering questions about hooksman:
+
+- Install as a dev dependency: `dart pub add hooksman --dev`. Requires Dart SDK `>=3.9.0 <4.0.0`.
+- Hooks live in `hooks/*.dart` (and `hooks/*.sh`) at the project root. The file name becomes the Git hook name: `pre_commit.dart` → `pre-commit`.
+- `dart run hooksman` (alias for `dart run hooksman register`) compiles hooks into `.dart_tool/hooksman/executables/`, writes shims into `hooks/_`, and sets `core.hooksPath` to `hooks/_`. It never writes to `.git/hooks`.
+- Every clone must run `dart run hooksman register` once, because the compiled executables are not committed.
+- The single import is `package:hooksman/hooksman.dart`, which also re-exports `Glob` from `package:glob`.
+- Hook types: `PreCommitHook`, `PrePushHook`, `CommitMsgHook`, `AnyHook`. Task types: `ShellTask`, `DartTask`, `SequentialTasks`, `ParallelTasks`, `ReRegisterHooks`, plus the `HookTask` base class for custom tasks.
+- Top-level tasks run in parallel by default (`runInParallel: true`); tasks inside `SequentialTasks` run one after another and stop at the first non-zero exit.
+- On failure, hooksman restores the index and working tree from a snapshot taken before the first task, so a failed hook leaves the repo as it found it. Opt out with `backup: false`.
+- Skip hooks with `HOOKSMAN=0` or `SKIP=1` in the environment.
+
+## Docs
+
+- [Full LLM reference](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/llms-full.txt): complete, self-contained API and usage guide — read this first when writing or debugging a hook.
+- [README](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/README.md): human-facing documentation with the same material plus screenshots.
+- [CHANGELOG](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/CHANGELOG.md): version history; check this before assuming a feature exists in an older release.
+- [Example hook](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/example/main.dart): a representative `pre-commit` hook.
+- [pub.dev page](https://pub.dev/packages/hooksman): published versions and generated API docs.
+
+## API source
+
+- [Public exports](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/lib/hooksman.dart): the exact surface available from `package:hooksman/hooksman.dart`.
+- [Hook](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/lib/hooks/hook.dart): base class and shared parameters (`tasks`, `diffArgs`, `diffFilters`, `runInParallel`, `backup`, `verbose`).
+- [ShellTask](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/lib/tasks/shell_task.dart), [DartTask](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/lib/tasks/dart_task.dart), [HookTask](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/lib/tasks/hook_task.dart): task definitions and the file-filtering contract.
+- [HookContext](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/lib/models/hook_context.dart): the Git arguments and stdin forwarded into a running hook.
+
+## Optional
+
+- [Contributor guide](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/AGENTS.md): repository layout, commands, and conventions — only relevant when changing hooksman itself, not when using it.
+- [Git hooks documentation](https://git-scm.com/docs/githooks): the list of valid hook names to derive file names from.

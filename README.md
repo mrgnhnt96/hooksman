@@ -18,6 +18,15 @@ Tasks are used to safeguard your codebase, if a task fails, `hooksman` exits wit
 >
 > Check out [`sip_cli`](https://pub.dev/packages/sip_cli) for a Dart-based CLI tool to manage mono-repos, maintain project scripts, and run `dart|flutter pub get` across multiple packages.
 
+## For AI Assistants
+
+This package ships machine-readable documentation following the [llms.txt](https://llmstxt.org) convention:
+
+- [`llms.txt`](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/llms.txt) — a short index of the package and where to find the rest.
+- [`llms-full.txt`](https://raw.githubusercontent.com/mrgnhnt96/hooksman/main/llms-full.txt) — a complete, self-contained reference covering the API, hook and task types, runtime behavior, and troubleshooting.
+
+Both files are included in the published package, so an assistant with the dependency on disk can read them from the pub cache without network access. Contributors working on `hooksman` itself should read [`AGENTS.md`](https://github.com/mrgnhnt96/hooksman/blob/main/AGENTS.md).
+
 ## Installation
 
 Add `hooksman` to your `pubspec.yaml`:

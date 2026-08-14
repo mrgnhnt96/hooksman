@@ -1,0 +1,557 @@
+# hooksman — complete reference for LLMs
+
+This file is a self-contained guide to *using* the `hooksman` package. It targets an
+assistant helping someone set up or debug Git hooks in a Dart or Flutter project. For
+working on the hooksman codebase itself, read `AGENTS.md` instead.
+
+Package: `hooksman` · Dart SDK `>=3.9.0 <4.0.0` · https://pub.dev/packages/hooksman
+
+---
+
+## 1. Mental model
+
+A hook is a Dart file whose `main()` returns a `Hook`:
+
+```dart
+// hooks/pre_commit.dart
+import 'package:hooksman/hooksman.dart';
+
+Hook main() {
+  return PreCommitHook(
+    tasks: [
+      ShellTask(
+        name: 'Analyze',
+        include: [Glob('**.dart')],
+        commands: (filePaths) => ['dart analyze ${filePaths.join(' ')}'],
+      ),
+    ],
+  );
+}
+```
+
+When Git fires the hook, hooksman:
+
+1. Asks Git for the changed files (`git diff` with the hook's `diffArgs` / `diffFilters`).
+2. Snapshots the index and working tree (unless `backup: false`).
+3. Filters that file list per task with the task's `exclude` patterns first, then `include`.
+4. Runs the tasks — top-level tasks in parallel by default, sub-tasks per their group type.
+5. On success, re-stages files that tasks modified. On any other exit, restores the snapshot.
+6. Exits non-zero if any task failed, which aborts the Git operation.
+
+Tasks that match zero files are skipped. A hook whose tasks all match zero files exits 0
+without running anything, unless a task was built with an `.always()` constructor.
+
+---
+
+## 2. Installation and registration
+
+```sh
+dart pub add hooksman --dev
+mkdir -p hooks
+# write hooks/pre_commit.dart
+dart run hooksman            # same as: dart run hooksman register
+```
+
+`register` does three things:
+
+- Compiles each `hooks/*.dart` into a native executable in `.dart_tool/hooksman/executables/`.
+- Copies each `hooks/*.sh` into that same directory and marks it executable.
+- Writes a thin shim per hook into `hooks/_/` and sets `git config core.hooksPath hooks/_`.
+
+Resulting layout:
+
+```
+.
+├── hooks
+│   ├── pre_commit.dart          # authored source (committed)
+│   ├── post-commit.sh           # authored source (committed)
+│   └── _                        # managed shims (gitignored, do not edit)
+│       ├── pre-commit
+│       └── post-commit
+├── .dart_tool/hooksman/executables/   # compiled binaries (local, gitignored)
+└── pubspec.yaml
+```
+
+**Every clone must run `dart run hooksman register` once.** The compiled executables are
+not committed, so the shims have nothing to invoke until register runs. A common setup is
+a post-clone note in the README plus a `ReRegisterHooks()` task (see §5.5) so the hooks
+stay current afterwards.
+
+`.git/hooks` is never written to or wiped; Git is pointed at `hooks/_` instead.
+
+### Uninstall
+
+```sh
+dart run hooksman uninstall
+```
+
+Unsets `core.hooksPath` and deletes the managed shims in `hooks/_` (keeping that
+directory's `.gitignore` and `README.md`). Authored sources are untouched.
+
+### CLI surface
+
+| Command | Effect |
+| --- | --- |
+| `dart run hooksman` | Same as `register`. |
+| `dart run hooksman register` | Compile hooks, write shims, set `core.hooksPath`. |
+| `dart run hooksman register --help` | Print register usage. |
+| `dart run hooksman uninstall` | Unset `core.hooksPath`, remove managed shims. |
+
+Global flags: `--loud` (verbose logging), `--quiet` (errors only).
+
+---
+
+## 3. Hook files
+
+### Naming
+
+The Git hook name is derived from the file name, with underscores converted to hyphens:
+
+| File | Git hook |
+| --- | --- |
+| `hooks/pre_commit.dart` | `pre-commit` |
+| `hooks/pre_push.dart` | `pre-push` |
+| `hooks/commit_msg.dart` | `commit-msg` |
+| `hooks/post-merge.sh` | `post-merge` |
+
+Only **top-level** files in `hooks/` are registered. Put helpers in subdirectories and
+import them; they are ignored by the scanner:
+
+```
+hooks
+├── tasks
+│   └── my_task.dart     # ignored, importable
+├── _                    # managed shims, ignored
+└── pre_commit.dart      # registered
+```
+
+Valid names are the ones Git defines: https://git-scm.com/docs/githooks
+
+### Shell hooks
+
+A file with a `.sh` extension is used verbatim as the hook body:
+
+```sh
+#!/bin/sh
+echo "Running post-commit hook"
+```
+
+From a shell hook you can invoke another registered hook by its shim, e.g. `hooks/_/pre-commit`.
+
+---
+
+## 4. Hook types
+
+All hooks come from `package:hooksman/hooksman.dart`. Each has a `.verbose()` named
+constructor that mirrors the default one and enables detailed output. Verbose slows
+execution down and is intended for debugging a hook, not for CI or day-to-day use.
+
+### `PreCommitHook`
+
+```dart
+PreCommitHook({
+  required List<HookTask> tasks,
+  String diffFilters = 'ACMR',
+  List<String> diffArgs = const ['--staged', 'HEAD', '--name-only'],
+  bool allowEmpty = false,
+  bool runInParallel = true,
+  bool backup = true,
+})
+```
+
+Operates on staged files. After the tasks succeed, if no files remain to commit and
+`allowEmpty` is `false`, the hook exits 1 — this is the only hook type that fails on an
+empty result. Set `allowEmpty: true` to permit an empty commit.
+
+### `PrePushHook`
+
+```dart
+PrePushHook({
+  required List<HookTask> tasks,
+  String diffFilters = 'ACMR',
+  List<String> diffArgs = const ['@{u}', 'HEAD'],
+  bool runInParallel = true,
+  bool backup = true,
+})
+```
+
+Compares the local branch against its upstream. A missing or failing `@{u}` is treated as
+an empty file list rather than an error.
+
+### `CommitMsgHook`
+
+```dart
+CommitMsgHook({
+  required List<HookTask> tasks,
+  String? messageFile,
+  List<String> diffArgs = const [],
+  String diffFilters = '',
+  bool runInParallel = true,
+  bool backup = true,
+})
+```
+
+Git passes the commit message file path as `$1`; hooksman binds it to `messageFile` and to
+`hookContext.messageFile`. This hook **always runs**, even when the diff is empty.
+
+```dart
+// hooks/commit_msg.dart
+import 'dart:io';
+import 'package:hooksman/hooksman.dart';
+
+Hook main() {
+  return CommitMsgHook(
+    tasks: [
+      DartTask(
+        include: [AllFiles()],
+        name: 'Conventional commit',
+        run: (_) async {
+          final path = hookContext.messageFile;
+          if (path == null) return 1;
+          final message = File(path).readAsStringSync().trim();
+          final pattern = RegExp(r'^(feat|fix|chore|docs|test|refactor)(\(.+\))?: ');
+          if (!pattern.hasMatch(message)) {
+            print('Commit message must follow Conventional Commits.');
+            return 1;
+          }
+          return 0;
+        },
+      ),
+    ],
+  );
+}
+```
+
+### `AnyHook`
+
+```dart
+AnyHook({
+  required List<HookTask> tasks,
+  List<String> diffArgs = const [],
+  String diffFilters = '',
+  bool backup = true,
+})
+```
+
+For any other Git hook. Note it does **not** take `runInParallel`. With empty `diffArgs`
+there is no meaningful diff, so pair it with `.always()` tasks.
+
+### Shared parameters
+
+| Parameter | Meaning |
+| --- | --- |
+| `tasks` | Top-level tasks. Run in parallel unless `runInParallel: false`. |
+| `diffArgs` | Arguments passed to `git diff` to produce the file list. |
+| `diffFilters` | Git `--diff-filter` letters: `A`dded, `C`opied, `M`odified, `R`enamed, `D`eleted, etc. |
+| `runInParallel` | Whether top-level tasks run concurrently. Default `true`. Not available on `AnyHook`. |
+| `backup` | Snapshot and roll back on failure. Default `true`. |
+| `verbose` | Set by using the `.verbose()` constructor, not by a parameter. |
+
+---
+
+## 5. Tasks
+
+### 5.1 File filtering
+
+Every task takes `include` and `exclude` lists of `Pattern`, so `Glob`, `RegExp`, and plain
+`String` all work. `AllFiles()` matches everything.
+
+`exclude` is applied **before** `include`. A file excluded by any pattern is dropped even if
+an include pattern would have matched it.
+
+Filtered paths are what gets handed to `commands` / `run`. If the filtered list is empty,
+the task does not run at all — unless it was created with an `.always()` constructor.
+
+`Glob` is re-exported by `package:hooksman/hooksman.dart`, so no separate import is needed.
+
+### 5.2 `ShellTask`
+
+```dart
+ShellTask({
+  required List<Pattern> include,
+  required List<String> Function(Iterable<String>) commands,
+  List<Pattern> exclude = const [],
+  String? workingDirectory,
+  String? name,
+})
+
+ShellTask.always({ ... })   // runs even with no matching files; no `include`
+```
+
+Each returned string is one command, run sequentially through `bash -c` (`cmd /c` on
+Windows). The first non-zero exit stops the task and the whole hook.
+
+```dart
+ShellTask(
+  name: 'Lint & Format',
+  include: [Glob('**.dart')],
+  exclude: [Glob('**.g.dart')],
+  commands: (filePaths) => [
+    'dart analyze --fatal-infos ${filePaths.join(' ')}',
+    'dart format ${filePaths.join(' ')}',
+  ],
+),
+```
+
+`workingDirectory` prefixes each command with a `cd` and rewrites matched paths to be
+relative to that directory — useful in a monorepo where a package's tooling must run from
+the package root.
+
+Interpolating `filePaths` is optional. A command that ignores its argument (`'dart test'`)
+still benefits from `include`, because the task is skipped entirely when nothing matches.
+
+### 5.3 `DartTask`
+
+```dart
+DartTask({
+  required List<Pattern> include,
+  required FutureOr<int> Function(List<String>) run,
+  List<Pattern> exclude = const [],
+  String? name,
+})
+```
+
+Return `0` for success, non-zero for failure. Runs in the hook's own process, so it starts
+faster than a shell command but must not call `exit()`.
+
+Tasks run inside a zone that captures `print()` and replays it after the TUI finishes, so
+printing diagnostics is safe. Writing to `stdout` directly is not — it bypasses the zone
+and corrupts the progress display.
+
+```dart
+DartTask(
+  name: 'No debugPrint',
+  include: [Glob('lib/**.dart')],
+  run: (filePaths) async {
+    var failed = false;
+    for (final path in filePaths) {
+      if (File(path).readAsStringSync().contains('debugPrint(')) {
+        print('debugPrint found in $path');
+        failed = true;
+      }
+    }
+    return failed ? 1 : 0;
+  },
+),
+```
+
+### 5.4 Grouping: `SequentialTasks` and `ParallelTasks`
+
+```dart
+SequentialTasks({required List<HookTask> tasks, String? name, List<Pattern> exclude})
+ParallelTasks({required List<HookTask> tasks, String? name, List<Pattern> exclude})
+```
+
+Neither takes `include` — a group is always considered runnable, and each child task still
+filters files on its own. `SequentialTasks` stops at the first child that exits non-zero;
+`ParallelTasks` starts all children and fails as soon as one does.
+
+Use `SequentialTasks` when order matters, e.g. generate code before analyzing it:
+
+```dart
+PreCommitHook(
+  tasks: [
+    SequentialTasks(
+      name: 'Codegen then analyze',
+      tasks: [
+        ShellTask(
+          include: [Glob('lib/models/**.dart')],
+          exclude: [Glob('**.g.dart')],
+          commands: (_) => ['dart run build_runner build --delete-conflicting-outputs'],
+        ),
+        ShellTask(
+          include: [Glob('**.dart')],
+          commands: (filePaths) => ['dart analyze --fatal-infos ${filePaths.join(' ')}'],
+        ),
+      ],
+    ),
+  ],
+)
+```
+
+### 5.5 `ReRegisterHooks`
+
+```dart
+ReRegisterHooks({String? pathToHooksDir})
+```
+
+A prebuilt `ShellTask` that reruns `dart run hooksman register` whenever an authored hook
+file changes (`hooks/**.{dart,sh}`, excluding `hooks/_/**`). Add it as the first task of a
+`pre-commit` hook so teammates' compiled hooks stay in sync with the sources they commit.
+Pass `pathToHooksDir` when the hooks directory is not at the repository root.
+
+### 5.6 Custom tasks
+
+Extend `HookTask` when neither shell nor a plain Dart callback fits, e.g. to add sub-tasks:
+
+```dart
+class MyTask extends HookTask {
+  MyTask() : super(include: [Glob('**.dart')]);
+
+  @override
+  String get name => 'My task';
+
+  @override
+  FutureOr<int> run(
+    List<String> filePaths, {
+    required void Function(String?) print,
+    required void Function(HookTask, int) completeTask,
+    required void Function(HookTask) startTask,
+    required String? workingDirectory,
+  }) async {
+    startTask(this);
+    // ...
+    completeTask(this, 0);
+    return 0;
+  }
+}
+```
+
+Use the injected `print` callback (or a plain `print()`, which the surrounding zone
+captures) rather than writing to `stdout` directly — the hook renders a live TUI and direct
+writes corrupt it. Call `startTask` / `completeTask` so progress is reported.
+
+### 5.7 Task names
+
+A task's display name defaults to its include patterns. Pass `name:` for readable output.
+
+---
+
+## 6. Runtime context
+
+`hookContext` is a global getter (from `package:hooksman/hooksman.dart`) holding what Git
+passed to the hook:
+
+```dart
+class HookContext {
+  final List<String> args;    // positional args ($1, $2, …)
+  final String stdin;         // piped stdin, e.g. pre-push refs
+  final String? messageFile;  // $1 for commit-msg / prepare-commit-msg
+}
+```
+
+For `pre-push`, Git passes `<remote-name> <remote-url>` as args and the refs being pushed
+on stdin. For `commit-msg`, `$1` is the message file path.
+
+---
+
+## 7. Behavior during a run
+
+### Re-staging modified files
+
+After tasks succeed, files that tasks created, modified, or deleted are added to the
+commit. This is what makes `dart format` in a `pre-commit` hook useful: the formatted
+result lands in the commit rather than being left in the working tree.
+
+### Rollback on failure
+
+Before the first task runs, hooksman snapshots the index and working tree. If the hook
+exits for any reason other than success — a failed task, `Ctrl+C`, an unhandled error — it
+restores that snapshot, so a failed hook leaves the repository exactly as it found it. On
+success the snapshot is dropped.
+
+- **Untracked files are never rolled back.** They cannot be captured, so removing them
+  would be data loss. Files a task creates but does not stage stay put.
+- **The snapshot lives at `refs/hooksman/backup`** until the hook succeeds. If the process
+  is killed outright, recover the work with `git stash apply refs/hooksman/backup`.
+- **The stash stack is untouched** — `git stash list` never shows these snapshots.
+- **The first commit in a repository is not snapshotted**, since there is no `HEAD`. The
+  hook still runs.
+
+Disable per hook with `backup: false`.
+
+### Skipping hooks
+
+```sh
+HOOKSMAN=0 git commit -m "wip"
+SKIP=1 git push
+```
+
+`HOOKSMAN=0`, `SKIP=1`, and `SKIP=true` all short-circuit the shim and the Dart entrypoint.
+`git commit --no-verify` also works, as with any Git hook.
+
+### Exit codes
+
+`0` allows the Git operation. Any non-zero exit aborts it. A `pre-commit` hook that ends
+with nothing left to commit exits `1` unless `allowEmpty: true`.
+
+---
+
+## 8. Complete example
+
+```dart
+// hooks/pre_commit.dart
+import 'package:hooksman/hooksman.dart';
+
+Hook main() {
+  return PreCommitHook(
+    tasks: [
+      ReRegisterHooks(),
+      ShellTask(
+        name: 'Lint & Format',
+        include: [Glob('**.dart')],
+        exclude: [Glob('**.g.dart')],
+        commands: (filePaths) => [
+          'dart analyze --fatal-infos ${filePaths.join(' ')}',
+          'dart format ${filePaths.join(' ')}',
+        ],
+      ),
+      ShellTask(
+        name: 'Tests',
+        include: [Glob('**.dart')],
+        exclude: [Glob('hooks/**')],
+        commands: (_) => ['dart test'],
+      ),
+    ],
+  );
+}
+```
+
+```dart
+// hooks/pre_push.dart
+import 'package:hooksman/hooksman.dart';
+
+Hook main() {
+  return PrePushHook(
+    tasks: [
+      ShellTask.always(
+        name: 'Full test suite',
+        commands: (_) => ['dart test'],
+      ),
+    ],
+  );
+}
+```
+
+---
+
+## 9. Troubleshooting
+
+| Symptom | Cause and fix |
+| --- | --- |
+| Hooks never fire | `core.hooksPath` is not set. Run `dart run hooksman register` and confirm with `git config core.hooksPath`. |
+| `No such file or directory` from a shim | The compiled executables are missing — normal after a fresh clone or a `.dart_tool` wipe. Run `dart run hooksman register`. |
+| A hook change has no effect | The executables are stale. Re-register, or add `ReRegisterHooks()` to the hook. |
+| `No hooks defined` / `No hooks to register` | No top-level `.dart` or `.sh` files in `hooks/`. Files in subdirectories are intentionally ignored. |
+| A task never runs | Its patterns match nothing after `exclude` is applied, or the diff is empty. Use a `.always()` constructor, or widen `include`. |
+| `pre-commit` exits 1 with no error shown | Expected when nothing is left to commit after the tasks ran. Set `allowEmpty: true`. (An empty diff *before* tasks run is a skip, exit 0.) |
+| Task edits vanished after a failure | Expected: the rollback restored the pre-hook state. Recover from `refs/hooksman/backup`, or set `backup: false`. |
+| Garbled or interleaved output | Something wrote to `stdout` directly, bypassing the zone that buffers task output. Use `print()` or the `print` callback passed to `run`. |
+| Need to bypass once | `HOOKSMAN=0 git commit …` or `git commit --no-verify`. |
+
+To see what a hook is actually doing, switch it to the `.verbose()` constructor
+temporarily, or run the compiled executable directly:
+`.dart_tool/hooksman/executables/pre-commit`.
+
+---
+
+## 10. Public API surface
+
+Everything below is available from the single import `package:hooksman/hooksman.dart`:
+
+- Hooks: `Hook`, `PreCommitHook`, `PrePushHook`, `CommitMsgHook`, `AnyHook`
+- Tasks: `HookTask`, `ShellTask`, `DartTask`, `SequentialTask`, `SequentialTasks`,
+  `ParallelTasks`, `ReRegisterHooks`
+- Patterns: `Glob` (re-exported from `package:glob`), `AllFiles`
+- Context: `HookContext`, `hookContext`
+- Entrypoint: `executeHook` — called by generated wrappers; never call it yourself
