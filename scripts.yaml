@@ -41,7 +41,7 @@ publish:
         echo ""
         echo "ERROR: pubspec.yaml still has path: gen/ dependencies."
         echo "Use hosted nocterm and committed lib/src/vendor/ copies of"
-        echo "nocterm_provider / nocterm_nested (sip gen sync runs vendor_from_gen)."
+        echo "nocterm_provider / nocterm_nested (sip run gen sync runs vendor_from_gen)."
         echo ""
         exit 1
       fi
@@ -51,8 +51,11 @@ publish:
         echo ""
         exit 1
       fi
-    - sip gen sync
-    - sip test --bail --recursive --concurrent
+    - sip run gen sync
+    # Scoped to test/ for the same reason as the pre-commit hook: --recursive
+    # walks into the gitignored gen/ checkout and tries to run the vendored
+    # packages' own tests.
+    - sip test --bail --concurrent test/
     - "{$lint}"
     - dart pub publish --dry-run
     - |
