@@ -5,7 +5,7 @@ bin/tester.dart
 todo.md
 build
 barreler.yaml
-analysis_optoins.yaml
+analysis_options.yaml
 hooks
 !lib/hooks/**
 tool/

@@ -3,7 +3,7 @@
 - [ ] Create a `Condition` class that can be used to check a task's exit code and execute a task based on the result
 - [ ] Add `IfAny`, `IfAll`, and `IfNone` conditions
   - [ ] Verify by creating a task that checks if the pubspec.yaml file contains a `dev_dependencies.build_runner`, then execut a task to run `build_runner build --delete-conflicting-outputs`
-- [ ] Make nocterm TUI optional for publish builds (fall back to mason_logger) once feasible; until then publish is gated while `path: gen/` deps remain
+- [ ] Make nocterm TUI optional for publish builds (fall back to mason_logger) once feasible
 
 ## Fixed
 
