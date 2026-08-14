@@ -154,3 +154,9 @@ backend/pocketbase/pb_data
 backend/scripts/json
 bin/tester.dart
 **/.test_optimizer.dart
+
+# llm_chat identity for this project
+.llm_chat/
+
+# machine-local hook config (absolute paths)
+.claude/settings.local.json
