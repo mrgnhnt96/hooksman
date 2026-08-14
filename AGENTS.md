@@ -14,7 +14,7 @@ non-zero to abort the Git operation.
 ## Setup
 
 ```sh
-sip install          # gen sync + clean .dart_tool + pub get + global activate
+sip run install      # gen sync + clean .dart_tool + pub get + global activate
 ```
 
 `sip` is [`sip_cli`](https://pub.dev/packages/sip_cli); every script lives in
@@ -30,16 +30,16 @@ dart pub get
 | Task | Command | Notes |
 | --- | --- | --- |
 | Test | `sip test` / `dart test` | Scope to `test/` when passing a path — see the `gen/` warning below. |
-| Lint | `sip lint` | `dart format . --set-exit-if-changed` then `dart analyze --fatal-infos --fatal-warnings`. Both must pass. |
+| Lint | `sip run lint` | `dart format --set-exit-if-changed` over the source dirs, then `dart analyze --fatal-infos --fatal-warnings`. Both must pass. |
 | Codegen | `sip run build_runner build` | Regenerates `*.g.dart` (equatable props). |
 | Barrel | `sip run barrel` | Regenerates `lib/hooksman.dart` via `barreler`. |
-| Vendor sync | `sip gen sync` | Re-clones pins into `gen/`, re-vendors `lib/src/vendor/`. |
-| Register hooks | `sip hooks` / `dart run hooksman register` | Recompiles this repo's own hooks. |
-| Publish | `sip publish` | Guarded, see Publishing. |
+| Vendor sync | `sip run gen sync` | Re-clones pins into `gen/`, re-vendors `lib/src/vendor/`. |
+| Register hooks | `sip run hooks` / `dart run hooksman register` | Recompiles this repo's own hooks. |
+| Publish | `sip run publish` | Guarded, see Publishing. |
 
 Analysis is strict: `strict-casts`, `strict-inference`, `strict-raw-types`, and a long
 lint list in `analysis_options.yaml`. `--fatal-infos` means an info-level lint fails the
-build, so run `sip lint` before considering work done.
+build, so run `sip run lint` before considering work done.
 
 ## Layout
 
@@ -107,8 +107,12 @@ Never hand-edit these; regenerate instead:
 `git:` dependencies.
 
 - Commit `lib/src/vendor/`, never `gen/`.
-- Do not edit `lib/src/vendor/` by hand — bump the pin and re-run `sip gen sync`.
-- Both `gen/**` and `lib/src/vendor/**` are excluded from analysis.
+- Do not edit `lib/src/vendor/` by hand — bump the pin and re-run `sip run gen sync`.
+- Both `gen/**` and `lib/src/vendor/**` are excluded from analysis, but **not** from
+  `dart format`. `tool/vendor_from_gen.sh` formats what it vendors for that reason; drop
+  that step and the next lint rewrites the vendored files and fails.
+- The lint script lists source directories explicitly rather than using `.`, because a
+  sync resets `gen/` to upstream formatting and an unscoped format walks into it.
 - Keep the hosted `nocterm` constraint compatible with the pinned SHA's version.
 
 ## Testing
@@ -140,7 +144,7 @@ overall. Always pass `test/`. Plain `dart test` is unaffected.
 `CHANGELOG.md` leads with an `# Unreleased` section grouped under `## Features`,
 `## Fixes`, `## Deps`. Add an entry there for any user-visible change.
 
-`sip publish` derives the version from the first `# ` heading in `CHANGELOG.md` and writes
+`sip run publish` derives the version from the first `# ` heading in `CHANGELOG.md` and writes
 it into `pubspec.yaml`, so a release means renaming `# Unreleased` to `# <version> | <date>`.
 The script refuses to publish while `pubspec.yaml` has any `path:` or `git:` dependency,
 then runs gen sync, tests, lint, a dry run, publish, commit, tag, and push.
@@ -154,7 +158,7 @@ tests. Two consequences:
   failed commit, verify what is staged before retrying — a blind `git add -A && git commit`
   sweeps unrelated work into the commit. Stage explicit paths.
 - Changing anything under `hooks/` requires a re-register for the change to take effect;
-  `ReRegisterHooks` handles that on the next commit, but run `sip hooks` if you need it now.
+  `ReRegisterHooks` handles that on the next commit, but run `sip run hooks` if you need it now.
 
 Commit messages follow Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`,
 `style:`).

@@ -469,7 +469,7 @@ Hook main() {
 `nocterm` is a hosted pub.dev dependency. Its unpublished siblings (`nocterm_provider`, `nocterm_nested`) are cloned into `gen/` (gitignored), then copied into committed `lib/src/vendor/`, so a checkout needs one extra step before `pub get`:
 
 ```sh
-sip install    # gen sync + pub get + global activate
+sip run install    # gen sync + pub get + global activate
 ```
 
 [`AGENTS.md`](https://github.com/mrgnhnt96/hooksman/blob/main/AGENTS.md) covers the rest: repository layout, the generated files, the vendoring rules, testing, and the release process.
