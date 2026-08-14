@@ -24,11 +24,16 @@ barrel: barreler build
 test: dart test
 
 lint:
-  - (+) dart format . --set-exit-if-changed
+  # Paths are listed explicitly because `dart format .` walks into the
+  # gitignored gen/ checkout. `sip gen sync` resets that tree to upstream with
+  # `checkout --force` + `clean -fdx`, so an unscoped format always finds
+  # unformatted files there and fails — including inside `sip publish`, which
+  # syncs immediately before linting.
+  - (+) dart format bin example hooks lib test tool --set-exit-if-changed
   - (+) dart analyze --fatal-infos --fatal-warnings
 
 publish:
-  (bail):
+  (bail): true
   (command):
     - |
       # Path/git deps cannot be published to pub.dev.

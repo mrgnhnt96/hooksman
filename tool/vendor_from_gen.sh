@@ -63,4 +63,16 @@ for pkg in "${PACKAGES[@]}"; do
   echo "  → lib/src/vendor/${pkg}"
 done
 
+# Format the vendored copies. They land with upstream's formatting, and the
+# import rewriting above changes line lengths, so without this the next
+# `dart format --set-exit-if-changed` rewrites them and fails. That made
+# `sip run publish` impossible: it syncs (resetting these files) immediately
+# before it lints.
+if command -v dart >/dev/null 2>&1; then
+  echo "→ format lib/src/vendor"
+  dart format "${VENDOR_ROOT}" >/dev/null
+else
+  echo "dart not found; skipping format of ${VENDOR_ROOT}" >&2
+fi
+
 echo "Done. Vendored packages are under lib/src/vendor/ (committed)."
