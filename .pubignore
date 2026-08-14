@@ -10,3 +10,7 @@ hooks
 !lib/hooks/**
 tool/
 gen/
+
+# Contributor-facing agent docs; llms.txt / llms-full.txt are published.
+AGENTS.md
+CLAUDE.md
