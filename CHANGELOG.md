@@ -1,5 +1,11 @@
 <!--  -->
 
+# Unreleased
+
+## Fixes
+
+- Print what tasks printed after the TUI closes even when the hook is not verbose, so a failing task no longer aborts the commit or push without explanation (#2)
+
 # 3.3.0 | 8.13.26
 
 ## Features

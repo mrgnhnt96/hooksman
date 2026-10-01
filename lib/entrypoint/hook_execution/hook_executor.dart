@@ -134,6 +134,17 @@ class HookExecutor {
     );
   }
 
+  /// Writes what tasks printed while the TUI was up.
+  ///
+  /// `Logger.flush` replays through `Logger.info` by default, which a
+  /// non-verbose hook's [Level.error] silences -- so a failing task would
+  /// abort with no explanation. Task output is the user's own, and always
+  /// shows; hooksman's own messages stay governed by the log level.
+  @visibleForTesting
+  void flushTaskOutput() {
+    logger.flush((message) => logger.write('${message ?? ''}\n'));
+  }
+
   Future<int> _runTasks(PendingHook pendingHook, GitContext context) async {
     logger.detail('Starting tasks');
     await _wait(durations.short);
@@ -192,7 +203,7 @@ class HookExecutor {
     await runner.cancel();
 
     if (logger.level.index == Level.verbose.index || !pendingHook.wasKilled) {
-      logger.flush();
+      flushTaskOutput();
     }
     if (!pendingHook.wasKilled) {
       logger.write('\n');
